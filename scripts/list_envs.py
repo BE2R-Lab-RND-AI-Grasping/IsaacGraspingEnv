@@ -7,7 +7,7 @@ It prints the name of the environment, the entry point and the config file.
 
 """Launch Isaac Sim Simulator first."""
 
-from isaaclab.app import AppLauncher
+from omni.isaac.lab.app import AppLauncher
 
 # launch omniverse app
 app_launcher = AppLauncher(headless=True)
@@ -20,7 +20,7 @@ import gymnasium as gym
 from prettytable import PrettyTable
 
 # Import extensions to set up environment tasks
-import ext_template.tasks  # noqa: F401
+import IsaacGraspEnv.tasks  # noqa: F401
 
 
 def main():
@@ -37,7 +37,7 @@ def main():
     index = 0
     # acquire all Isaac environments names
     for task_spec in gym.registry.values():
-        if "Template-" in task_spec.id:
+        if "Iiwa-" in task_spec.id:
             # add details to table
             table.add_row([index + 1, task_spec.id, task_spec.entry_point, task_spec.kwargs["env_cfg_entry_point"]])
             # increment count

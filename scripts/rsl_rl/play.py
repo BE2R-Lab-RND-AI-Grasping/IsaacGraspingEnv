@@ -4,20 +4,20 @@
 
 import argparse
 
-from isaaclab.app import AppLauncher
+from omni.isaac.lab.app import AppLauncher
 
 # local imports
 import cli_args  # isort: skip
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
-parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
-parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
+parser.add_argument("--video", action="store_true", default=True, help="Record videos during training.")
+parser.add_argument("--video_length", type=int, default=400, help="Length of the recorded video (in steps).")
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
-parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default=None, help="Name of the task.")
+parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
+parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
@@ -39,18 +39,24 @@ import torch
 
 from rsl_rl.runners import OnPolicyRunner
 
-from isaaclab.envs import DirectMARLEnv, multi_agent_to_single_agent
-from isaaclab.utils.dict import print_dict
-from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlVecEnvWrapper, export_policy_as_jit, export_policy_as_onnx
-from isaaclab_tasks.utils import get_checkpoint_path, parse_env_cfg
+from omni.isaac.lab.envs import DirectMARLEnv, multi_agent_to_single_agent
+from omni.isaac.lab.utils.dict import print_dict
+from omni.isaac.lab_tasks.utils import get_checkpoint_path, parse_env_cfg
+from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import (
+    RslRlOnPolicyRunnerCfg,
+    RslRlVecEnvWrapper,
+    export_policy_as_jit,
+    export_policy_as_onnx,
+)
 
 # Import extensions to set up environment tasks
-import ext_template.tasks  # noqa: F401
+import IsaacGraspEnv.tasks  # noqa: F401
 
 
 def main():
     """Play with RSL-RL agent."""
     # parse configuration
+    args_cli.device = "cpu"
     env_cfg = parse_env_cfg(
         args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
     )
@@ -111,6 +117,7 @@ def main():
             # agent stepping
             actions = policy(obs)
             # env stepping
+            print(actions)
             obs, _, _, _ = env.step(actions)
         if args_cli.video:
             timestep += 1
