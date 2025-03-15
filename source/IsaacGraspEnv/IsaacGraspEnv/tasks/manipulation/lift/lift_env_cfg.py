@@ -24,10 +24,12 @@ from omni.isaac.lab.utils.assets import ISAAC_NUCLEUS_DIR
 
 from . import mdp
 
+import numpy as np
+from scipy.spatial.transform import Rotation as R
+
 ##
 # Scene definition
 ##
-
 
 @configclass
 class ObjectTableSceneCfg(InteractiveSceneCfg):
@@ -51,7 +53,8 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Table",
         init_state=AssetBaseCfg.InitialStateCfg(pos=[0.8, 0, 0], rot=[0.707, 0, 0, 0.707]),
-        spawn=UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd"),
+        spawn=UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd",
+                         semantic_tags = [("class","table"), ("color", "gray")],),
     )
 
     # plane

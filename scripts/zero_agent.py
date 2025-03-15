@@ -16,16 +16,21 @@ parser = argparse.ArgumentParser(description="Zero agent for Isaac Lab environme
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
+# parser.add_argument("--enable_cameras", action="store_true" , default=False, help="Enable camera.")
 parser.add_argument("--num_envs", type=int, default=2, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+# parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Cam-Lift-Cube-Iiwa-v0", help="Name of the task.")
+
 # parser.add_argument("--device", type=str, default="cpu", help="Name of the device.")
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
 args_cli = parser.parse_args()
+args_cli.enable_cameras = True
 
 # launch omniverse app
 app_launcher = AppLauncher(args_cli)
+
 simulation_app = app_launcher.app
 
 """Rest everything follows."""
@@ -68,7 +73,7 @@ def main():
             # actions[1,6:] = torch.ones((1,env.action_space.shape[1]-6), device=env.unwrapped.device) * (-1)
             obs, _, done, terminated, info = env.step(actions) # type: ignore
             # if done or terminated:
-            #     i = 0
+            # i = 0
 
     # close the simulator
     env.close()
