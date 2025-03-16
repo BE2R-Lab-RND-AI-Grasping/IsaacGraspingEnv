@@ -84,7 +84,6 @@ def object_hand_contact(
             torch.logical_or(is_contact_right, is_contact_left), is_contact_thumb
         ),
         dim=1,
-        keepdim=True,
     )
     return res
 
@@ -106,7 +105,7 @@ def object_is_lifted(
                         left_flex_cfgs, left_finray_cfgs, threshold)
     """Reward the agent for lifting the object above the minimal height."""
     object: RigidObject = env.scene[object_cfg.name]
-    return is_contact.float() * torch.where(object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.0).unsqueeze(1)
+    return is_contact.float() * torch.where(object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.0)
 
 def object_lift(
     env: ManagerBasedRLEnv,
@@ -126,7 +125,7 @@ def object_lift(
                         left_flex_cfgs, left_finray_cfgs, threshold)
     """Reward the agent for lifting the object above the minimal height."""
     object: RigidObject = env.scene[object_cfg.name]
-    lift = torch.clip(object.data.root_pos_w[:, 2], 0.0, minimal_height).unsqueeze(1)
+    lift = torch.clip(object.data.root_pos_w[:, 2], 0.0, minimal_height)
     
     return is_contact.float() * lift
 
@@ -182,7 +181,7 @@ def object_fingertips_distance(
 
     reward_scale = torch.tensor([0.04, 0.01, 0.01]).to(env.sim.device)
     
-    return torch.sum(torch.mul(1 /(std + object_fingertips_distance), reward_scale), dim=1, keepdim=True)
+    return torch.sum(torch.mul(1 /(std + object_fingertips_distance), reward_scale), dim=1)
 
 
 def object_goal_distance(
@@ -219,7 +218,7 @@ def object_goal_distance(
     # rewarded if the object is lifted above the threshold
     
     # reward = (1 - torch.tanh(distance / std)).unsqueeze(1)
-    reward = 1.0 / (std + distance).unsqueeze(1)
+    reward = 1.0 / (std + distance)
 
     
     return obj_is_lifted.float() * reward

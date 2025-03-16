@@ -66,7 +66,7 @@ class IiwaCubeLiftEnvCfg(LiftEnvCfg):
             prim_path="{ENV_REGEX_NS}/Object",
             # From Front
             # init_state=RigidObjectCfg.InitialStateCfg(pos=[0.9, 0, 0.08], rot=[0.    , 0.    , 0.7071, 0.7071]),
-            init_state=RigidObjectCfg.InitialStateCfg(pos=OBJ_POS.tolist(), rot=OBJ_ROT.as_quat(scalar_first=True).tolist()),
+            init_state=RigidObjectCfg.InitialStateCfg(pos=OBJ_POS.tolist(), rot=OBJ_ROT.as_quat()[[3,0,1,2]].tolist()),
             # From Top
             # init_state=RigidObjectCfg.InitialStateCfg(pos=[0.5, 0, 0.055], rot=[1, 0, 0, 0]),
             spawn=UsdFileCfg(
@@ -268,7 +268,7 @@ class IiwaCubeCamLiftEnvCfg(CamLiftEnvCfg):
         self.scene.object = RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Object",
             # From Front
-            init_state=RigidObjectCfg.InitialStateCfg(pos=OBJ_POS.tolist(), rot=OBJ_ROT.as_quat(scalar_first=True).tolist()),
+            init_state=RigidObjectCfg.InitialStateCfg(pos=OBJ_POS.tolist(), rot=OBJ_ROT.as_quat()[[3,0,1,2]].tolist()),
             spawn=UsdFileCfg(
                 usd_path=f"source/IsaacGraspEnv/IsaacGraspEnv/assets/data/YCB/035_power_drill.usd",
                 scale=(1.0, 1.0, 1.0),

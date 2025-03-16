@@ -32,7 +32,7 @@ from scipy.spatial.transform import Rotation as R
 # CAM_ROT = R.from_quat([0.39126, -0.1423, 0.0799, 0.90374], scalar_first=True)
 # Upd 13.03.25
 CAM_POS = np.array([1.955, -1.29826, 0.64681])
-CAM_ROT = R.from_quat([0.39126, -0.1423, 0.0799, 0.90374], scalar_first=True)
+CAM_ROT = R.from_quat([-0.1423, 0.0799, 0.90374, 0.39126])
 
 ##
 # Scene definition
@@ -56,7 +56,7 @@ class ObjectCamTableSceneCfg(lift_env.ObjectTableSceneCfg):
             focal_length=24.0, focus_distance=400.0, horizontal_aperture=20.955, clipping_range=(0.1, 1.0e5)
         ),
         offset=CameraCfg.OffsetCfg(pos=tuple(CAM_POS.tolist()),
-                                   rot=tuple(CAM_ROT.as_quat(scalar_first=True).tolist()),
+                                   rot=tuple(CAM_ROT.as_quat()[[3,0,1,2]].tolist()),
                                    convention="world"),
     )
 
