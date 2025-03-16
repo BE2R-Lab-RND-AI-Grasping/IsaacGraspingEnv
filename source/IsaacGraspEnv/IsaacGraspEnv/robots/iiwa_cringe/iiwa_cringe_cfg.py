@@ -26,6 +26,9 @@ import numpy as np
 relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa.usd"
 ABSOLUTE_PATH = Path(relative_path).resolve()
 
+INIT_Q_IIWA = np.array([-2.9, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
+INIT_Q_IIWA = INIT_Q_IIWA.tolist()
+
 IIWA_CRINGE_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
         usd_path=ABSOLUTE_PATH.as_posix(),
@@ -58,6 +61,7 @@ IIWA_CRINGE_CFG = ArticulationCfg(
             # stabilization_threshold=0.0005,
         ),
         collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
+        semantic_tags = [("class","robot"), ("color", "orange")],
     ),
     # -0.036,  1.204,   2.9670658, 1.906,    2.9671504,  -1.555,-2.926
     init_state=ArticulationCfg.InitialStateCfg(
@@ -92,13 +96,21 @@ IIWA_CRINGE_CFG = ArticulationCfg(
             # "Joint_left_finray_proxy":0.0,
             
             # Close to object
-            "lbr_iiwa_joint_1": 0.0,
-            "lbr_iiwa_joint_2": 1.4,
-            "lbr_iiwa_joint_3": 3.14,
-            "lbr_iiwa_joint_4": 1.6,
-            "lbr_iiwa_joint_5": -3.466,
-            "lbr_iiwa_joint_6": -1.155,
-            "lbr_iiwa_joint_7": -2.926,
+            # "lbr_iiwa_joint_1": 0.0,
+            # "lbr_iiwa_joint_2": 1.4,
+            # "lbr_iiwa_joint_3": 3.14,
+            # "lbr_iiwa_joint_4": 1.6,
+            # "lbr_iiwa_joint_5": -3.466,
+            # "lbr_iiwa_joint_6": -1.155,
+            # "lbr_iiwa_joint_7": -2.926,
+            
+            "lbr_iiwa_joint_1": INIT_Q_IIWA[0],
+            "lbr_iiwa_joint_2": INIT_Q_IIWA[1],
+            "lbr_iiwa_joint_3": INIT_Q_IIWA[2],
+            "lbr_iiwa_joint_4": INIT_Q_IIWA[3],
+            "lbr_iiwa_joint_5": INIT_Q_IIWA[4],
+            "lbr_iiwa_joint_6": INIT_Q_IIWA[5],
+            "lbr_iiwa_joint_7": INIT_Q_IIWA[6],
             
             "Joint_thumb_dynamixel_crank": 0.0,
             "Joint_thumb_crank_pusher": 0.0,

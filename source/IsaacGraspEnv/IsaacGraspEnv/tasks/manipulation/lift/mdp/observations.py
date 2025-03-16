@@ -11,9 +11,44 @@ from typing import TYPE_CHECKING
 from omni.isaac.lab.assets import RigidObject
 from omni.isaac.lab.managers import SceneEntityCfg
 from omni.isaac.lab.utils.math import subtract_frame_transforms
+from omni.isaac.lab.sensors import Camera, RayCasterCamera, TiledCamera
+
+import open3d as o3d
+import numpy as np
 
 if TYPE_CHECKING:
     from omni.isaac.lab.envs import ManagerBasedRLEnv
+
+
+def depth2point_cloud(
+    camera: TiledCamera | Camera | RayCasterCamera,
+    depth_image: torch.Tensor
+) -> torch.Tensor:
+    height, width = depth_image.shape
+    y, x = torch.meshgrid(torch.arange(height), torch.arange(width))
+    
+    f_x = camera.cfg.spawn.focal_length
+    f_y = camera.cfg.spawn.focal_length
+    
+    
+    c_x = width / 2
+    c_y = height / 2
+    
+    
+    Z = depth_image
+    X = (x - c_x) * Z / f_x
+    Y = (y - c_y) * Z / f_y
+    
+    points = torch.stack([X,Y,Z], dim=-1)
+    point_cloud = points.reshape(-1, 3)
+    valid_points = point_cloud[point_cloud[:, 2] > 0]
+    
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(valid_points.numpy())
+    o3d.visualization.draw_geometries([pcd])
+    
+    return valid_points
+    
 
 
 def object_position_in_robot_root_frame(
@@ -88,3 +123,55 @@ def pos_fingertips_root_frame(
     ], dim=1 )
     
     return object_fingertips_distance
+
+
+def point_cloud(
+    env: ManagerBasedEnv,
+    sensor_cfg: SceneEntityCfg = SceneEntityCfg("tiled_camera"),
+    data_type: str = "rgb",
+    convert_perspective_to_orthogonal: bool = False,
+    normalize: bool = True,
+) -> torch.Tensor:
+    """Images of a specific datatype from the camera sensor.
+
+    If the flag :attr:`normalize` is True, post-processing of the images are performed based on their
+    data-types:
+
+    - "rgb": Scales the image to (0, 1) and subtracts with the mean of the current image batch.
+    - "depth" or "distance_to_camera" or "distance_to_plane": Replaces infinity values with zero.
+
+    Args:
+        env: The environment the cameras are placed within.
+        sensor_cfg: The desired sensor to read from. Defaults to SceneEntityCfg("tiled_camera").
+        data_type: The data type to pull from the desired camera. Defaults to "rgb".
+        convert_perspective_to_orthogonal: Whether to orthogonalize perspective depth images.
+            This is used only when the data type is "distance_to_camera". Defaults to False.
+        normalize: Whether to normalize the images. This depends on the selected data type.
+            Defaults to True.
+
+    Returns:
+        The images produced at the last time-step
+    """
+    # extract the used quantities (to enable type-hinting)
+    sensor: TiledCamera | Camera | RayCasterCamera = env.scene.sensors[sensor_cfg.name]
+
+    # obtain the input image
+    images = sensor.data.output[data_type]
+    images[images == float("inf")] = 0
+    images[images > 3] = 0
+    depth2point_cloud(sensor, images[0].squeeze())
+    
+    # depth image conversion
+    if (data_type == "distance_to_camera") and convert_perspective_to_orthogonal:
+        images = math_utils.orthogonalize_perspective_depth(images, sensor.data.intrinsic_matrices)
+
+    # rgb/depth image normalization
+    if normalize:
+        if data_type == "rgb":
+            images = images.float() / 255.0
+            mean_tensor = torch.mean(images, dim=(1, 2), keepdim=True)
+            images -= mean_tensor
+        elif "distance_to" in data_type or "depth" in data_type:
+            images[images == float("inf")] = 0
+
+    return images.clone()
