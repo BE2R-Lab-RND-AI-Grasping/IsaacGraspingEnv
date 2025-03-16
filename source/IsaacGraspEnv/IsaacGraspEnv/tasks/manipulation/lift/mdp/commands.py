@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import torch
 from collections.abc import Sequence
-from omni.isaac.lab.managers import SceneEntityCfg
+from isaaclab.managers import SceneEntityCfg
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from omni.isaac.lab.envs import ManagerBasedRLEnv
+    from isaaclab.envs import ManagerBasedRLEnv
 
 def set_pd_offset(env: ManagerBasedRLEnv,
                   env_ids: Sequence[int],

@@ -1,7 +1,7 @@
 
 import argparse
 
-from omni.isaac.lab.app import AppLauncher
+from isaaclab.app import AppLauncher
 
 # add argparse arguments
 
@@ -20,8 +20,8 @@ app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
 import torch
-import omni.isaac.lab.sim as sim_utils
-from omni.isaac.lab.scene import InteractiveScene
+import isaaclab.sim as sim_utils
+from isaaclab.scene import InteractiveScene
 from IsaacGraspEnv.tasks.manipulation.lift.config.iiwa.joint_pos_env_cfg import IiwaCubeCamLiftEnvCfg
 
 

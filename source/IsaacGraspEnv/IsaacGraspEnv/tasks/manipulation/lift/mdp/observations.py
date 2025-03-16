@@ -8,16 +8,16 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 
-from omni.isaac.lab.assets import RigidObject
-from omni.isaac.lab.managers import SceneEntityCfg
-from omni.isaac.lab.utils.math import subtract_frame_transforms
-from omni.isaac.lab.sensors import Camera, RayCasterCamera, TiledCamera
+from isaaclab.assets import RigidObject
+from isaaclab.managers import SceneEntityCfg
+from isaaclab.utils.math import subtract_frame_transforms
+from isaaclab.sensors import Camera, RayCasterCamera, TiledCamera
 
 import open3d as o3d
 import numpy as np
 
 if TYPE_CHECKING:
-    from omni.isaac.lab.envs import ManagerBasedRLEnv
+    from isaaclab.envs import ManagerBasedRLEnv
 
 
 def depth2point_cloud(

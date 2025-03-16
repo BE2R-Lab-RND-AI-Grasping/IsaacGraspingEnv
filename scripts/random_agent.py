@@ -9,7 +9,7 @@
 
 import argparse
 
-from omni.isaac.lab.app import AppLauncher
+from isaaclab.app import AppLauncher
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Random agent for Isaac Lab environments.")
@@ -33,7 +33,7 @@ import gymnasium as gym
 import torch
 
 import IsaacGraspEnv.tasks  # noqa: F401
-from omni.isaac.lab_tasks.utils import parse_env_cfg
+from isaaclab_tasks.utils import parse_env_cfg
 
 
 def main():
