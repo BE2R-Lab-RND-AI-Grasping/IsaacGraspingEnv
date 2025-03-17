@@ -71,6 +71,7 @@ class IiwaCubeLiftEnvCfg(LiftEnvCfg):
             # init_state=RigidObjectCfg.InitialStateCfg(pos=[0.5, 0, 0.055], rot=[1, 0, 0, 0]),
             spawn=UsdFileCfg(
                 usd_path=f"source/IsaacGraspEnv/IsaacGraspEnv/assets/data/YCB/035_power_drill.usd",
+                # usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/YCB/Axis_Aligned/035_power_drill.usd",
                 # usd_path=f"source/IsaacGraspEnv/IsaacGraspEnv/assets/data/YCB/Props/instanceable_meshes.usd",
                 scale=(1.0, 1.0, 1.0),
                 rigid_props=RigidBodyPropertiesCfg(
@@ -84,11 +85,10 @@ class IiwaCubeLiftEnvCfg(LiftEnvCfg):
                     solver_position_iteration_count=192,
                     solver_velocity_iteration_count=1,
                     max_contact_impulse=1e32,
-                        ),
+                ),
                 collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
                 semantic_tags = [("class","object"), ("color", "red")],
-                ),
-            # ),
+            ),
             # Grasp From Front
             # spawn=sim_utils.CylinderCfg(
             # radius=0.028,
