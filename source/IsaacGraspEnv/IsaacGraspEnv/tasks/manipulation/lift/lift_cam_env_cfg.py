@@ -47,13 +47,17 @@ class ObjectCamTableSceneCfg(lift_env.ObjectTableSceneCfg):
     tiled_camera = CameraCfg(
         prim_path="{ENV_REGEX_NS}/Robot/front_cam",
         update_period=0.1,
-        height=80,
-        width=80,
+        # height=80,
+        height=720,
+        # width=80,
+        width=1280,
         colorize_semantic_segmentation=False,
         semantic_filter="class: object | robot | table",
         data_types=["rgb", "distance_to_image_plane", "semantic_segmentation", "distance_to_camera"],
         spawn=sim_utils.PinholeCameraCfg(
             focal_length=24.0, focus_distance=400.0, horizontal_aperture=20.955, clipping_range=(0.1, 1.0e5)
+            # focal_length=1.93, focus_distance=0.6, horizontal_aperture=3.896, vertical_aperture=2.453, clipping_range=(0.1, 1.0e5)
+            # focal_length=19.3, focus_distance=5.6, horizontal_aperture=38.96, vertical_aperture=245.3, clipping_range=(0.1, 1.0e5)
         ),
         offset=CameraCfg.OffsetCfg(pos=tuple(CAM_POS.tolist()),
                                    rot=tuple(CAM_ROT.as_quat()[[3,0,1,2]].tolist()),
@@ -114,7 +118,8 @@ class DepthObservationsCfg:
             # func=mdp.image,
             # params={"sensor_cfg":SceneEntityCfg("tiled_camera"), "data_type":"distance_to_image_plane"} 
             # params={"sensor_cfg":SceneEntityCfg("tiled_camera"), "data_type":"distance_to_image_plane"}
-            params={"sensor_cfg":SceneEntityCfg("tiled_camera"), "data_type":"distance_to_camera"}
+            params={"sensor_cfg":SceneEntityCfg("tiled_camera"), "data_type":"distance_to_camera",
+                    "class_filter":["robot", "object"]}
         )
         # joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
         #                                                                                                                   "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",

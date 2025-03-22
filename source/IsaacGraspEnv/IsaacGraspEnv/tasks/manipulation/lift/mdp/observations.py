@@ -19,6 +19,45 @@ import numpy as np
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
+def show_torch_image(image):
+    import matplotlib.pyplot as plt
+    plt.imshow(image.permute(0, 1, 2))
+
+
+def viz_pc_o3d(camera: TiledCamera | Camera | RayCasterCamera):
+    
+    
+    color = camera.data.output["rgb"].numpy()
+    depth = camera.data.output['distance_to_camera'].numpy()
+    
+    width = depth[0].shape[0]
+    height = depth[0].shape[1]
+    
+    color = o3d.geometry.Image(color[0])
+    depth = o3d.geometry.Image(depth[0])
+    
+    pinhole_cam_intrinsic = o3d.camera.PinholeCameraIntrinsic(
+        width= width,
+        height= height,
+        fx=camera.data.intrinsic_matrices[0,0,0], fy=camera.data.intrinsic_matrices[0,1,1],
+        cx=camera.data.intrinsic_matrices[0,0,2], cy=camera.data.intrinsic_matrices[0,1,2]
+    )
+    
+    rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(color, depth, convert_rgb_to_intensity = False)
+    pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, pinhole_cam_intrinsic)
+
+    # flip the orientation, so it looks upright, not upside-down
+    pcd.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
+
+    o3d.visualization.draw_geometries([pcd])
+
+def segm_class_label2id(
+    camera: TiledCamera | Camera | RayCasterCamera,
+    ):
+    idToLabels = camera.data.info[0]["semantic_segmentation"]["idToLabels"]
+    label2id = {val["class"]: int(key) for key, val in idToLabels.items()}
+    
+    return label2id
 
 def depth2point_cloud(
     camera: TiledCamera | Camera | RayCasterCamera,
@@ -27,12 +66,13 @@ def depth2point_cloud(
     height, width = depth_image.shape
     y, x = torch.meshgrid(torch.arange(height), torch.arange(width))
     
-    f_x = camera.cfg.spawn.focal_length
-    f_y = camera.cfg.spawn.focal_length
+    # Convert world unit focal length (mm) to pixel unit. Fx (mm) * w (pixel) / horizontal size sensor (mm). https://ksimek.github.io/2013/08/13/intrinsic/
+    f_x = camera.data.intrinsic_matrices[0,0,0]#camera.cfg.spawn.focal_length * width / camera.cfg.spawn.horizontal_aperture
+    f_y = camera.data.intrinsic_matrices[0,1,1]#camera.cfg.spawn.focal_length * height / camera.cfg.spawn.vertical_aperture
     
     
-    c_x = width / 2
-    c_y = height / 2
+    c_x = camera.data.intrinsic_matrices[0,0,2]#width / 2
+    c_y = camera.data.intrinsic_matrices[0,1,2]#height / 2
     
     
     Z = depth_image
@@ -43,13 +83,55 @@ def depth2point_cloud(
     point_cloud = points.reshape(-1, 3)
     valid_points = point_cloud[point_cloud[:, 2] > 0]
     
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(valid_points.numpy())
-    o3d.visualization.draw_geometries([pcd])
+    trans_matr = torch.Tensor([[1,0,0],[0,-1,0],[0,0,-1]]).to(valid_points.device)
+    result = torch.matmul(valid_points, trans_matr)
     
-    return valid_points
+    # pcd = o3d.geometry.PointCloud()
+    # pcd.points = o3d.utility.Vector3dVector(valid_points.numpy())
+    # pcd.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
+    # o3d.visualization.draw_geometries([pcd])
+    # o3d.io.write_point_cloud(f"./test_point_cloud/frame_1")
     
+    return result
+    
+def depths2pcs(
+    camera: TiledCamera | Camera | RayCasterCamera,
+    depth_images: torch.Tensor
+) -> torch.Tensor:
+    depth_images = depth_images.squeeze()
+    n_imgs, height, width = depth_images.shape
+    y, x = torch.meshgrid(torch.arange(height), torch.arange(width))
+    
+    y = y.repeat(n_imgs, 1).reshape(n_imgs, height, width)
+    x = x.repeat(n_imgs, 1).reshape(n_imgs, height, width)
+    
+    # Convert world unit focal length (mm) to pixel unit. Fx (mm) * w (pixel) / horizontal size sensor (mm). https://ksimek.github.io/2013/08/13/intrinsic/
+    f_x = camera.data.intrinsic_matrices[0,0,0]#camera.cfg.spawn.focal_length * width / camera.cfg.spawn.horizontal_aperture
+    f_y = camera.data.intrinsic_matrices[0,1,1]#camera.cfg.spawn.focal_length * height / camera.cfg.spawn.vertical_aperture
+    
+    
+    c_x = camera.data.intrinsic_matrices[0,0,2]#width / 2
+    c_y = camera.data.intrinsic_matrices[0,1,2]#height / 2
+    
+    
+    Z = depth_images
+    X = (x - c_x) * Z / f_x
+    Y = (y - c_y) * Z / f_y
+    
+    points = torch.stack([X,Y,Z], dim=-1)
+    point_cloud = points.reshape(n_imgs,-1, 3)
+    # valid_points = point_cloud[point_cloud[:, :, 2] > 0]
 
+    trans_matr = torch.Tensor([[1,0,0],[0,-1,0],[0,0,-1]]).to(point_cloud.device)
+    result = torch.matmul(point_cloud, trans_matr)
+    
+    # pcd = o3d.geometry.PointCloud()
+    # pcd.points = o3d.utility.Vector3dVector(valid_points.numpy())
+    # pcd.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
+    # o3d.visualization.draw_geometries([pcd])
+    # o3d.io.write_point_cloud(f"./test_point_cloud/frame_1")
+    
+    return result
 
 def object_position_in_robot_root_frame(
     env: ManagerBasedRLEnv,
@@ -131,6 +213,7 @@ def point_cloud(
     data_type: str = "rgb",
     convert_perspective_to_orthogonal: bool = False,
     normalize: bool = True,
+    class_filter: list[str] = []
 ) -> torch.Tensor:
     """Images of a specific datatype from the camera sensor.
 
@@ -158,13 +241,24 @@ def point_cloud(
     # obtain the input image
     images = sensor.data.output[data_type]
     images[images == float("inf")] = 0
-    images[images > 3] = 0
-    depth2point_cloud(sensor, images[0].squeeze())
+    # images[images > 3] = 0
+    
+    if class_filter:
+        segmetation_data = sensor.data.output["semantic_segmentation"]
+        label2id = segm_class_label2id(sensor)
+        label_masks = torch.zeros_like(segmetation_data)  
+        for label in class_filter:
+            label_masks.add_(torch.eq(segmetation_data, label2id[label]))
+        images = images * label_masks
+    
     
     # depth image conversion
     if (data_type == "distance_to_camera") and convert_perspective_to_orthogonal:
         images = math_utils.orthogonalize_perspective_depth(images, sensor.data.intrinsic_matrices)
 
+    pcs = depths2pcs(sensor, images)
+    
+    
     # rgb/depth image normalization
     if normalize:
         if data_type == "rgb":
@@ -174,4 +268,4 @@ def point_cloud(
         elif "distance_to" in data_type or "depth" in data_type:
             images[images == float("inf")] = 0
 
-    return images.clone()
+    return pcs.clone()
