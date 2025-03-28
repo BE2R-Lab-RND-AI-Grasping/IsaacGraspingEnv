@@ -23,7 +23,7 @@ parser.add_argument("--video", action="store_true", default=False, help="Record 
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
 parser.add_argument("--num_envs", type=int, default=256, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Abs-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
 parser.add_argument("--seed", type=int, default=24, help="Seed used for the environment")
 parser.add_argument(
     "--distributed", action="store_true", default=False, help="Run training with multiple GPUs or nodes."
@@ -40,7 +40,7 @@ parser.add_argument(
     "--algorithm",
     type=str,
     default="PPO",
-    choices=["PPO", "IPPO", "MAPPO"],
+    choices=["PPO", "IPPO", "MAPPO", "SAC"],
     help="The RL algorithm used for training the skrl agent.",
 )
 
@@ -90,12 +90,15 @@ from isaaclab.envs import (
     ManagerBasedRLEnvCfg,
     multi_agent_to_single_agent,
 )
+from isaaclab.utils.assets import retrieve_file_path
 from isaaclab.utils.dict import print_dict
 from isaaclab.utils.io import dump_pickle, dump_yaml
 
+from isaaclab_rl.skrl import SkrlVecEnvWrapper
+
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils.hydra import hydra_task_config
-from isaaclab_tasks.utils.wrappers.skrl import SkrlVecEnvWrapper
+
 
 # config shortcuts
 algorithm = args_cli.algorithm.lower()

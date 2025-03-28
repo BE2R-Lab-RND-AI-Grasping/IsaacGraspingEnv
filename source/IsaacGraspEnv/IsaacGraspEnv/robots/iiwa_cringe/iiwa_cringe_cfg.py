@@ -26,7 +26,8 @@ import numpy as np
 relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa.usd"
 ABSOLUTE_PATH = Path(relative_path).resolve()
 
-INIT_Q_IIWA = np.array([-2.9, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
+# INIT_Q_IIWA = np.array([-2.9, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
+INIT_Q_IIWA = np.array([-2.9-2.1, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
 INIT_Q_IIWA = INIT_Q_IIWA.tolist()
 
 IIWA_CRINGE_CFG = ArticulationCfg(
@@ -228,7 +229,7 @@ IIWA_CRINGE_CFG = ArticulationCfg(
             joint_names_expr=["lbr_iiwa_joint_[6-7]"],
             effort_limit_sim=40.0,
             velocity_limit_sim= 135 * np.pi / 180.0,
-            stiffness=40.0,
+            stiffness=20.0,
             damping=2.0,
         ),
         # "cringe_hand": ImplicitActuatorCfg(

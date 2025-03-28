@@ -24,7 +24,7 @@ parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
 parser.add_argument("--num_envs", type=int, default=4, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="Isaac-ChebaLeg-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint.")
 parser.add_argument(
     "--ml_framework",
@@ -78,9 +78,9 @@ elif args_cli.ml_framework.startswith("jax"):
 from isaaclab.envs import DirectMARLEnv, multi_agent_to_single_agent
 from isaaclab.utils.dict import print_dict
 
-import IsaacDesignEvaluation.tasks # noqa: F401
+import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import get_checkpoint_path, load_cfg_from_registry, parse_env_cfg
-from isaaclab_tasks.utils.wrappers.skrl import SkrlVecEnvWrapper
+from isaaclab_rl.skrl import SkrlVecEnvWrapper
 
 # config shortcuts
 algorithm = args_cli.algorithm.lower()

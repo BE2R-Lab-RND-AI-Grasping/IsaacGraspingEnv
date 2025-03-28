@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from isaaclab.assets import RigidObject
 from isaaclab.managers import SceneEntityCfg
-from isaaclab.utils.math import subtract_frame_transforms
+from isaaclab.utils.math import subtract_frame_transforms, transform_points, unproject_depth
 from isaaclab.sensors import Camera, RayCasterCamera, TiledCamera
 
 import open3d as o3d
