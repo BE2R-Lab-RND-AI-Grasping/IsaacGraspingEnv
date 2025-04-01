@@ -94,7 +94,7 @@ class CommandsCfg:
         debug_vis=True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             # Grasp from front
-            pos_x=(0.9, 1.0), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
+            pos_x=(0.8, 0.9), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
             # Grasp from top
             # pos_x=(0.4, 0.6), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
         ),
@@ -151,7 +151,16 @@ class EventCfg:
     """Configuration for events."""
 
     reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
-
+    
+    random_initial_position = EventTerm(
+        func=mdp.reset_joints_by_offset,
+        mode="reset",
+        params={
+            "position_range":(-0.05, 0.05),
+            "velocity_range":(-0.00, 0.00),
+            "asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*"])
+        }
+    )
     # reset_object_position = EventTerm(
     #     func=mdp.reset_root_state_uniform,
     #     mode="reset",
@@ -176,41 +185,41 @@ add_is_contact_param = lambda b: b.update(is_contact_params) or b
 class RewardsCfg:
     """Reward terms for the MDP."""
     
-    fingettips_to_object = RewTerm(func=mdp.object_fingertips_distance, params={"std": 0.06}, weight=1.0)
+    fingettips_to_object = RewTerm(func=mdp.object_fingertips_distance, params={"std": 0.06}, weight=2.0 /0.2)
 
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
-    lifting_object = RewTerm(func=mdp.object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0)
-    lifted_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.02}), weight=1.0)
+    lifting_object = RewTerm(func=mdp.object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0/0.2)
+    lifted_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.09}), weight=1.0/0.2)
     
 
     object_goal_tracking = RewTerm(
         func=mdp.object_goal_distance,
-        params=add_is_contact_param({"std": 0.3, "minimal_height": 0.2, "command_name": "object_pose"}),
-        weight=1.0,
+        params=add_is_contact_param({"std": 0.04, "minimal_height": 0.09, "command_name": "object_pose"}),
+        weight=1.0/0.2, 
     )
 
     # object_goal_tracking_fine_grained = RewTerm(
     #     func=mdp.object_goal_distance,
     #     params=add_is_contact_param({"std": 0.05, "minimal_height": 0.2, "command_name": "object_pose"}),
-    #     weight=5.0,
+    #     weight=5.0/0.2,
     # )
     hand_object_contact = RewTerm(
         func=mdp.object_hand_contact,
-        weight=0.5,
+        weight=0.5/0.2,
         params=is_contact_params,
     )
     # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-2)
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-2/0.2)
 
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2_clip,
-        weight=-1e-3,
+        weight=-1e-3/0.2,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
     
     contact_penalty = RewTerm(
         func=mdp.undesired_contacts,
-        weight=-1e-1,
+        weight=-1e-0/0.2,
         params={"sensor_cfg": SceneEntityCfg("contact_forces_arm", body_names="lbr_.*"), "threshold": 1.0},
     )
 
