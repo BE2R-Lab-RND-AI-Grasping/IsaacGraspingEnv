@@ -45,6 +45,8 @@ def main():
         args_cli.task, device="cpu", num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
         # args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
     )
+    # env_cfg.terminations.time_out = None
+    env_cfg.episode_length_s = 2.5
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.env.sim.set_camera_view([2.5,1, 1], [0.0, 0.0,0.0])
@@ -66,10 +68,14 @@ def main():
     obs, __ = env.reset()
     time_step = 0
     time_arr = []
+    
+    init_position = []
+    succes = []
     effort_limits = {act_name:env.env.scene.articulations["robot"].actuators[act_name].effort_limit.tolist()[0]
                     for act_name in  env.env.scene.articulations["robot"].actuators.keys()}
     computed_efforts_act = {act_name:[] for act_name in  env.env.scene.articulations["robot"].actuators.keys()}
     applied_efforts_act = {act_name:[] for act_name in  env.env.scene.articulations["robot"].actuators.keys()}
+    rew_arr = []
     # simulate environment
     while simulation_app.is_running():
         # run everything in inference mode
@@ -81,29 +87,44 @@ def main():
             for act_name in applied_efforts_act.keys():
                 applied_efforts_act[act_name].append(env.env.scene.articulations["robot"].actuators[act_name].applied_effort.tolist()[0])
                 computed_efforts_act[act_name].append(env.env.scene.articulations["robot"].actuators[act_name].computed_effort.tolist()[0])
-            if time_step < 70:
+            if time_step < 100:
                 delta_ee_pos = (obj_pos - ee_pos) / 2
             else:
                 delta_ee_pos = (target_pos - obj_pos) / 2
             delta_ee_ang = torch.zeros(3, device=env.unwrapped.device)
 
+            if time_step == 0:
+                init_position.append(ee_pos.numpy())
+
             if time_step < 45:
                 gripper_joint = -torch.ones(7, device=env.unwrapped.device)
                 gripper_joint[2] = 0
+                ramp = 1
             else:
+                if time_step > 150:
+                    ramp = 1#0.01 * (150 - time_step) + 1
+                else:
+                    ramp = 0.5 + np.random.normal(0, 0.8) # 0.01 * (time_step - 45) + np.random.normal(0, 0.8)
                 gripper_joint = -torch.ones(7, device=env.unwrapped.device)
                 gripper_joint[2] = 0
-                gripper_joint[3:5] = torch.ones(2, device=env.unwrapped.device)
-                gripper_joint[6] = 1
+                gripper_joint[3:5] = torch.ones(2, device=env.unwrapped.device) * ramp
+                gripper_joint[6] = 1 * ramp
 
+            
             actions = torch.cat([delta_ee_pos, delta_ee_ang, gripper_joint]).unsqueeze(0)
             # actions = 2 * torch.rand(env.action_space.shape, device=env.unwrapped.device) - 1
             # apply actions
             obs, rew, terminated, truncated, info =  env.step(actions)
             time_step +=1
-            
+            rew_arr.append(rew)
+            # print(time_step, np.round(env.env.sim.current_time, 2), np.round(ramp,3))
             if truncated or terminated:
-                break
+                if obj_pos.numpy()[2] > 0.2:
+                    succes.append(1)
+                else:
+                    succes.append(0)
+                time_step =0
+                # break
 
     # close the simulator
     env.close()
@@ -120,9 +141,6 @@ def main():
         plt.legend()
         plt.grid()
         plt.show()
-    
-    
-    
 
 
 if __name__ == "__main__":

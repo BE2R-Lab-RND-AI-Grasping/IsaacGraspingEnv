@@ -70,7 +70,8 @@ class IiwaCubeLiftEnvCfg(LiftEnvCfg):
             # From Top
             # init_state=RigidObjectCfg.InitialStateCfg(pos=[0.5, 0, 0.055], rot=[1, 0, 0, 0]),
             spawn=UsdFileCfg(
-                usd_path=f"source/IsaacGraspEnv/IsaacGraspEnv/assets/data/YCB/035_power_drill.usd",
+                # usd_path=f"source/IsaacGraspEnv/IsaacGraspEnv/assets/data/YCB/035_power_drill_wo_texture.usd",
+                usd_path=f"source/IsaacGraspEnv/IsaacGraspEnv/assets/data/YCB/035_power_drill_wo_texture_light.usd",
                 # usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/YCB/Axis_Aligned/035_power_drill.usd",
                 # usd_path=f"source/IsaacGraspEnv/IsaacGraspEnv/assets/data/YCB/Props/instanceable_meshes.usd",
                 scale=(1.0, 1.0, 1.0),
