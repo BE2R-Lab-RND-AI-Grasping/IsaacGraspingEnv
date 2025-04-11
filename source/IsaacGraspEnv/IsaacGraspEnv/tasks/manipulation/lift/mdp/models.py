@@ -2,44 +2,57 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from skrl.models.torch import Model, GaussianMixin
-
+import numpy as np
+from skrl.models.torch import Model, GaussianMixin, DeterministicMixin
+from skrl.utils.spaces.torch import flatten_tensorized_space, unflatten_tensorized_space
 
 # define the model
-class PointNet(GaussianMixin, Model):
-    def __init__(self, observation_space, action_space, device,
+class PCPolicy(GaussianMixin, DeterministicMixin, Model):
+    def __init__(self, observation_space, action_space, device, feature_extractor,
                  clip_actions=False, clip_log_std=True, min_log_std=-20, max_log_std=2, reduction="sum"):
         Model.__init__(self, observation_space, action_space, device)
-        GaussianMixin.__init__(self, clip_actions, clip_log_std, min_log_std, max_log_std, reduction)
+        GaussianMixin.__init__(self, clip_actions, clip_log_std, min_log_std, max_log_std, reduction, role="policy")
+        DeterministicMixin.__init__(self, clip_actions, role="value")
 
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=8, stride=4)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
-        self.fc1 = nn.Linear(1024, 512)
-        self.fc2 = nn.Linear(512, 16)
-        self.fc3 = nn.Linear(16, 64)
-        self.fc4 = nn.Linear(64, 32)
-        self.fc5 = nn.Linear(32, self.num_actions)
+        self.state_dim = self.num_observations - np.prod(observation_space["point_cloud"].shape)
+        
+        self.feature_extraction = feature_extractor
+        
+        self.value_nn = nn.Sequential(
+                nn.Linear(self.feature_extraction.n_output_channels, 64),
+                nn.ReLU(),
+                nn.Linear(64, 64),
+                nn.ReLU(),
+                nn.Linear(64, 1),
+            )
+        
+        self.pi_mean_nn = nn.Sequential(
+                nn.Linear(self.feature_extraction.n_output_channels, 64),
+                nn.ReLU(),
+                nn.Linear(64, 64),
+                nn.ReLU(),
+                nn.Linear(64, self.num_actions),
+            )
 
         self.log_std_parameter = nn.Parameter(torch.zeros(self.num_actions))
+        
 
+    def act(self, inputs, role):
+        if role == "policy":
+            return GaussianMixin.act(self, inputs, role)
+        elif role == "value":
+            return DeterministicMixin.act(self, inputs, role)
+        
     def compute(self, inputs, role):
         # permute (samples, width * height * channels) -> (samples, channels, width, height)
-        x = inputs["states"].view(-1, *self.observation_space.shape).permute(0, 3, 1, 2)
-        x = self.conv1(x)
-        x = F.relu(x)
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = self.conv3(x)
-        x = F.relu(x)
-        x = torch.flatten(x, start_dim=1)
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.fc2(x)
-        x = torch.tanh(x)
-        x = self.fc3(x)
-        x = torch.tanh(x)
-        x = self.fc4(x)
-        x = torch.tanh(x)
-        x = self.fc5(x)
-        return x, self.log_std_parameter, {}
+        
+        obs = unflatten_tensorized_space(self.observation_space, inputs["states"])
+
+        features = self.feature_extraction(obs)
+
+        if role == "policy":
+            # save shared layers/network output to perform a single forward-pass
+            return self.pi_mean_nn(features), self.log_std_parameter, {}
+        elif role == "value":
+            # use saved shared layers/network output to perform a single forward-pass, if it was saved
+            return self.value_nn(features), {}

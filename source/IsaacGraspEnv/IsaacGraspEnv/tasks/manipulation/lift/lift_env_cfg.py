@@ -50,19 +50,31 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     object: RigidObjectCfg | DeformableObjectCfg = MISSING
 
     # Table
+    # table = AssetBaseCfg(
+    #     prim_path="{ENV_REGEX_NS}/Table",
+    #     init_state=AssetBaseCfg.InitialStateCfg(pos=[0.8, 0, 0], rot=[0.707, 0, 0, 0.707]),
+    #     spawn=UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd",
+    #                      semantic_tags = [("class","table"), ("color", "gray")],),
+    # )
     table = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/Table",
-        init_state=AssetBaseCfg.InitialStateCfg(pos=[0.8, 0, 0], rot=[0.707, 0, 0, 0.707]),
-        spawn=UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd",
-                         semantic_tags = [("class","table"), ("color", "gray")],),
-    )
+        init_state=AssetBaseCfg.InitialStateCfg(pos=[0.6, 0, -0.1], rot=[1, 0, 0, 0.0]),
+        spawn=sim_utils.CuboidCfg(
+            size= [1.4, 0.8, 0.2],
+            # rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            # mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.6, 0.6, 0.9), metallic=0.2),
+        ),
+        )
 
     # plane
-    plane = AssetBaseCfg(
-        prim_path="/World/GroundPlane",
-        init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, -1.05]),
-        spawn=GroundPlaneCfg(),
-    )
+    # plane = AssetBaseCfg(
+    #     prim_path="/World/GroundPlane",
+    #     init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, -1.05]),
+    #     # init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0.0]),
+    #     spawn=GroundPlaneCfg(),
+    # )
     contact_forces_thumb_rot = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object"],update_period=0.0, history_length=6)
     contact_forces_thumb_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object"],update_period=0.0, history_length=6)
     contact_forces_thumb_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object"],update_period=0.0, history_length=6)
@@ -91,7 +103,7 @@ class CommandsCfg:
         asset_name="robot",
         body_name=MISSING,  # will be set by agent env cfg
         resampling_time_range=(5.0, 5.0),
-        debug_vis=True,
+        debug_vis=False,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             # Grasp from front
             pos_x=(0.8, 0.9), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
@@ -152,15 +164,14 @@ class EventCfg:
 
     reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
     
-    random_initial_position = EventTerm(
-        func=mdp.reset_joints_by_offset,
-        mode="reset",
-        params={
-            "position_range":(-0.05, 0.05),
-            "velocity_range":(-0.00, 0.00),
-            "asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*"])
-        }
-    )
+    # random_initial_position = EventTerm(
+    #     func=mdp.reset_joints_by_offset,
+    #     params= {
+    #         "position_range":(-0.05, 0.05),
+    #         "velocity_range":(-0.00, 0.00),
+    #         "asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*"])
+    #     }
+    # )
     # reset_object_position = EventTerm(
     #     func=mdp.reset_root_state_uniform,
     #     mode="reset",
@@ -189,12 +200,12 @@ class RewardsCfg:
 
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
     lifting_object = RewTerm(func=mdp.object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0/0.2)
-    lifted_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.09}), weight=1.0/0.2)
+    lifted_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.115}), weight=1.0/0.2)
     
 
     object_goal_tracking = RewTerm(
         func=mdp.object_goal_distance,
-        params=add_is_contact_param({"std": 0.04, "minimal_height": 0.09, "command_name": "object_pose"}),
+        params=add_is_contact_param({"std": 0.04, "minimal_height": 0.115, "command_name": "object_pose"}),
         weight=1.0/0.2, 
     )
 
@@ -276,7 +287,7 @@ class LiftEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 2
-        self.episode_length_s = 8.0
+        self.episode_length_s = 3.0
         # simulation settings
         self.sim.dt = 0.01 #1.0 /120.0  # 100Hz
         self.sim.render_interval = self.decimation

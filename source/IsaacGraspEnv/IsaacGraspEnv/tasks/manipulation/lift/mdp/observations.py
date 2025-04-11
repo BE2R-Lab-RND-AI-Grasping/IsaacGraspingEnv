@@ -6,15 +6,16 @@
 from __future__ import annotations
 
 import torch
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Type
 
 from isaaclab.assets import RigidObject
-from isaaclab.managers import SceneEntityCfg
+from isaaclab.managers import SceneEntityCfg, ObservationTermCfg, ManagerTermBase
 from isaaclab.utils.math import subtract_frame_transforms, transform_points, unproject_depth
 from isaaclab.sensors import Camera, RayCasterCamera, TiledCamera
 
 import open3d as o3d
 import numpy as np
+from torch import nn
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
@@ -59,40 +60,40 @@ def segm_class_label2id(
     
     return label2id
 
-def depth2point_cloud(
-    camera: TiledCamera | Camera | RayCasterCamera,
-    depth_image: torch.Tensor
-) -> torch.Tensor:
-    height, width = depth_image.shape
-    y, x = torch.meshgrid(torch.arange(height), torch.arange(width))
+# def depth2point_cloud(
+#     camera: TiledCamera | Camera | RayCasterCamera,
+#     depth_image: torch.Tensor
+# ) -> torch.Tensor:
+#     height, width = depth_image.shape
+#     y, x = torch.meshgrid(torch.arange(height), torch.arange(width))
     
-    # Convert world unit focal length (mm) to pixel unit. Fx (mm) * w (pixel) / horizontal size sensor (mm). https://ksimek.github.io/2013/08/13/intrinsic/
-    f_x = camera.data.intrinsic_matrices[0,0,0]#camera.cfg.spawn.focal_length * width / camera.cfg.spawn.horizontal_aperture
-    f_y = camera.data.intrinsic_matrices[0,1,1]#camera.cfg.spawn.focal_length * height / camera.cfg.spawn.vertical_aperture
-    
-    
-    c_x = camera.data.intrinsic_matrices[0,0,2]#width / 2
-    c_y = camera.data.intrinsic_matrices[0,1,2]#height / 2
+#     # Convert world unit focal length (mm) to pixel unit. Fx (mm) * w (pixel) / horizontal size sensor (mm). https://ksimek.github.io/2013/08/13/intrinsic/
+#     f_x = camera.data.intrinsic_matrices[0,0,0]#camera.cfg.spawn.focal_length * width / camera.cfg.spawn.horizontal_aperture
+#     f_y = camera.data.intrinsic_matrices[0,1,1]#camera.cfg.spawn.focal_length * height / camera.cfg.spawn.vertical_aperture
     
     
-    Z = depth_image
-    X = (x - c_x) * Z / f_x
-    Y = (y - c_y) * Z / f_y
+#     c_x = camera.data.intrinsic_matrices[0,0,2]#width / 2
+#     c_y = camera.data.intrinsic_matrices[0,1,2]#height / 2
     
-    points = torch.stack([X,Y,Z], dim=-1)
-    point_cloud = points.reshape(-1, 3)
-    valid_points = point_cloud[point_cloud[:, 2] > 0]
     
-    trans_matr = torch.Tensor([[1,0,0],[0,-1,0],[0,0,-1]]).to(valid_points.device)
-    result = torch.matmul(valid_points, trans_matr)
+#     Z = depth_image
+#     X = (x - c_x) * Z / f_x
+#     Y = (y - c_y) * Z / f_y
     
-    # pcd = o3d.geometry.PointCloud()
-    # pcd.points = o3d.utility.Vector3dVector(valid_points.numpy())
-    # pcd.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
-    # o3d.visualization.draw_geometries([pcd])
-    # o3d.io.write_point_cloud(f"./test_point_cloud/frame_1")
+#     points = torch.stack([X,Y,Z], dim=-1)
+#     point_cloud = points.reshape(-1, 3)
+#     valid_points = point_cloud[point_cloud[:, 2] > 0]
     
-    return result
+#     trans_matr = torch.Tensor([[1,0,0],[0,-1,0],[0,0,-1]]).to(valid_points.device)
+#     result = torch.matmul(valid_points, trans_matr)
+    
+#     # pcd = o3d.geometry.PointCloud()
+#     # pcd.points = o3d.utility.Vector3dVector(valid_points.numpy())
+#     # pcd.transform([[1,0,0,0],[0,-1,0,0],[0,0,-1,0],[0,0,0,1]])
+#     # o3d.visualization.draw_geometries([pcd])
+#     # o3d.io.write_point_cloud(f"./test_point_cloud/frame_1")
+    
+#     return result
     
 def depths2pcs(
     camera: TiledCamera | Camera | RayCasterCamera,
@@ -102,8 +103,8 @@ def depths2pcs(
     n_imgs, height, width = depth_images.shape
     y, x = torch.meshgrid(torch.arange(height), torch.arange(width))
     
-    y = y.repeat(n_imgs, 1).reshape(n_imgs, height, width)
-    x = x.repeat(n_imgs, 1).reshape(n_imgs, height, width)
+    y = y.repeat(n_imgs, 1).reshape(n_imgs, height, width).to(depth_images.device)
+    x = x.repeat(n_imgs, 1).reshape(n_imgs, height, width).to(depth_images.device)
     
     # Convert world unit focal length (mm) to pixel unit. Fx (mm) * w (pixel) / horizontal size sensor (mm). https://ksimek.github.io/2013/08/13/intrinsic/
     f_x = camera.data.intrinsic_matrices[0,0,0]#camera.cfg.spawn.focal_length * width / camera.cfg.spawn.horizontal_aperture
@@ -114,9 +115,9 @@ def depths2pcs(
     c_y = camera.data.intrinsic_matrices[0,1,2]#height / 2
     
     
-    Z = depth_images
-    X = (x - c_x) * Z / f_x
-    Y = (y - c_y) * Z / f_y
+    X = depth_images
+    Y = (x - c_x) * X / f_x
+    Z = (y - c_y) * X / f_y
     
     points = torch.stack([X,Y,Z], dim=-1)
     point_cloud = points.reshape(n_imgs,-1, 3)
@@ -124,6 +125,7 @@ def depths2pcs(
 
     trans_matr = torch.Tensor([[1,0,0],[0,-1,0],[0,0,-1]]).to(point_cloud.device)
     result = torch.matmul(point_cloud, trans_matr)
+    # result = point_cloud
     
     # pcd = o3d.geometry.PointCloud()
     # pcd.points = o3d.utility.Vector3dVector(valid_points.numpy())
@@ -131,7 +133,7 @@ def depths2pcs(
     # o3d.visualization.draw_geometries([pcd])
     # o3d.io.write_point_cloud(f"./test_point_cloud/frame_1")
     
-    return result
+    return result#.reshape(n_imgs, -1)
 
 def object_position_in_robot_root_frame(
     env: ManagerBasedRLEnv,
@@ -207,10 +209,10 @@ def pos_fingertips_root_frame(
     return object_fingertips_distance
 
 
-def point_cloud(
+def depth2point_cloud(
     env: ManagerBasedEnv,
     sensor_cfg: SceneEntityCfg = SceneEntityCfg("tiled_camera"),
-    data_type: str = "rgb",
+    data_type: str = "distance_to_camera",
     convert_perspective_to_orthogonal: bool = False,
     normalize: bool = True,
     class_filter: list[str] = []
@@ -241,7 +243,7 @@ def point_cloud(
     # obtain the input image
     images = sensor.data.output[data_type]
     images[images == float("inf")] = 0
-    # images[images > 3] = 0
+    images[images > 2.5] = 0
     
     if class_filter:
         segmetation_data = sensor.data.output["semantic_segmentation"]

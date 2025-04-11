@@ -48,9 +48,11 @@ class ObjectCamTableSceneCfg(lift_env.ObjectTableSceneCfg):
         prim_path="{ENV_REGEX_NS}/Robot/front_cam",
         update_period=0.1,
         # height=80,
-        height=720,
+        height=100,
         # width=80,
-        width=1280,
+        width=100,
+        # height=720,
+        # width=720,
         colorize_semantic_segmentation=False,
         semantic_filter="class: object | robot | table",
         data_types=["rgb", "distance_to_image_plane", "semantic_segmentation", "distance_to_camera"],
@@ -113,17 +115,24 @@ class DepthObservationsCfg:
     class DepthCamPolicyCfg(ObsGroup):
         """Observations for policy group."""
 
-        image = ObsTerm(
-            func = mdp.point_cloud,
-            # func=mdp.image,
-            # params={"sensor_cfg":SceneEntityCfg("tiled_camera"), "data_type":"distance_to_image_plane"} 
-            # params={"sensor_cfg":SceneEntityCfg("tiled_camera"), "data_type":"distance_to_image_plane"}
-            params={"sensor_cfg":SceneEntityCfg("tiled_camera"), "data_type":"distance_to_camera",
+        # image = ObsTerm(
+        #     func = mdp.point_cloud_feature_extractor,
+        #     params={"sensor_cfg":SceneEntityCfg("tiled_camera"),
+        #             "pc_feature_extractor": mdp.PointNetMLP(device="cpu"),
+        #             "data_type":"distance_to_camera",
+        #             "class_filter":["robot", "object"]}
+        # )
+        
+        point_cloud = ObsTerm(
+            func = mdp.depth2point_cloud,
+            params={"sensor_cfg":SceneEntityCfg("tiled_camera"),
+                    "data_type":"distance_to_camera",
                     "class_filter":["robot", "object"]}
         )
-        # joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-        #                                                                                                                   "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-        #                                                                                                                   "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+        
+        joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+                                                                                                                          "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
+                                                                                                                          "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
         # joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
         #                                                                                                     "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
         #                                                                                                     "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
@@ -134,7 +143,7 @@ class DepthObservationsCfg:
         
         def __post_init__(self):
             self.enable_corruption = False
-            self.concatenate_terms = True
+            self.concatenate_terms = False
 
     # observation groups
     policy: DepthCamPolicyCfg = DepthCamPolicyCfg()
@@ -170,41 +179,41 @@ add_is_contact_param = lambda b: b.update(is_contact_params) or b
 class RewardsCfg:
     """Reward terms for the MDP."""
     
-    fingettips_to_object = RewTerm(func=mdp.object_fingertips_distance, params={"std": 0.06}, weight=1.0)
+    fingettips_to_object = RewTerm(func=mdp.object_fingertips_distance, params={"std": 0.06}, weight=2.0 /0.2)
 
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
-    lifting_object = RewTerm(func=mdp.object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0)
-    lifted_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.02}), weight=1.0)
+    lifting_object = RewTerm(func=mdp.object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0/0.2)
+    lifted_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.115}), weight=1.0/0.2)
     
 
     object_goal_tracking = RewTerm(
         func=mdp.object_goal_distance,
-        params=add_is_contact_param({"std": 0.3, "minimal_height": 0.2, "command_name": "object_pose"}),
-        weight=1.0,
+        params=add_is_contact_param({"std": 0.04, "minimal_height": 0.115, "command_name": "object_pose"}),
+        weight=1.0/0.2, 
     )
 
     # object_goal_tracking_fine_grained = RewTerm(
     #     func=mdp.object_goal_distance,
     #     params=add_is_contact_param({"std": 0.05, "minimal_height": 0.2, "command_name": "object_pose"}),
-    #     weight=5.0,
+    #     weight=5.0/0.2,
     # )
     hand_object_contact = RewTerm(
         func=mdp.object_hand_contact,
-        weight=0.5,
+        weight=0.5/0.2,
         params=is_contact_params,
     )
     # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-2)
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-2/0.2)
 
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2_clip,
-        weight=-1e-3,
+        weight=-1e-3/0.2,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
     
     contact_penalty = RewTerm(
         func=mdp.undesired_contacts,
-        weight=-1e-1,
+        weight=-1e-0/0.2,
         params={"sensor_cfg": SceneEntityCfg("contact_forces_arm", body_names="lbr_.*"), "threshold": 1.0},
     )
 
