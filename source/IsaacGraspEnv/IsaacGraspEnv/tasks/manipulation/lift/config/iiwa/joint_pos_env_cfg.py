@@ -26,7 +26,8 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 # OBJ_POS = np.array([0.97163, 0.04869, 0.07077])
-OBJ_POS = np.array([0.9, 0.04869, 0.07077])
+# OBJ_POS = np.array([0.9, 0.04869, 0.07077])
+OBJ_POS = np.array([0.9, 0.0, 0.07077])
 OBJ_ROT = R.from_euler('xyz', [90.0, 0.0, 180.0],  degrees=True)
 
 @configclass
