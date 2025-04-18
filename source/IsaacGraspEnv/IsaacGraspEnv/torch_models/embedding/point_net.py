@@ -8,7 +8,7 @@ class PointNetMLP(nn.Module):  # actually pointnet
         # NOTE: we require the output dim to be 256, in order to match the pretrained weights
         super(PointNetMLP, self).__init__()
 
-        print(f'PointNetMedium')
+        print(f"PointNetMedium")
 
         in_channel = point_channel
         self.mlp_out_dim = output_dim
@@ -26,15 +26,15 @@ class PointNetMLP(nn.Module):  # actually pointnet
     def reset_parameters_(self):
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                nn.init.trunc_normal_(m.weight, std=.02)
+                nn.init.trunc_normal_(m.weight, std=0.02)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
 
     def forward(self, x):
-        '''
+        """
         x: [B, N, 3]
-        '''
-        
+        """
+
         # x = x.to(self.device)
         # Local
         x = self.local_mlp(x)

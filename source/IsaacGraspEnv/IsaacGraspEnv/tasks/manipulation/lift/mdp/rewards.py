@@ -87,6 +87,7 @@ def object_hand_contact(
     )
     return res
 
+
 def object_is_lifted(
     env: ManagerBasedRLEnv,
     minimal_height: float,
@@ -100,12 +101,24 @@ def object_is_lifted(
     threshold,
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
 ) -> torch.Tensor:
-    
-    is_contact = object_hand_contact(env, thumb_rot_cfgs, thumb_flex_cfgs, thumb_finray_cfgs, right_flex_cfgs, right_finray_cfgs,
-                        left_flex_cfgs, left_finray_cfgs, threshold)
+
+    is_contact = object_hand_contact(
+        env,
+        thumb_rot_cfgs,
+        thumb_flex_cfgs,
+        thumb_finray_cfgs,
+        right_flex_cfgs,
+        right_finray_cfgs,
+        left_flex_cfgs,
+        left_finray_cfgs,
+        threshold,
+    )
     """Reward the agent for lifting the object above the minimal height."""
     object: RigidObject = env.scene[object_cfg.name]
-    return is_contact.float() * torch.where(object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.0)
+    return is_contact.float() * torch.where(
+        object.data.root_pos_w[:, 2] > minimal_height, 1.0, 0.0
+    )
+
 
 def object_lift(
     env: ManagerBasedRLEnv,
@@ -120,14 +133,24 @@ def object_lift(
     threshold,
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
 ) -> torch.Tensor:
-    
-    is_contact = object_hand_contact(env, thumb_rot_cfgs, thumb_flex_cfgs, thumb_finray_cfgs, right_flex_cfgs, right_finray_cfgs,
-                        left_flex_cfgs, left_finray_cfgs, threshold)
+
+    is_contact = object_hand_contact(
+        env,
+        thumb_rot_cfgs,
+        thumb_flex_cfgs,
+        thumb_finray_cfgs,
+        right_flex_cfgs,
+        right_finray_cfgs,
+        left_flex_cfgs,
+        left_finray_cfgs,
+        threshold,
+    )
     """Reward the agent for lifting the object above the minimal height."""
     object: RigidObject = env.scene[object_cfg.name]
     lift = torch.clip(object.data.root_pos_w[:, 2], 0.0, minimal_height)
-    
+
     return is_contact.float() * lift
+
 
 def object_ee_distance(
     env: ManagerBasedRLEnv,
@@ -171,17 +194,22 @@ def object_fingertips_distance(
     right_pos_w = right_ft_frame.data.target_pos_w[..., 0, :]
     left_pos_w = left_ft_frame.data.target_pos_w[..., 0, :]
     # Distance of the end-effector to the object: (num_envs,)
-    object_fingertips_distance = torch.cat([
-        torch.norm(object_pos_w - thumb_pos_w, dim=1, keepdim=True),
-        torch.norm(object_pos_w - right_pos_w, dim=1, keepdim=True),
-        torch.norm(object_pos_w - left_pos_w, dim=1, keepdim=True)], dim=-1
+    object_fingertips_distance = torch.cat(
+        [
+            torch.norm(object_pos_w - thumb_pos_w, dim=1, keepdim=True),
+            torch.norm(object_pos_w - right_pos_w, dim=1, keepdim=True),
+            torch.norm(object_pos_w - left_pos_w, dim=1, keepdim=True),
+        ],
+        dim=-1,
     )
-    
+
     object_fingertips_distance = torch.clip(object_fingertips_distance, 0.03, 0.8)
 
-    reward_scale = torch.tensor([0.04, 0.01, 0.01]).to(env.sim.device)
-    
-    return torch.sum(torch.mul(1 /(std + object_fingertips_distance), reward_scale), dim=1)
+    reward_scale = torch.tensor([0.04, 0.02, 0.02]).to(env.sim.device)
+
+    return torch.sum(
+        torch.mul(1 / (std + object_fingertips_distance), reward_scale), dim=1
+    )
 
 
 def object_goal_distance(
@@ -200,9 +228,19 @@ def object_goal_distance(
     robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
 ) -> torch.Tensor:
-    
-    obj_is_lifted = object_is_lifted(env, minimal_height, thumb_rot_cfgs, thumb_flex_cfgs, thumb_finray_cfgs, right_flex_cfgs, right_finray_cfgs, # type: ignore
-                        left_flex_cfgs, left_finray_cfgs, threshold)
+
+    obj_is_lifted = object_is_lifted(
+        env,
+        minimal_height,
+        thumb_rot_cfgs,
+        thumb_flex_cfgs,
+        thumb_finray_cfgs,
+        right_flex_cfgs,
+        right_finray_cfgs,  # type: ignore
+        left_flex_cfgs,
+        left_finray_cfgs,
+        threshold,
+    )
     """Reward the agent for tracking the goal pose using tanh-kernel."""
     # extract the used quantities (to enable type-hinting)
     robot: RigidObject = env.scene[robot_cfg.name]
@@ -216,21 +254,29 @@ def object_goal_distance(
     # distance of the end-effector to the object: (num_envs,)
     distance = torch.norm(des_pos_w - object.data.root_pos_w[:, :3], dim=1)
     # rewarded if the object is lifted above the threshold
-    
+
     # reward = (1 - torch.tanh(distance / std)).unsqueeze(1)
     reward = 1.0 / (std + distance)
 
-    
     return obj_is_lifted.float() * reward
 
-def joint_vel_l2_clip(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+
+def joint_vel_l2_clip(
+    env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
     """Penalize joint velocities on the articulation using L2 squared kernel.
 
     NOTE: Only the joints configured in :attr:`asset_cfg.joint_ids` will have their joint velocities contribute to the term.
     """
     # extract the used quantities (to enable type-hinting)
     asset: Articulation = env.scene[asset_cfg.name]
-    return torch.sum(torch.clip(torch.square(asset.data.joint_vel[:, asset_cfg.joint_ids]), -1.0, 1.0), dim=1)
+    return torch.sum(
+        torch.clip(
+            torch.square(asset.data.joint_vel[:, asset_cfg.joint_ids]), -1.0, 1.0
+        ),
+        dim=1,
+    )
+
 
 # def undesired_contacts(env: ManagerBasedRLEnv, threshold: float, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
 #     """Penalize undesired contacts as the number of violations that are above a threshold."""
