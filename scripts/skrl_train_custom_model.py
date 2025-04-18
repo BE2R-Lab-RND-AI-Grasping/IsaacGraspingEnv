@@ -22,9 +22,9 @@ parser = argparse.ArgumentParser(description="Train an RL agent with skrl.")
 parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
-parser.add_argument("--num_envs", type=int, default=4, help="Number of environments to simulate.")
+parser.add_argument("--num_envs", type=int, default=256, help="Number of environments to simulate.")
 # parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.") # Isaac-Cam-Lift-Cube-Iiwa-v0
-parser.add_argument("--task", type=str, default="Isaac-Cam-Lift-Cube-Iiwa-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Full-Obj-PC-Lift-Iiwa-IK-Rel-v0", help="Name of the task.")
 parser.add_argument("--seed", type=int, default=24, help="Seed used for the environment")
 parser.add_argument(
     "--distributed", action="store_true", default=False, help="Run training with multiple GPUs or nodes."
@@ -183,7 +183,13 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     
     memory = RandomMemory(memory_size=8, num_envs=env.num_envs, device=env.device)
 
-    feature_extraction = PointNetExtractorGP(env.observation_space, "point_cloud", state_keys=["joint_pos"])
+    feature_extraction = PointNetExtractorGP(env.observation_space, "point_cloud", state_keys=["joint_pos",
+                                                                                               "joint_vel",
+                                                                                               "ee_frame",
+                                                                                               "fingertips_positions",
+                                                                                               "target_object_position",
+                                                                                               "actions"
+                                                                                               ])
     
     models = {}
     models["policy"] = mdp.PCPolicy(env.observation_space, env.action_space, env.device, feature_extraction)
@@ -218,6 +224,11 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     cfg["experiment"]["directory"] =  log_root_path
     cfg["experiment"]["experiment_name"] = log_dir
     
+    
+    agent_cfg["models"] = models
+    agent_cfg["memory"] = memory
+    agent_cfg["agent"] = cfg
+    
     # dump the configuration into log-directory
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
@@ -238,7 +249,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     # runner.run()
 
     # configure and instantiate the RL trainer
-    cfg_trainer = {"timesteps": 36000, "headless": True}
+    cfg_trainer = {"timesteps":agent_cfg["trainer"]["timesteps"], "headless": True, 
+                   "environment_info":agent_cfg["trainer"]["environment_info"],
+                   "close_environment_at_exit":agent_cfg["trainer"]["close_environment_at_exit"]}
     trainer = SequentialTrainer(cfg=cfg_trainer, env=env, agents=agent)
     # start training
     trainer.train()

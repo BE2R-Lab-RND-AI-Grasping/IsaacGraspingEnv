@@ -19,7 +19,7 @@ parser.add_argument(
 # parser.add_argument("--enable_cameras", action="store_true" , default=False, help="Enable camera.")
 parser.add_argument("--num_envs", type=int, default=2, help="Number of environments to simulate.")
 # parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
-parser.add_argument("--task", type=str, default="Isaac-Cam-Lift-Cube-Iiwa-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Full-Obj-PC-Lift-Iiwa-IK-Rel-v0", help="Name of the task.")
 
 # parser.add_argument("--device", type=str, default="cpu", help="Name of the device.")
 # append AppLauncher cli args
