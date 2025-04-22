@@ -197,12 +197,12 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
 
     cfg = PPO_DEFAULT_CONFIG.copy()
-    cfg["rollouts"] = 8  # memory_size
-    cfg["learning_epochs"] = 5
+    cfg["rollouts"] = 24#8  # memory_size
+    cfg["learning_epochs"] = 8 #5
     cfg["mini_batches"] = 4  # 24 * 4096 / 16384
-    cfg["discount_factor"] = 0.96
+    cfg["discount_factor"] = 0.99 #0.96
     cfg["lambda"] = 0.95
-    cfg["learning_rate"] = 3e-4
+    cfg["learning_rate"] = 1e-04 #3e-4
     cfg["learning_rate_scheduler"] = KLAdaptiveRL
     cfg["learning_rate_scheduler_kwargs"] = {"kl_threshold": 0.008}
     cfg["random_timesteps"] = 0

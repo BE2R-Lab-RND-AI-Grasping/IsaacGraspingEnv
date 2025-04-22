@@ -10,7 +10,7 @@ Visit the skrl documentation (https://skrl.readthedocs.io) to see the examples s
 a more user-friendly way.
 """
 
-"""Launch Isaac Sim Simulator first."""
+"""Launch Isaac Sim Simulator first.""" 
 
 import argparse
 
@@ -24,7 +24,8 @@ parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
 parser.add_argument("--num_envs", type=int, default=16, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+# parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-v0", help="Name of the task.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint.")
 parser.add_argument(
     "--ml_framework",

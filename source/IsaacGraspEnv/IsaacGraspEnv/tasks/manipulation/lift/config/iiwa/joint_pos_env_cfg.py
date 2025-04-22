@@ -35,7 +35,7 @@ import os
 
 
 # OBJ_POS = np.array([0.0, 0.0, 0.0])
-OBJ_POS = np.array([0.9, 0.0, 0.05+0.07077])
+OBJ_POS = np.array([0.9, 0.0, 0.07077])
 OBJ_ROT = R.from_euler('xyz', [90.0, 0.0, 0.0],  degrees=True)
 path = "/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/power_drill/model_1.usd"
 
@@ -53,6 +53,7 @@ rigid_props = schemas_cfg.RigidBodyPropertiesCfg(
     max_contact_impulse=1e32,
 )
 collision_props = schemas_cfg.CollisionPropertiesCfg(contact_offset=0.001, rest_offset=0.0015)
+# collision_props = schemas_cfg.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0)
 
 mesh_converter_cfg = MeshConverterCfg(
                 mass_props=mass_props,
@@ -64,7 +65,8 @@ mesh_converter_cfg = MeshConverterCfg(
                 make_instanceable=True,
                 usd_dir = os.path.dirname(path), 
                 usd_file_name = os.path.basename(path),
-                translation = (0.0, 0.05, 0.0),
+                translation = (0.0, 0.0, 0.0),
+                # translation = (0.0, 0.0, 0.0),
                 rotation = R.from_euler('xyz', [0.0, 0.0, 0.0],  degrees=True).as_quat()[[3,0,1,2]].tolist(),
                 scale = (0.001, 0.001, 0.001)
                 )
