@@ -3,28 +3,29 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+import numpy as np
+from scipy.spatial.transform import Rotation as R
+
 from isaaclab.assets import RigidObjectCfg
 from isaaclab.sensors import FrameTransformerCfg
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import OffsetCfg
-from isaaclab.sim.schemas.schemas_cfg import RigidBodyPropertiesCfg
 from isaaclab.sim.spawners.from_files.from_files_cfg import UsdFileCfg
 import isaaclab.sim as sim_utils
 from isaaclab.utils import configclass
-from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 
 from isaaclab_tasks.manager_based.manipulation.lift import mdp
 from IsaacGraspEnv.tasks.manipulation.lift.lift_env_cfg import LiftEnvCfg
 from IsaacGraspEnv.tasks.manipulation.lift.lift_cam_env_cfg import ObjectCamTableSceneCfg, PointCloudObservationsCfg, FullObjPCObservationsCfg
 
-from isaaclab.sim.converters import MeshConverter, MeshConverterCfg
+from isaaclab.sim.converters import MeshConverterCfg
+from IsaacGraspEnv.sim.converters import ExtentedMeshConverter
 ##
 # Pre-defined configs
 ##
 from isaaclab.markers.config import FRAME_MARKER_CFG  # isort: skip
-from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import IIWA_CRINGE_CFG  # isort: skip
 from isaaclab.sim.schemas import schemas_cfg
-import numpy as np
-from scipy.spatial.transform import Rotation as R
+from IsaacGraspEnv.sim.schemas import schemas_cfg as ext_schemas_cfg
+from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import IIWA_CRINGE_CFG  # isort: skip
 
 import os
 
@@ -52,26 +53,26 @@ rigid_props = schemas_cfg.RigidBodyPropertiesCfg(
     solver_velocity_iteration_count=1,
     max_contact_impulse=1e32,
 )
-collision_props = schemas_cfg.CollisionPropertiesCfg(contact_offset=0.001, rest_offset=0.0015)
+sdf_collision_props = ext_schemas_cfg.SDFCollisionPropertiesCfg(sdf_bits_per_subgrid_pixel="BitsPerPixel8")
+collision_props = ext_schemas_cfg.ExtentedCollisionPropertiesCfg(contact_offset=0.001, rest_offset=0.0001, sdf_collision_properties_cfg=sdf_collision_props)
 # collision_props = schemas_cfg.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0)
 
 mesh_converter_cfg = MeshConverterCfg(
                 mass_props=mass_props,
                 rigid_props=rigid_props,
                 collision_props=collision_props,
-                asset_path="/home/yefim-home/Downloads/Telegram Desktop/dataset/power_drills/model_1/object_convex_decomposition.obj",
-                collision_approximation = "convexDecomposition",
+                asset_path="/home/yefim-home/Downloads/Telegram Desktop/dataset/power_drills/model_1/object_convex_decomposition_scaled.obj",
+                collision_approximation = "sdf", #convexDecomposition",
                 force_usd_conversion=True,
                 make_instanceable=True,
                 usd_dir = os.path.dirname(path), 
                 usd_file_name = os.path.basename(path),
-                translation = (0.0, 0.0, 0.0),
+                translation = (0.0, 0.05, 0.0),
                 # translation = (0.0, 0.0, 0.0),
                 rotation = R.from_euler('xyz', [0.0, 0.0, 0.0],  degrees=True).as_quat()[[3,0,1,2]].tolist(),
-                scale = (0.001, 0.001, 0.001)
                 )
 
-mesh_converter = MeshConverter(mesh_converter_cfg)
+mesh_converter = ExtentedMeshConverter(mesh_converter_cfg)
 
 
 @configclass

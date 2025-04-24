@@ -61,7 +61,7 @@ IIWA_CRINGE_CFG = ArticulationCfg(
             # sleep_threshold=0.005,
             # stabilization_threshold=0.0005,
         ),
-        collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.001, rest_offset=0.0015),
+        collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.001, rest_offset=0.0001),
         # collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
         semantic_tags = [("class","robot"), ("color", "orange")],
     ),
