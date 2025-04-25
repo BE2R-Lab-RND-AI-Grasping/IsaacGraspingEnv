@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from typing import Literal
+from typing import Literal, Tuple
 
 from isaaclab.utils import configclass
 
-from isaaclab.sim.schemas.schemas_cfg import CollisionPropertiesCfg
+from isaaclab.sim.schemas.schemas_cfg import CollisionPropertiesCfg, MassPropertiesCfg
 
 @configclass
 class SDFCollisionPropertiesCfg:
@@ -76,7 +76,7 @@ class SDFCollisionPropertiesCfg:
 
 
 @configclass
-class ExtentedCollisionPropertiesCfg(CollisionPropertiesCfg):
+class ExtendedCollisionPropertiesCfg(CollisionPropertiesCfg):
     """Properties to apply to colliders in a rigid body.
 
     See :meth:`modify_collision_properties` for more information.
@@ -116,3 +116,32 @@ class ExtentedCollisionPropertiesCfg(CollisionPropertiesCfg):
     """Minimum radius of the contact patch for applying torsional friction (in m)."""
 
     sdf_collision_properties_cfg: SDFCollisionPropertiesCfg | None = None
+
+
+@configclass
+class ExtendedMassPropertiesCfg(MassPropertiesCfg):
+    """Properties to define explicit mass properties of a rigid body.
+    It is extened version of IsaacLab's class
+
+    See :meth:`modify_mass_properties` for more information.
+
+    .. note::
+        If the values are None, they are not modified. This is useful when you want to set only a subset of
+        the properties and leave the rest as-is.
+    """
+
+    center_of_mass: Tuple[float] | None = None
+    """Center of mass in the prim's local space.
+    Units: distance.
+    """
+    
+    principal_axes: Tuple[float] | None = None
+    """Orientation of the inertia tensor's principal axes in the prim's local space.
+    Orientation is setted in quaternion notation
+    """
+    
+    diagonal_inertia: Tuple[float] | None = None
+    """If non-zero, specifies diagonalized inertia tensor along the principal axes.
+
+    Note: if diagonalInertial is (0.0, 0.0, 0.0) it is ignored. Units: mass*distance*distance.
+    """

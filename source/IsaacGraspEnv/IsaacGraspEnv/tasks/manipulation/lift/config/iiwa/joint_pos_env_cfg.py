@@ -54,7 +54,7 @@ rigid_props = schemas_cfg.RigidBodyPropertiesCfg(
     max_contact_impulse=1e32,
 )
 sdf_collision_props = ext_schemas_cfg.SDFCollisionPropertiesCfg(sdf_bits_per_subgrid_pixel="BitsPerPixel8")
-collision_props = ext_schemas_cfg.ExtentedCollisionPropertiesCfg(contact_offset=0.001, rest_offset=0.0001, sdf_collision_properties_cfg=sdf_collision_props)
+collision_props = ext_schemas_cfg.ExtendedCollisionPropertiesCfg(contact_offset=0.001, rest_offset=0.0001, sdf_collision_properties_cfg=sdf_collision_props)
 # collision_props = schemas_cfg.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0)
 
 mesh_converter_cfg = MeshConverterCfg(

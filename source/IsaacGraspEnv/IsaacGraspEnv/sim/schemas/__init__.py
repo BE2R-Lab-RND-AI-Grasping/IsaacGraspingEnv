@@ -35,9 +35,12 @@ Locally, the schemas are defined in the following files:
 from .schemas import (
     define_collision_properties,
     modify_collision_properties,
+    define_mass_properties,
+    modify_mass_properties
 
 )
 from .schemas_cfg import (
-    ExtentedCollisionPropertiesCfg,
-    SDFCollisionPropertiesCfg
+    ExtendedCollisionPropertiesCfg,
+    SDFCollisionPropertiesCfg,
+    ExtendedMassPropertiesCfg
 )

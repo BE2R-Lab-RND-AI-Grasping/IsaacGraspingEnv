@@ -182,7 +182,7 @@ class ExtentedMeshConverter(MeshConverter):
         #   asset unintentionally share the same rigid body properties
         # apply mass properties
         if cfg.mass_props is not None:
-            schemas.define_mass_properties(prim_path=xform_prim.GetPath(), cfg=cfg.mass_props, stage=stage)
+            ext_schemas.define_mass_properties(prim_path=xform_prim.GetPath(), cfg=cfg.mass_props, stage=stage)
         # apply rigid body properties
         if cfg.rigid_props is not None:
             schemas.define_rigid_body_properties(prim_path=xform_prim.GetPath(), cfg=cfg.rigid_props, stage=stage)
