@@ -8,14 +8,14 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING, List, Type
 
-from isaaclab.assets import RigidObject
+from isaaclab.assets import Articulation, RigidObject, RigidObjectCollection
 from isaaclab.managers import SceneEntityCfg, ObservationTermCfg, ManagerTermBase
 from isaaclab.utils.math import (
     subtract_frame_transforms,
     transform_points,
     unproject_depth,
 )
-from isaaclab.sensors import Camera, RayCasterCamera, TiledCamera
+from isaaclab.sensors import Camera, RayCasterCamera, TiledCamera, FrameTransformer
 
 import open3d as o3d
 import numpy as np
@@ -339,3 +339,72 @@ class full_obj_point_cloud(ManagerTermBase):
         )
 
         return points_b
+
+
+
+def instance_randomize_obj_positions_in_robot_world_frame(
+    env: ManagerBasedRLEnv,
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+) -> torch.Tensor:
+    """The position of the object in the world frame."""
+    if not hasattr(env, "rigid_objects_in_focus"):
+        return torch.full((env.num_envs, 3), fill_value=-1)
+
+        
+    obj: RigidObjectCollection = env.scene[object_cfg.name]
+
+    obj_pos_w = []
+    for env_id in range(env.num_envs):
+        obj_pos_w.append(obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3])
+    obj_pos_w = torch.stack(obj_pos_w)
+
+    return obj_pos_w
+
+def instance_randomize_obj_positions_in_robot_root_frame(
+    env: ManagerBasedRLEnv,
+    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+) -> torch.Tensor:
+    """The position of the object in the world frame."""
+    if not hasattr(env, "rigid_objects_in_focus"):
+        return torch.full((env.num_envs, 3), fill_value=-1)
+
+    robot: RigidObject = env.scene[robot_cfg.name]
+
+        
+    obj: RigidObjectCollection = env.scene[object_cfg.name]
+
+    obj_pos_w = []
+    for env_id in range(env.num_envs):
+        obj_pos_w.append(obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3])
+    obj_pos_w = torch.stack(obj_pos_w)
+
+    object_pos_b, _ = subtract_frame_transforms(
+        robot.data.root_state_w[:, :3], robot.data.root_state_w[:, 3:7], obj_pos_w
+    )
+    return object_pos_b
+
+def instance_randomize_obj_orientations_in_robot_root_frame(
+    env: ManagerBasedRLEnv,
+    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+) -> torch.Tensor:
+    """The orientation of the cubes in the world frame."""
+    if not hasattr(env, "rigid_objects_in_focus"):
+        return torch.full((env.num_envs, 9), fill_value=-1)
+
+    robot: RigidObject = env.scene[robot_cfg.name]
+    obj: RigidObjectCollection = env.scene[object_cfg.name]
+
+    obj_quat_w = []
+    obj_pos_w = []
+    for env_id in range(env.num_envs):
+        obj_quat_w.append(obj.data.object_quat_w[env_id, env.rigid_objects_in_focus[env_id][0], :4])
+        obj_pos_w.append(obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3])
+    obj_quat_w = torch.stack(obj_quat_w)
+    obj_pos_w = torch.stack(obj_pos_w)
+    
+    _, object_quat_b = subtract_frame_transforms(
+        robot.data.root_state_w[:, :3], robot.data.root_state_w[:, 3:7], obj_pos_w, obj_quat_w
+    )
+    return object_quat_b

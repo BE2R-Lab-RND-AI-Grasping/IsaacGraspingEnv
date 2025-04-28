@@ -46,16 +46,17 @@ class ExtentedMeshConverter(MeshConverter):
         process or an offset can be added within the config in Isaac Lab.
 
     """
-
+    geom_name: str
     cfg: MeshConverterCfg
     """The configuration instance for mesh to USD conversion."""
 
-    def __init__(self, cfg: MeshConverterCfg):
+    def __init__(self, cfg: MeshConverterCfg, geom_name = "geometry"):
         """Initializes the class.
 
         Args:
             cfg: The configuration instance for mesh to USD conversion.
         """
+        self.geom_name = geom_name
         super().__init__(cfg=cfg)
 
     """
@@ -70,8 +71,8 @@ class ExtentedMeshConverter(MeshConverter):
 
         .. code-block:: none
             mesh_file_basename (default prim)
-                |- /geometry/Looks
-                |- /geometry/mesh
+                |- /{geom_name}/Looks
+                |- /{geom_name}/mesh
 
         Args:
             cfg: The configuration for conversion of mesh to USD.
@@ -104,7 +105,7 @@ class ExtentedMeshConverter(MeshConverter):
         UsdPhysics.SetStageKilogramsPerUnit(temp_stage, 1.0)
         # Add mesh to stage
         base_prim = temp_stage.DefinePrim(f"/{mesh_file_basename}", "Xform")
-        prim = temp_stage.DefinePrim(f"/{mesh_file_basename}/geometry", "Xform")
+        prim = temp_stage.DefinePrim(f"/{mesh_file_basename}/{self.geom_name}", "Xform")
         prim.GetReferences().AddReference(self.usd_path)
         temp_stage.SetDefaultPrim(base_prim)
         temp_stage.Export(self.usd_path)
@@ -117,7 +118,7 @@ class ExtentedMeshConverter(MeshConverter):
         stage_id = UsdUtils.StageCache.Get().Insert(stage)
         # Get the default prim (which is the root prim) -- "/{mesh_file_basename}"
         xform_prim = stage.GetDefaultPrim()
-        geom_prim = stage.GetPrimAtPath(f"/{mesh_file_basename}/geometry")
+        geom_prim = stage.GetPrimAtPath(f"/{mesh_file_basename}/{self.geom_name}")
         # Move all meshes to underneath new Xform
         for child_mesh_prim in geom_prim.GetChildren():
             if child_mesh_prim.GetTypeName() == "Mesh":
