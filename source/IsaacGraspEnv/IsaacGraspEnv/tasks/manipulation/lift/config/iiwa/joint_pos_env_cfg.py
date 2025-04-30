@@ -6,73 +6,38 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from isaaclab.assets import RigidObjectCfg
+from isaaclab.assets import RigidObjectCollectionCfg
 from isaaclab.sensors import FrameTransformerCfg
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import OffsetCfg
-from isaaclab.sim.spawners.from_files.from_files_cfg import UsdFileCfg
-import isaaclab.sim as sim_utils
 from isaaclab.utils import configclass
 
 from isaaclab_tasks.manager_based.manipulation.lift import mdp
 from IsaacGraspEnv.tasks.manipulation.lift.lift_env_cfg import LiftEnvCfg
-from IsaacGraspEnv.tasks.manipulation.lift.lift_cam_env_cfg import ObjectCamTableSceneCfg, PointCloudObservationsCfg, FullObjPCObservationsCfg
+from IsaacGraspEnv.tasks.manipulation.lift.lift_cam_env_cfg import (
+    ObjectCamTableSceneCfg,
+    PointCloudObservationsCfg,
+    FullObjPCObservationsCfg,
+)
 
-from isaaclab.sim.converters import MeshConverterCfg
-from IsaacGraspEnv.sim.converters import ExtentedMeshConverter
 ##
 # Pre-defined configs
 ##
 from isaaclab.markers.config import FRAME_MARKER_CFG  # isort: skip
-from isaaclab.sim.schemas import schemas_cfg
-from IsaacGraspEnv.sim.schemas import schemas_cfg as ext_schemas_cfg
-from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import IIWA_CRINGE_CFG  # isort: skip
+from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import (
+    IIWA_CRINGE_CFG,
+)  # isort: skip
 
-import os
+from dataclasses import MISSING
 
 # OBJ_POS = np.array([0.97163, 0.04869, 0.07077])
 # OBJ_POS = np.array([0.9, 0.04869, 0.07077])
 # OBJ_ROT = R.from_euler('xyz', [90.0, 0.0, 180.0],  degrees=True)
 
 
-
 # OBJ_POS = np.array([0.0, 0.0, 0.0])
 OBJ_POS = np.array([0.9, 0.0, 0.07077])
-OBJ_ROT = R.from_euler('xyz', [90.0, 0.0, 0.0],  degrees=True)
-path = "/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/power_drill/model_1.usd"
-
-mass_props = schemas_cfg.MassPropertiesCfg(mass=0.5)
-rigid_props = schemas_cfg.RigidBodyPropertiesCfg(
-    disable_gravity=False,
-    max_depenetration_velocity=5.0,
-    linear_damping=0.0,
-    angular_damping=0.0,
-    max_linear_velocity=1000.0,
-    max_angular_velocity=3666.0,
-    enable_gyroscopic_forces=True,
-    solver_position_iteration_count=192,
-    solver_velocity_iteration_count=1,
-    max_contact_impulse=1e32,
-)
-sdf_collision_props = ext_schemas_cfg.SDFCollisionPropertiesCfg(sdf_bits_per_subgrid_pixel="BitsPerPixel8")
-collision_props = ext_schemas_cfg.ExtendedCollisionPropertiesCfg(contact_offset=0.001, rest_offset=0.0001, sdf_collision_properties_cfg=sdf_collision_props)
-# collision_props = schemas_cfg.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0)
-
-mesh_converter_cfg = MeshConverterCfg(
-                mass_props=mass_props,
-                rigid_props=rigid_props,
-                collision_props=collision_props,
-                asset_path="/home/yefim-home/Downloads/Telegram Desktop/dataset/power_drills/model_1/object_convex_decomposition_scaled.obj",
-                collision_approximation = "sdf", #convexDecomposition",
-                force_usd_conversion=True,
-                make_instanceable=True,
-                usd_dir = os.path.dirname(path), 
-                usd_file_name = os.path.basename(path),
-                translation = (0.0, 0.05, 0.0),
-                # translation = (0.0, 0.0, 0.0),
-                rotation = R.from_euler('xyz', [0.0, 0.0, 0.0],  degrees=True).as_quat()[[3,0,1,2]].tolist(),
-                )
-
-mesh_converter = ExtentedMeshConverter(mesh_converter_cfg)
+# OBJ_POS = np.array([0.0, 0.0, 10.0])
+OBJ_ROT = R.from_euler("xyz", [90.0, 0.0, 0.0], degrees=True)
 
 
 @configclass
@@ -86,12 +51,15 @@ class IiwaCubeLiftEnvCfg(LiftEnvCfg):
 
         # Set actions for the specific robot type (franka)
         self.actions.arm_action = mdp.JointPositionActionCfg(
-            asset_name="robot", joint_names=["lbr_iiwa_joint_.*"], scale=0.5, use_default_offset=True
+            asset_name="robot",
+            joint_names=["lbr_iiwa_joint_.*"],
+            scale=0.5,
+            use_default_offset=True,
         )
         # self.actions.gripper_action = mdp.JointPositionToLimitsActionCfg(
         #     asset_name="robot",
         #     joint_names=["Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation"],
-        #     scale=1.0, 
+        #     scale=1.0,
         # )
         # self.actions.gripper_action = mdp.JointPositionToLimitsActionCfg(
         #     asset_name="robot",
@@ -100,120 +68,19 @@ class IiwaCubeLiftEnvCfg(LiftEnvCfg):
         # )
         self.actions.gripper_action = mdp.JointPositionToLimitsActionCfg(
             asset_name="robot",
-            joint_names=["Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation"],
-            rescale_to_limits = True,
+            joint_names=[
+                "Joint_.*_abduction",
+                "Joint_.*_dynamixel_crank",
+                "Joint_.*_rotation",
+            ],
+            rescale_to_limits=True,
             # scale=1.0
         )
         # Set the body name for the end effector
         self.commands.object_pose.body_name = "lbr_iiwa_link_7"
 
         # Set Cube as object
-        self.scene.object = RigidObjectCfg(
-            prim_path="{ENV_REGEX_NS}/Object",
-            # From Front
-            # init_state=RigidObjectCfg.InitialStateCfg(pos=[0.9, 0, 0.08], rot=[0.    , 0.    , 0.7071, 0.7071]),
-            init_state=RigidObjectCfg.InitialStateCfg(pos=OBJ_POS.tolist(), rot=OBJ_ROT.as_quat()[[3,0,1,2]].tolist()),
-            # From Top
-            # init_state=RigidObjectCfg.InitialStateCfg(pos=[0.5, 0, 0.055], rot=[1, 0, 0, 0]),
-            spawn=UsdFileCfg(
-                # usd_path=f"source/IsaacGraspEnv/IsaacGraspEnv/assets/data/YCB/035_power_drill_wo_texture.usd",
-                usd_path=path,
-                # usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/YCB/Axis_Aligned/035_power_drill.usd",
-                # usd_path=f"source/IsaacGraspEnv/IsaacGraspEnv/assets/data/YCB/Props/instanceable_meshes.usd",
-                scale=(1.0, 1.0, 1.0),
-                # rigid_props=RigidBodyPropertiesCfg(
-                #     disable_gravity=False,
-                #     max_depenetration_velocity=5.0,
-                #     linear_damping=0.0,
-                #     angular_damping=0.0,
-                #     max_linear_velocity=1000.0,
-                #     max_angular_velocity=3666.0,
-                #     enable_gyroscopic_forces=True,
-                #     solver_position_iteration_count=192,
-                #     solver_velocity_iteration_count=1,
-                #     max_contact_impulse=1e32,
-                # ),
-                # collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.001, rest_offset=0.0),
-                semantic_tags = [("class","object"), ("color", "red")],
-            ),
-            # Grasp From Front
-            # spawn=sim_utils.CylinderCfg(
-            # radius=0.028,
-            # height=0.14,
-            # visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0,0.0,0.0)),
-            # mass_props=sim_utils.MassPropertiesCfg(density=1000),
-            # rigid_props=sim_utils.RigidBodyPropertiesCfg(
-            #         # solver_position_iteration_count=16,
-            #         # solver_velocity_iteration_count=1,
-            #         # max_angular_velocity=1000.0,
-            #         # max_linear_velocity=1000.0,
-            #         # max_depenetration_velocity=5.0,
-            #         # disable_gravity=False,
-                    
-            #     # kinematic_enabled=False,
-            #     # disable_gravity=False,
-            #     # enable_gyroscopic_forces=True,
-            #     # solver_position_iteration_count=8,
-            #     # solver_velocity_iteration_count=0,
-            #     # sleep_threshold=0.005,
-            #     # stabilization_threshold=0.0025,
-            #     # max_depenetration_velocity=1000.0,
-                
-            #     disable_gravity=False,
-            #     max_depenetration_velocity=5.0,
-            #     linear_damping=0.0,
-            #     angular_damping=0.0,
-            #     max_linear_velocity=1000.0,
-            #     max_angular_velocity=3666.0,
-            #     enable_gyroscopic_forces=True,
-            #     solver_position_iteration_count=192,
-            #     solver_velocity_iteration_count=1,
-            #     max_contact_impulse=1e32,
-            #         ),
-            # physics_material=sim_utils.RigidBodyMaterialCfg(            
-            #     static_friction=1.0,
-            #     dynamic_friction=1.0,),
-            # collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
-            # ),
-            # Grasp From Top
-            # spawn=sim_utils.CuboidCfg(
-            # size=[0.06,0.06,0.06],
-            # visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(1.0,0.0,0.0)),
-            # mass_props=sim_utils.MassPropertiesCfg(density=1000),
-            # rigid_props=sim_utils.RigidBodyPropertiesCfg(
-            #         # solver_position_iteration_count=16,
-            #         # solver_velocity_iteration_count=1,
-            #         # max_angular_velocity=1000.0,
-            #         # max_linear_velocity=1000.0,
-            #         # max_depenetration_velocity=5.0,
-            #         # disable_gravity=False,
-                    
-            #     # kinematic_enabled=False,
-            #     # disable_gravity=False,
-            #     # enable_gyroscopic_forces=True,
-            #     # solver_position_iteration_count=8,
-            #     # solver_velocity_iteration_count=0,
-            #     # sleep_threshold=0.005,
-            #     # stabilization_threshold=0.0025,
-            #     # max_depenetration_velocity=1000.0,
-                
-            #     disable_gravity=False,
-            #     max_depenetration_velocity=5.0,
-            #     linear_damping=0.0,
-            #     angular_damping=0.0,
-            #     max_linear_velocity=1000.0,
-            #     max_angular_velocity=3666.0,
-            #     enable_gyroscopic_forces=True,
-            #     solver_position_iteration_count=192,
-            #     solver_velocity_iteration_count=1,
-            #     max_contact_impulse=1e32,
-            #         ),
-            # physics_material=sim_utils.RigidBodyMaterialCfg(            
-            #     static_friction=1.0,
-            #     dynamic_friction=1.0,),
-            # collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
-            # ),
-        )
+        self.scene.object = RigidObjectCollectionCfg(rigid_objects=MISSING)
 
         # Listens to the required transforms
         marker_cfg = FRAME_MARKER_CFG.copy()
@@ -289,7 +156,6 @@ class IiwaCubeLiftEnvCfg_PLAY(IiwaCubeLiftEnvCfg):
         self.observations.policy.enable_corruption = False
 
 
-
 @configclass
 class IiwaCubePCLiftEnvCfg(IiwaCubeLiftEnvCfg):
 
@@ -298,7 +164,6 @@ class IiwaCubePCLiftEnvCfg(IiwaCubeLiftEnvCfg):
     # Basic settings
     observations: PointCloudObservationsCfg = PointCloudObservationsCfg()
 
-    
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
@@ -322,7 +187,6 @@ class IiwaCubeFullObjPCLiftEnvCfg(IiwaCubeLiftEnvCfg):
     # Basic settings
     observations: FullObjPCObservationsCfg = FullObjPCObservationsCfg()
 
-    
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
