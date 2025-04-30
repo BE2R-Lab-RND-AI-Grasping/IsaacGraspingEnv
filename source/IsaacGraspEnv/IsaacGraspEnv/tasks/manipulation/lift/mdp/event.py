@@ -84,12 +84,12 @@ class randomize_rigid_object_in_focus(ManagerTermBase):
         x = torch.linspace(
             -self.asset.num_objects / 2 * 0.15,
             self.asset.num_objects / 2 * 0.15,
-            math.floor(self.asset.num_objects / 2),
+            math.ceil(self.asset.num_objects / 2),
         )
         y = torch.linspace(
             -self.asset.num_objects / 2 * 0.15,
             self.asset.num_objects / 2 * 0.15,
-            math.floor(self.asset.num_objects / 2),
+            math.ceil(self.asset.num_objects / 2),
         )
 
         x, y = torch.meshgrid(y, x)

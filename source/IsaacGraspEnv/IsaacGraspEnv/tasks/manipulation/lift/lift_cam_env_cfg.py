@@ -123,7 +123,8 @@ class FullObjPCObservationsCfg:
             params = {
                 "object_cfg": SceneEntityCfg("object"),
                 "robot_cfg": SceneEntityCfg("robot"),
-                "path_to_point_cloud": "/home/yefim-home/Downloads/Telegram Desktop/dataset/power_drills/model_1/point_cloud_labeled.ply",
+                "path_to_point_clouds": MISSING,
+                "scale": MISSING,
                 "num_pc": 100
                 
             }
