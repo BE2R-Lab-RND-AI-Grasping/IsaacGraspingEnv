@@ -376,7 +376,7 @@ def instance_randomize_obj_positions_in_robot_root_frame(
 
     obj_pos_w = []
     for env_id in range(env.num_envs):
-        obj_pos_w.append(obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3])
+        obj_pos_w.append(obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0]])
     obj_pos_w = torch.stack(obj_pos_w)
 
     object_pos_b, _ = subtract_frame_transforms(

@@ -165,13 +165,12 @@ class EventCfg:
 
     
     randomize_cubes_in_focus = EventTerm(
-        func=mdp.randomize_rigid_objects_in_focus,
+        func=mdp.randomize_rigid_object_in_focus,
         mode="reset",
         params={
-            "asset_cfgs": [SceneEntityCfg("object")],
-            "out_focus_state": torch.tensor([10.0, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "asset_cfg": SceneEntityCfg("object"),
+            "out_focus_state": torch.tensor([0.0, 0.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
             "pose_range": {"x": (0.9, 0.9), "y": (0.0, 0.0), "z": (0.07077, 0.07077), "roll": (1.57, 1.57)},
-            "min_separation": 0.1,
 
         },
     )

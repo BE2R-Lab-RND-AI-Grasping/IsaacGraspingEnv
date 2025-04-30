@@ -14,7 +14,7 @@ from isaaclab.sim.utils import (
     apply_nested,
     safe_set_attribute_on_usd_schema,
 )
-from isaaclab.sim.schemas import lab_schemas_cfg
+from isaaclab.sim import schemas as lab_schemas_cfg
 from . import schemas_cfg
 
 
