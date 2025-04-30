@@ -42,6 +42,26 @@ parser.add_argument(
     help="The RL algorithm used for training the skrl agent.",
 )
 
+
+parser.add_argument(
+    "--dataset_path",
+    type=str,
+    default=None,
+    help="Absolute path to dataset. Dataset directory must have folders with models.",
+)
+parser.add_argument(
+    "--usd_file_name",
+    type=str,
+    default="object.usd",
+    help="The name of the USD file in the folder",
+)
+parser.add_argument(
+    "--model_filter",
+    type=str,
+    default=None,
+    help="A comma separated list of identifiers to be taken from the dataset",
+)
+
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -82,6 +102,7 @@ from isaaclab.utils.dict import print_dict
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import get_checkpoint_path, load_cfg_from_registry, parse_env_cfg
 from isaaclab_rl.skrl import SkrlVecEnvWrapper
+from IsaacGraspEnv.dataset_managers import load_object_dataset
 
 # config shortcuts
 algorithm = args_cli.algorithm.lower()
@@ -98,6 +119,18 @@ def main():
         # args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
         args_cli.task, device="cpu", num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
     )
+    if args_cli.model_filter:
+        dt_models_filter = args_cli.model_filter.replace(" ", "").split(",")
+    else:
+        dt_models_filter = args_cli.model_filter
+        
+
+    env_cfg.scene.object.rigid_objects =  load_object_dataset(
+        args_cli.dataset_path,
+        args_cli.usd_file_name,
+        dt_models_filter
+    )
+
     try:
         experiment_cfg = load_cfg_from_registry(args_cli.task, f"skrl_{algorithm}_cfg_entry_point")
     except ValueError:

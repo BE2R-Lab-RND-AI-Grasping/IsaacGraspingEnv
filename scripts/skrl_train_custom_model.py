@@ -45,6 +45,26 @@ parser.add_argument(
     help="The RL algorithm used for training the skrl agent.",
 )
 
+
+parser.add_argument(
+    "--dataset_path",
+    type=str,
+    default=None,
+    help="Absolute path to dataset. Dataset directory must have folders with models.",
+)
+parser.add_argument(
+    "--usd_file_name",
+    type=str,
+    default="object.usd",
+    help="The name of the USD file in the folder",
+)
+parser.add_argument(
+    "--model_filter",
+    type=str,
+    default=None,
+    help="A comma separated list of identifiers to be taken from the dataset",
+)
+
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -109,6 +129,7 @@ from IsaacGraspEnv.torch_models.feature_extractor import PointNetExtractorGP
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils.hydra import hydra_task_config
 
+from IsaacGraspEnv.dataset_managers import load_object_dataset
 
 # config shortcuts
 algorithm = args_cli.algorithm.lower()
@@ -121,6 +142,19 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     # override configurations with non-hydra CLI arguments
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
     env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
+
+    if args_cli.model_filter:
+        dt_models_filter = args_cli.model_filter.replace(" ", "").split(",")
+    else:
+        dt_models_filter = args_cli.model_filter
+        
+
+    env_cfg.scene.object.rigid_objects =  load_object_dataset(
+        args_cli.dataset_path,
+        args_cli.usd_file_name,
+        dt_models_filter
+    )
+    
 
     # multi-gpu training config
     if args_cli.distributed:
