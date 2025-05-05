@@ -53,6 +53,7 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np 
 
+from IsaacGraspEnv.dataset_managers.dataset_loading import load_object_dataset
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
 
