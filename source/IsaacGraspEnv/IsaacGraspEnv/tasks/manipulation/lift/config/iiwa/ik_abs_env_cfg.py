@@ -3,12 +3,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from isaaclab.assets import DeformableObjectCfg
 from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
-from isaaclab.managers import EventTermCfg as EventTerm
-from isaaclab.managers import SceneEntityCfg
-from isaaclab.sim.spawners import UsdFileCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR
 
@@ -19,6 +15,7 @@ from . import joint_pos_env_cfg
 ##
 # Pre-defined configs
 ##
+from IsaacGraspEnv.tasks.manipulation.lift.lift_cam_env_cfg import ObjectCamTableSceneCfg, PointCloudObservationsCfg, FullObjPCObservationsCfg
 from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import IIWA_CRINGE_CFG_HIGH_PD_CFG  # isort: skip
 
 
@@ -58,53 +55,51 @@ class IiwaCubeLiftEnvCfg_PLAY(IiwaCubeLiftEnvCfg):
         # disable randomization for play
         self.observations.policy.enable_corruption = False
 
-
-##
-# Deformable object lift environment.
-##
-
-
 @configclass
-class IiwaTeddyBearLiftEnvCfg(IiwaCubeLiftEnvCfg):
+class IiwaCubePCLiftEnvCfg(IiwaCubeLiftEnvCfg):
+
+    # Scene settings
+    scene: ObjectCamTableSceneCfg = ObjectCamTableSceneCfg(num_envs=4096, env_spacing=2)
+    # Basic settings
+    observations: PointCloudObservationsCfg = PointCloudObservationsCfg()
+
+    
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
 
-        self.scene.object = DeformableObjectCfg(
-            prim_path="{ENV_REGEX_NS}/Object",
-            init_state=DeformableObjectCfg.InitialStateCfg(pos=(0.5, 0, 0.05), rot=(0.707, 0, 0, 0.707)),
-            spawn=UsdFileCfg(
-                usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Objects/Teddy_Bear/teddy_bear.usd",
-                scale=(0.01, 0.01, 0.01),
-            ),
-        )
 
-        # Make the end effector less stiff to not hurt the poor teddy bear
-        self.scene.robot.actuators["lbr_iiwa_link_7"].effort_limit = 50.0
-        self.scene.robot.actuators["lbr_iiwa_link_7"].stiffness = 40.0
-        self.scene.robot.actuators["lbr_iiwa_link_7"].damping = 10.0
+@configclass
+class IiwaCubePCLiftEnvCfg_PLAY(IiwaCubePCLiftEnvCfg):
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()
+        # make a smaller scene for play
+        self.scene.num_envs = 50
+        self.scene.env_spacing = 2.5
+        # disable randomization for play
+        self.observations.policy.enable_corruption = False
 
-        # Disable replicate physics as it doesn't work for deformable objects
-        # FIXME: This should be fixed by the PhysX replication system.
-        self.scene.replicate_physics = False
 
-        # Set events for the specific object type (deformable cube)
-        self.events.reset_object_position = EventTerm(
-            func=mdp.reset_nodal_state_uniform,
-            mode="reset",
-            params={
-                "position_range": {"x": (-0.1, 0.1), "y": (-0.25, 0.25), "z": (0.0, 0.0)},
-                "velocity_range": {},
-                "asset_cfg": SceneEntityCfg("object"),
-            },
-        )
+@configclass
+class IiwaCubeFullObjPCLiftEnvCfg(IiwaCubeLiftEnvCfg):
 
-        # Remove all the terms for the state machine demo
-        # TODO: Computing the root pose of deformable object from nodal positions is expensive.
-        #       We need to fix that part before enabling these terms for the training.
-        self.terminations.object_dropping = None
-        self.rewards.reaching_object = None
-        self.rewards.lifting_object = None
-        self.rewards.object_goal_tracking = None
-        self.rewards.object_goal_tracking_fine_grained = None
-        self.observations.policy.object_position = None
+    # Basic settings
+    observations: FullObjPCObservationsCfg = FullObjPCObservationsCfg()
+
+    
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()
+
+
+@configclass
+class IiwaCubeFullObjPCLiftEnvCfg_PLAY(IiwaCubeFullObjPCLiftEnvCfg):
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()
+        # make a smaller scene for play
+        self.scene.num_envs = 50
+        self.scene.env_spacing = 2.5
+        # disable randomization for play
+        self.observations.policy.enable_corruption = False
