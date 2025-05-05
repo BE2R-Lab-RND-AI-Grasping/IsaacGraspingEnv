@@ -62,6 +62,8 @@ MASS_PROPERTIES_OBJECTS = {
     "wrenches": ("density", 7850),
     "combinational_wrenches": ("density", 7850),
     "screwdrivers": ("density", 7850),
+    "locking_pliers": ("density", 7850),
+    "fixed_joint_pliers": ("density", 7850),
 }
 
 def get_dir_paths_to_obj(path_to_dataset, file_obj, include_mdls=[], ):
@@ -110,11 +112,6 @@ def main():
                 path_to_usd_dir = path_usd_dataset / o_cls / obj_model
                 path_to_usd_file = path_to_usd_dir / "object.usd"
                 
-                if args_cli.name_point_cloud:
-                    path_to_pc = path_to_dataset / o_cls / obj_model / args_cli.name_point_cloud
-                    shutil.copy2(path_to_pc, path_to_usd_dir)
-                shutil.copy2(path_to_pc_labeled, path_to_usd_dir)
-                
                 
                 mass_props = schemas_cfg.MassPropertiesCfg()
                 setattr(mass_props, mass_prop_obj[0], mass_prop_obj[1])
@@ -150,6 +147,11 @@ def main():
                                 )
 
                 mesh_converter = ExtentedMeshConverter(mesh_converter_cfg, geom_name=f"{o_cls}_{obj_model}")
+                
+                if args_cli.name_point_cloud:
+                    path_to_pc = path_to_dataset / o_cls / obj_model / args_cli.name_point_cloud
+                    shutil.copy2(path_to_pc, path_to_usd_dir)
+                shutil.copy2(path_to_pc_labeled, path_to_usd_dir)
                 
                 
     # Determine if there is a GUI to update:
