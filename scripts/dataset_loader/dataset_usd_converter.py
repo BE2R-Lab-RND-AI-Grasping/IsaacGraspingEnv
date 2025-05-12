@@ -59,11 +59,11 @@ import omni.kit.app
 
 MASS_PROPERTIES_OBJECTS = {
     "power_drills": ("mass", 0.5),
-    "wrenches": ("density", 7850),
-    "combinational_wrenches": ("density", 7850),
-    "screwdrivers": ("density", 7850),
-    "locking_pliers": ("density", 7850),
-    "fixed_joint_pliers": ("density", 7850),
+    "wrenches": ("density", 2000),
+    "combinational_wrenches": ("density", 2000),
+    "screwdrivers": ("density", 2000),
+    "locking_pliers": ("density", 2000),
+    "fixed_joint_pliers": ("density", 2000),
 }
 
 def get_dir_paths_to_obj(path_to_dataset, file_obj, include_mdls=[], ):

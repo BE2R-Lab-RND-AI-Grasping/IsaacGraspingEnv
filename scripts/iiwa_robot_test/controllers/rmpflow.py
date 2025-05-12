@@ -7,7 +7,7 @@ class RMPFlowController(mg.MotionPolicyController):
         self.rmpflow = mg.lula.motion_policies.RmpFlow(robot_description_path="/home/yefim-home/Documents/work/IsaacGraspingEnv/scripts/iiwa_robot_test/rmpflow/robot_dexcriptor.yaml",
                                                         rmpflow_config_path="/home/yefim-home/Documents/work/IsaacGraspingEnv/scripts/iiwa_robot_test/rmpflow/iiwa_rmpflow_common.yaml",
                                                         urdf_path="/home/yefim-home/Documents/robots_models/iiwa_cringe_release/iiwa_cringe.urdf",
-                                                        end_effector_frame_name="lbr_iiwa_link_7",
+                                                        end_effector_frame_name="iiwa_link_ee_kuka",
                                                         maximum_substep_size=0.00334)
 
         self.articulation_rmp = mg.ArticulationMotionPolicy(robot_articulation, self.rmpflow, physics_dt)

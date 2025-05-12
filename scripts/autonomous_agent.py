@@ -23,7 +23,7 @@ parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0"
 parser.add_argument(
     "--dataset_path",
     type=str,
-    default=None,
+    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers", #"wrenches",#None,
     help="Absolute path to dataset. Dataset directory must have folders with models.",
 )
 parser.add_argument(
@@ -35,7 +35,7 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default=None,
+    default="4",#None,
     help="A comma separated list of identifiers to be taken from the dataset",
 )
 AppLauncher.add_app_launcher_args(parser)
@@ -56,7 +56,9 @@ import numpy as np
 from IsaacGraspEnv.dataset_managers.dataset_loading import load_object_dataset
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
-
+from isaaclab.markers.config import FRAME_MARKER_CFG  # isort: skip
+from isaaclab.sensors import FrameTransformerCfg
+from isaaclab.sensors.frame_transformer.frame_transformer_cfg import OffsetCfg
 
 def main():
     """Random actions agent with Isaac Lab environment."""
@@ -66,7 +68,7 @@ def main():
         # args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
     )
     # env_cfg.terminations.time_out = None
-    env_cfg.episode_length_s = 2.5
+    env_cfg.episode_length_s = 3
     if args_cli.model_filter:
         dt_models_filter = args_cli.model_filter.replace(" ", "").split(",")
     else:
@@ -78,12 +80,32 @@ def main():
         args_cli.usd_file_name,
         dt_models_filter
     )
-    
+    #         # Listens to the required transforms
+    marker_cfg = FRAME_MARKER_CFG.copy()
+    marker_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+    marker_cfg.prim_path = "/Visuals/FrameTransformer"
+    env_cfg.scene.target_ft_obj = FrameTransformerCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_0",
+        debug_vis=True,
+        visualizer_cfg=marker_cfg,
+        target_frames=[
+            FrameTransformerCfg.FrameCfg(
+                prim_path="{ENV_REGEX_NS}/Object_model_4",
+                name="target_model_4",
+                offset=OffsetCfg(
+                    pos=[-0.05, 0.0, 0.0],
+                ),
+            ),
+        ],
+    )
 
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.env.sim.set_camera_view([2.5,1, 1], [0.0, 0.0,0.0])
     env.env.sim.set_render_mode(env.env.sim.RenderMode.FULL_RENDERING)
+    
+    env.scene.articulations["robot"].root_physx_view.prim_paths
+    
     # env.env.sim.set_render_mode(env.env.sim.RenderMode.NO_GUI_OR_RENDERING)
     # print info (this is vectorized environment)
     print(f"[INFO]: Gym observation space: {env.observation_space}")
@@ -114,7 +136,7 @@ def main():
         # run everything in inference mode
         with torch.inference_mode():
             ee_pos = obs["policy"][0,0:3]
-            obj_pos = obs["policy"][0,56:59]
+            obj_pos = obs["policy"][0,56:59]+ torch.Tensor([0.0, 0.0, 0.11]) #4: + torch.Tensor([-0.05, 0.0, 0.1])  #3: + torch.Tensor([-0.05, 0.0, 0.1]) # 2: + torch.Tensor([-0.05, 0.0, 0.1]) #1: + torch.Tensor([-0.1, 0.0, 0.12])
             target_pos = obs["policy"][0,63:66]
             time_arr.append(env.env.sim.current_time)
             for act_name in applied_efforts_act.keys():
@@ -123,7 +145,7 @@ def main():
             if time_step < 100:
                 delta_ee_pos = (obj_pos - ee_pos) / 2
             else:
-                delta_ee_pos = (target_pos - obj_pos) / 2
+                delta_ee_pos = (target_pos - ee_pos) / 2
             delta_ee_ang = torch.zeros(3, device=env.unwrapped.device)
 
             if time_step == 0:

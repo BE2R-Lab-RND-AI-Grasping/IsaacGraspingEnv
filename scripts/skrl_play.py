@@ -18,14 +18,14 @@ from isaaclab.app import AppLauncher
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Play a checkpoint of an RL agent from skrl.")
-parser.add_argument("--video", action="store_true", default=True, help="Record videos during training.")
+parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
 parser.add_argument("--num_envs", type=int, default=16, help="Number of environments to simulate.")
 # parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
-parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint.")
 parser.add_argument(
     "--ml_framework",
@@ -46,7 +46,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_path",
     type=str,
-    default=None,
+    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers",#None,
     help="Absolute path to dataset. Dataset directory must have folders with models.",
 )
 parser.add_argument(
@@ -58,10 +58,9 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default=None,
+    default="2, 3, 4",
     help="A comma separated list of identifiers to be taken from the dataset",
 )
-
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -158,7 +157,7 @@ def main():
             "video_folder": os.path.join(log_dir, "videos", "play"),
             "step_trigger": lambda step: step == 0,
             "video_length": args_cli.video_length,
-            "disable_logger": True,
+            "disable_logger": False,
             # "fps": 30,
         }
         print("[INFO] Recording videos during training.")
@@ -194,7 +193,7 @@ def main():
             # agent stepping
             actions = runner.agent.act(obs, timestep=0, timesteps=0)[0]
             # env stepping
-            obs, _, _, _, _ = env.step(actions)
+            obs, _, _, _, info = env.step(actions)
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video

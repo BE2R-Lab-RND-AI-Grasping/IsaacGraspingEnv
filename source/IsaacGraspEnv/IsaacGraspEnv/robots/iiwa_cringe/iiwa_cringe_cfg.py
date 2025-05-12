@@ -23,11 +23,15 @@ import numpy as np
 
 # relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/iiwa_cringe/usd/iiwa_cringe_v2_open.usd"
 # relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/iiwa_cringe/usd/iiwa_cringe_v1.usd"
-relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa.usd"
+# relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa.usd"
+relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa_table.usd"
 ABSOLUTE_PATH = Path(relative_path).resolve()
 
 # INIT_Q_IIWA = np.array([-2.9, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
-INIT_Q_IIWA = np.array([-2.9-2.1, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
+# INIT_Q_IIWA = np.array([-2.9-2.1, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
+# INIT_Q_IIWA = np.array([0.1768, 1.0323, -0.2726, -1.0931, -0.1364, 1.0486, 0.102])
+INIT_Q_IIWA = np.array([ 0.3228,  1.0685, -0.3784, -1.0638, -0.1891,  1.1131,  0.2125]) # 0.7, 0.0, 0.3
+# INIT_Q_IIWA = np.array([ 0.2752,  0.8553, -0.3494, -0.9131, -0.2294,  1.4273,  0.0736]) # 0.7, 0.0, 0.5
 INIT_Q_IIWA = INIT_Q_IIWA.tolist()
 
 IIWA_CRINGE_CFG = ArticulationCfg(
@@ -113,7 +117,7 @@ IIWA_CRINGE_CFG = ArticulationCfg(
             "lbr_iiwa_joint_6": INIT_Q_IIWA[5],
             "lbr_iiwa_joint_7": INIT_Q_IIWA[6],
             
-            "Joint_thumb_dynamixel_crank": 0.0,
+            "Joint_thumb_dynamixel_crank": 0.5,
             "Joint_thumb_crank_pusher": 0.0,
             
             "Joint_thumb_rotation":0.0,

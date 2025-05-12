@@ -43,7 +43,8 @@ class FollowTarget(tasks.FollowTarget):
                                         name="hand_iiwa",
                                         end_effector_prim_name="lbr_iiwa_link_7",
                                         gripper=gripper)
-        INIT_Q_IIWA = np.array([0.0, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
+        # INIT_Q_IIWA = np.array([0.0, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
+        INIT_Q_IIWA = np.array([ 0.3228,  1.0685, -0.3784, -1.0638, -0.1891,  1.1131,  0.2125])
         INIT_Q_IIWA = np.hstack([INIT_Q_IIWA, np.zeros(16)])
         INIT_Q_IIWA = INIT_Q_IIWA.tolist()
         manipulator.set_joints_default_state(positions=INIT_Q_IIWA)
