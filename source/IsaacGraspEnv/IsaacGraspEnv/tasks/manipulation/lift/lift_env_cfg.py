@@ -76,6 +76,11 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     #     # init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0.0]),
     #     spawn=GroundPlaneCfg(),
     # )
+    '''
+     ======WARNING========
+     Check the prim_path filters, IsaacSim does not throw an exception or error if the filter path does not exist.
+     =====================
+    '''
     contact_forces_thumb_rot = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
     contact_forces_thumb_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
     contact_forces_thumb_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
@@ -92,7 +97,12 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
 
 @configclass
 class CommandsCfg:
-    """Command terms for the MDP."""
+    """Command terms for the MDP.
+    
+    ======WARNING========
+    UniformPoseCommandCfg sets the position for the robot end_effector, not for the object
+    =====================
+    """
 
     object_pose = mdp.UniformPoseCommandCfg(
         asset_name="robot",
