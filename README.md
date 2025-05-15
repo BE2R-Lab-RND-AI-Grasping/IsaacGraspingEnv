@@ -87,7 +87,7 @@ python scripts/skrl_play.py
 ```
 
 ## Project Structure
-
+```
 ├── scripts/                # Training, evaluation and utility scripts
 │   ├── autonomous_agent.py # Scripts runs autonomous agent without training using a finite state machine
 │   ├── skrl_play.py        # Scripts runs last trained policy
@@ -102,7 +102,7 @@ python scripts/skrl_play.py
 │   └── dataset_managers/   # Tools for loading and managing external object datasets
 ├── README.md
 └── requirements.txt
-
+```
 ## Troubleshooting
 
 ### Pylance Missing Indexing of Extensions
