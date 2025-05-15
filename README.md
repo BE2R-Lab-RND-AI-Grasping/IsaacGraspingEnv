@@ -25,16 +25,18 @@ Below is the environment with the DP-Flex arm and the kuka iiwa 14 manipulator. 
 
 - Action: joint position of manipulator
     - `Isaac-Lift-Cube-Iiwa-v0` - Observation: object's oracle information,
-    - `Isaac-PC-Lift-Iiwa-v0` - Observation: a sampled point cloud on the object, 
-    - `Isaac-Full-Obj-PC-Lift-Iiwa-v0` - Observation: a point cloud built by the camera
+    - `Isaac-Full-Obj-PC-Lift-Iiwa-v0` - Observation: a sampled point cloud on the object, 
+    - `Isaac-PC-Lift-Iiwa-v0` - Observation: a point cloud built by the camera
 - Action: absolute pose end-effector of manipulator in Cartesian space
     - `Isaac-Lift-Cube-Iiwa-IK-Abs-v0` - Observation: object's oracle information,
-    - `Isaac-PC-Lift-Iiwa-IK-Abs-v0` - Observation: a sampled point cloud on the object, 
-    - `Isaac-Full-Obj-PC-Lift-Iiwa-IK-Abs-v0` - Observation: a sampled point cloud on the object.
+    - `Isaac-Full-Obj-PC-Lift-Iiwa-IK-Abs-v0` - Observation: a sampled point cloud on the object, 
+    - `Isaac-PC-Lift-Iiwa-IK-Abs-v0` - Observation: a sampled point cloud on the object.
 - Action: relative pose end-effector of manipulator in Cartesian space
     - `Isaac-Lift-Cube-Iiwa-IK-Rel-v0` - Observation: object's oracle information,
-    - `Isaac-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object, 
-    - `Isaac-Full-Obj-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object.
+    - `Isaac-Full-Obj-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object, 
+    - `Isaac-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object.
+
+Full description of the environment below.
 
 ## Installation
 
