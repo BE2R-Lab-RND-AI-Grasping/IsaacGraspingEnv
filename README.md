@@ -10,9 +10,31 @@
 
 ## Overview
 
-This repository contains environments and agents for learning strategies for grasping objects with a dexterous hand. 
-Accessible Environments:
-- `Isaac-Lift-Cube-Iiwa-IK-Rel-v0` - environment with DP-Flex grasp and manipulator iiwa14. The agent's task is to grab the screwdriver and move the target position.
+This repository contains environments and agents for learning strategies for grasping objects with a dexterous hand. The repository have 9 environments with the same world, reward, and differing vectors of action and observation.
+There are three types of observation:
+- Observation with oracle information about the object. Environment name prefix is `Cube`.
+- Observation with a sampled point cloud on the object. Environment name prefix is `Full-Obj-PC`.
+- Observation with a point cloud built by the camera. Environment name prefix is `PC`.
+
+And three types of action space:
+- Vector of target positions in the robot's configuration space.
+- Vector of target positions for the end effector in Cartesian space. Environment name prefix is `IK-Abs`.
+- Vector of end effector displacement in Cartesian space. Environment name prefix is `IK-Rel`.
+
+Below is the environment with the DP-Flex arm and the kuka iiwa 14 manipulator. The agent's task is to grasp the object and move the target position:
+
+- Action: joint position of manipulator
+    - `Isaac-Lift-Cube-Iiwa-v0` - Observation: object's oracle information,
+    - `Isaac-PC-Lift-Iiwa-v0` - Observation: a sampled point cloud on the object, 
+    - `Isaac-Full-Obj-PC-Lift-Iiwa-v0` - Observation: a point cloud built by the camera
+- Action: absolute pose end-effector of manipulator in Cartesian space
+    - `Isaac-Lift-Cube-Iiwa-IK-Abs-v0` - Observation: object's oracle information,
+    - `Isaac-PC-Lift-Iiwa-IK-Abs-v0` - Observation: a sampled point cloud on the object, 
+    - `Isaac-Full-Obj-PC-Lift-Iiwa-IK-Abs-v0` - Observation: a sampled point cloud on the object.
+- Action: relative pose end-effector of manipulator in Cartesian space
+    - `Isaac-Lift-Cube-Iiwa-IK-Rel-v0` - Observation: object's oracle information,
+    - `Isaac-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object, 
+    - `Isaac-Full-Obj-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object.
 
 ## Installation
 
