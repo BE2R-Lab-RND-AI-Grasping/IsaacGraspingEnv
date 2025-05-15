@@ -86,7 +86,22 @@ Starts testing of the trained policy
 python scripts/skrl_play.py
 ```
 
+## Project Structure
 
+├── scripts/                # Training, evaluation and utility scripts
+│   ├── autonomous_agent.py # Scripts runs autonomous agent without training using a finite state machine
+│   ├── skrl_play.py        # Scripts runs last trained policy
+│   ├── skrl_train.py       # Scripts start trainig policy process
+├── logs/                   # Training logs and experiment results
+├── source/IsaacGraspEnv/IsaacGraspEnv
+│   ├── assets/             # Assets of objects for grasping
+│   ├── robots/             # USD description files of robots
+│   ├── sim/                # Extended config classes and schemas from IsaacLab
+│   ├── tasks/              # RL environments and task definitions
+│   ├── torch_models/       # Neural network architectures for policies and feature extraction
+│   └── dataset_managers/   # Tools for loading and managing external object datasets
+├── README.md
+└── requirements.txt
 
 ## Troubleshooting
 
