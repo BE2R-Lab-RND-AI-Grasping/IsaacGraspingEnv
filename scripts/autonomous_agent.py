@@ -19,6 +19,25 @@ parser.add_argument(
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
 parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
 # append AppLauncher cli args
+
+parser.add_argument(
+    "--dataset_path",
+    type=str,
+    default=None,
+    help="Absolute path to dataset. Dataset directory must have folders with models.",
+)
+parser.add_argument(
+    "--usd_file_name",
+    type=str,
+    default="object.usd",
+    help="The name of the USD file in the folder",
+)
+parser.add_argument(
+    "--model_filter",
+    type=str,
+    default=None,
+    help="A comma separated list of identifiers to be taken from the dataset",
+)
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
 args_cli = parser.parse_args()
@@ -34,6 +53,7 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np 
 
+from IsaacGraspEnv.dataset_managers.dataset_loading import load_object_dataset
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
 
@@ -47,6 +67,19 @@ def main():
     )
     # env_cfg.terminations.time_out = None
     env_cfg.episode_length_s = 2.5
+    if args_cli.model_filter:
+        dt_models_filter = args_cli.model_filter.replace(" ", "").split(",")
+    else:
+        dt_models_filter = args_cli.model_filter
+        
+
+    env_cfg.scene.object.rigid_objects =  load_object_dataset(
+        args_cli.dataset_path,
+        args_cli.usd_file_name,
+        dt_models_filter
+    )
+    
+
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.env.sim.set_camera_view([2.5,1, 1], [0.0, 0.0,0.0])
@@ -104,7 +137,7 @@ def main():
                 if time_step > 150:
                     ramp = 1#0.01 * (150 - time_step) + 1
                 else:
-                    ramp = 0.5 + np.random.normal(0, 0.8) # 0.01 * (time_step - 45) + np.random.normal(0, 0.8)
+                    ramp = 1# 0.5 + np.random.normal(0, 0.8) # 0.01 * (time_step - 45) + np.random.normal(0, 0.8)
                 gripper_joint = -torch.ones(7, device=env.unwrapped.device)
                 gripper_joint[2] = 0
                 gripper_joint[3:5] = torch.ones(2, device=env.unwrapped.device) * ramp

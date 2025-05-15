@@ -12,6 +12,7 @@ from . import joint_pos_env_cfg
 ##
 # Pre-defined configs
 ##
+from IsaacGraspEnv.tasks.manipulation.lift.lift_cam_env_cfg import ObjectCamTableSceneCfg, PointCloudObservationsCfg, FullObjPCObservationsCfg
 from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import IIWA_CRINGE_CFG_HIGH_PD_CFG  # isort: skip
 
 
@@ -38,6 +39,56 @@ class IiwaCubeLiftEnvCfg(joint_pos_env_cfg.IiwaCubeLiftEnvCfg):
 
 @configclass
 class IiwaCubeLiftEnvCfg_PLAY(IiwaCubeLiftEnvCfg):
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()
+        # make a smaller scene for play
+        self.scene.num_envs = 50
+        self.scene.env_spacing = 2.5
+        # disable randomization for play
+        self.observations.policy.enable_corruption = False
+
+
+@configclass
+class IiwaCubePCLiftEnvCfg(IiwaCubeLiftEnvCfg):
+
+    # Scene settings
+    scene: ObjectCamTableSceneCfg = ObjectCamTableSceneCfg(num_envs=4096, env_spacing=2)
+    # Basic settings
+    observations: PointCloudObservationsCfg = PointCloudObservationsCfg()
+
+    
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()
+
+
+@configclass
+class IiwaCubePCLiftEnvCfg_PLAY(IiwaCubePCLiftEnvCfg):
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()
+        # make a smaller scene for play
+        self.scene.num_envs = 50
+        self.scene.env_spacing = 2.5
+        # disable randomization for play
+        self.observations.policy.enable_corruption = False
+
+
+@configclass
+class IiwaCubeFullObjPCLiftEnvCfg(IiwaCubeLiftEnvCfg):
+
+    # Basic settings
+    observations: FullObjPCObservationsCfg = FullObjPCObservationsCfg()
+
+    
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()
+
+
+@configclass
+class IiwaCubeFullObjPCLiftEnvCfg_PLAY(IiwaCubeFullObjPCLiftEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()

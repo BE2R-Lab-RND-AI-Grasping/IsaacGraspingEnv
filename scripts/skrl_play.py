@@ -10,7 +10,7 @@ Visit the skrl documentation (https://skrl.readthedocs.io) to see the examples s
 a more user-friendly way.
 """
 
-"""Launch Isaac Sim Simulator first."""
+"""Launch Isaac Sim Simulator first.""" 
 
 import argparse
 
@@ -18,13 +18,14 @@ from isaaclab.app import AppLauncher
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Play a checkpoint of an RL agent from skrl.")
-parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
+parser.add_argument("--video", action="store_true", default=True, help="Record videos during training.")
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument(
     "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
 )
-parser.add_argument("--num_envs", type=int, default=4, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+parser.add_argument("--num_envs", type=int, default=16, help="Number of environments to simulate.")
+# parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-v0", help="Name of the task.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint.")
 parser.add_argument(
     "--ml_framework",
@@ -39,6 +40,26 @@ parser.add_argument(
     default="PPO",
     choices=["PPO", "IPPO", "MAPPO"],
     help="The RL algorithm used for training the skrl agent.",
+)
+
+
+parser.add_argument(
+    "--dataset_path",
+    type=str,
+    default=None,
+    help="Absolute path to dataset. Dataset directory must have folders with models.",
+)
+parser.add_argument(
+    "--usd_file_name",
+    type=str,
+    default="object.usd",
+    help="The name of the USD file in the folder",
+)
+parser.add_argument(
+    "--model_filter",
+    type=str,
+    default=None,
+    help="A comma separated list of identifiers to be taken from the dataset",
 )
 
 # append AppLauncher cli args
@@ -81,6 +102,7 @@ from isaaclab.utils.dict import print_dict
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import get_checkpoint_path, load_cfg_from_registry, parse_env_cfg
 from isaaclab_rl.skrl import SkrlVecEnvWrapper
+from IsaacGraspEnv.dataset_managers import load_object_dataset
 
 # config shortcuts
 algorithm = args_cli.algorithm.lower()
@@ -94,8 +116,21 @@ def main():
 
     # parse configuration
     env_cfg = parse_env_cfg(
-        args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
+        # args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
+        args_cli.task, device="cpu", num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
     )
+    if args_cli.model_filter:
+        dt_models_filter = args_cli.model_filter.replace(" ", "").split(",")
+    else:
+        dt_models_filter = args_cli.model_filter
+        
+
+    env_cfg.scene.object.rigid_objects =  load_object_dataset(
+        args_cli.dataset_path,
+        args_cli.usd_file_name,
+        dt_models_filter
+    )
+
     try:
         experiment_cfg = load_cfg_from_registry(args_cli.task, f"skrl_{algorithm}_cfg_entry_point")
     except ValueError:
@@ -116,6 +151,7 @@ def main():
 
     # create isaac environment
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
+    env.env.sim.set_camera_view([3.5,3.5, 2.5], [0.0, 0.0,0.0])
     # wrap for video recording
     if args_cli.video:
         video_kwargs = {
@@ -123,6 +159,7 @@ def main():
             "step_trigger": lambda step: step == 0,
             "video_length": args_cli.video_length,
             "disable_logger": True,
+            # "fps": 30,
         }
         print("[INFO] Recording videos during training.")
         print_dict(video_kwargs, nesting=4)

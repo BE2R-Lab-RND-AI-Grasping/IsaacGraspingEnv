@@ -34,10 +34,18 @@ git clone git@github.com:BE2R-Lab-RND-AI-Grasping/IsaacGraspingEnv.git
 python -m pip install -e source/IsaacGraspEnv
 ```
 
+- Download dataset of objects and extract zip: [link](https://disk.yandex.ru/d/NPZwTWIzPU2gvg)
+
+- Run scripts for converting obj files in usd:
+
+```bash
+python ./scripts/dataset_loader/dataset_usd_converter.py --dataset_path <PATH_TO_DATASET> --name_point_cloud point_cloud_colorless.ply --obj_file_name object_convex_decomposition_meter_unit.obj --path_usd <PATH_TO_USD>
+```
+
 - Verify that the extension is correctly installed by running the following command:
 
 ```bash
-python scripts/autonomous_agent.py
+python scripts/autonomous_agent.py --dataset_path <PATH_TO_USD>/power_drills --model_filter "1, 5"
 ```
 This environment presents an autonomous agent without training using a finite state machine.
 
