@@ -85,11 +85,21 @@ Starts testing of the trained policy
 ```bash
 python scripts/skrl_play.py
 ```
-## Environment description
+
+## TODO
+
+- [x] Create a scene with the robot available in the oracle lab with information about the object to debug RL algorithms
+- [x] Write scripts to load and convert dataset of objects in mesh formats to usd format
+- [x] Add a camera to the environment, write an algorithm to segment an object and build an object point cloud from the depth image
+- [x] Validate environments and train policies for each object class
+- [ ] Add Domain Randomization to reduce the sim2real gap
+- [ ] Modify the policy learning algorithm for warm start weights using collected trajectories
+- [ ] Modify the approach for functional capture of objects
+- [ ] Write a Teacher-Student algorithm for generalizing a policy to a set of objects
+
+## Environment
 
 ### Observation Space
-
-Observation Space
 
 The observation space includes:
 
@@ -104,6 +114,27 @@ Information about objects and scene supports three types of observation:
 - Oracle Information: $H_\text{o}^b$ - Object pose in the base frame
 - Sampled Point Cloud: $\mathbf{p}^b_\text{o}$ - Set of points sampled from the object mesh in the base frame
 - Camera-based Point Cloud: $\mathbf{p}^b_\text{o}$ - Set of points from the object captured by simulated depth cameras in the base frame
+
+The object information is concatenated to the observation vector of the robot.
+
+### Action Space
+
+The framework implements three action modes. All modes include normalized joint position $\mathbf{q}_g$ of gripper. Only the action vector for manipulator control is different:
+1. **Joint Position Control**: joint position of manipulator
+2. **Absolute Cartesian Position** - Manipulator with absolute IK control.  The position value of the joint is calculated by means of differential inverse kinematics. More information in the [IsaacLab](https://isaac-sim.github.io/IsaacLab/main/source/api/lab/isaaclab.controllers.html#isaaclab.controllers.DifferentialIKController) documentation
+3. **Relative Cartesian Position** - Manipulator with relative IK control.
+
+### Reward
+
+The reward function consists of five main components plus regularization terms:
+
+| Name                           | Function                                                                                           |
+| ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Fingertip-Object Distance      | $\sum_i^\text{Fingers} \frac{1}{0.06 + d(\mathbf{p}^b_\text{o},\mathbf{p}^b_i)}$                   |
+| Contact Quality                | $\sum_i^\text{Fingers} f_\text{contact}(d(\mathbf{p}^b_\text{o},\mathbf{p}^b_i)) \geq 2, \; r=0.5$ |
+| Object Lifting                 | $0 \leq z_\text{o} \leq 0.2, r = 10 z_\text{o}$                                                    |
+| Object Lifted                  | $z_\text{o} \geq 0.02, \; r = 1$                                                                   |
+| Target Position Distance       | $\frac{1}{0.04 + d(\\mathbf{p}^b_\text{o},\mathbf{p}^b_\text{t})}$                                 |
 
 ## Project Structure
 ```
