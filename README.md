@@ -85,6 +85,31 @@ Starts testing of the trained policy
 ```bash
 python scripts/skrl_play.py
 ```
+## Environment description
+
+### Observation Space
+
+Observation Space
+
+The observation space includes:
+
+    $H_\text{ee}^b$ - Robot's end-effector (hand wrist frame) pose relative to the robot's base frame
+
+    $\mathbf{p}^b_i, i \in \text{Fingers}$ - Positions of fingertips in the base frame
+
+    $\mathbf{q}, \dot{\mathbf{q}}$ - Joint positions and velocities of the robot
+
+    $\mathbf{p}^b_\text{t}$ - Target position of the object in the base frame
+
+    $\mathbf{a}_{t-1}$ - Last action taken by the robot
+
+Information about objects and scene supports three types of observation:
+
+    Oracle Information: $H_\text{o}^b$ - Object pose in the base frame
+
+    Sampled Point Cloud: $\mathbf{p}^b_\text{o}$ - Set of points sampled from the object mesh in the base frame
+
+    Camera-based Point Cloud: $\mathbf{p}^b_\text{o}$ - Set of points from the object captured by simulated depth cameras in the base frame
 
 ## Project Structure
 ```
