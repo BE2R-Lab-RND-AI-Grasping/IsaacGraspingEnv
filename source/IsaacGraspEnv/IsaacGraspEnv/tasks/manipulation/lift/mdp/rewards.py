@@ -9,7 +9,7 @@ import torch
 from typing import TYPE_CHECKING
 
 from isaaclab.assets import RigidObject, RigidObjectCollection
-from isaaclab.managers import SceneEntityCfg
+from isaaclab.managers import SceneEntityCfg, RewardTermCfg, ManagerTermBase
 from isaaclab.sensors import FrameTransformer
 from isaaclab.utils.math import combine_frame_transforms
 from isaaclab.sensors import ContactSensor
@@ -17,8 +17,9 @@ from isaaclab.sensors import ContactSensor
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
-from .observations import ( 
+from .observations import (
     instance_randomize_obj_positions_in_robot_world_frame as get_obj_pos_w,
+    instance_randomize_obj_vel_in_world_frame as get_obj_vel_w,
 )
 
 
@@ -248,7 +249,6 @@ def object_ee_distance(
     return 1 - torch.tanh(object_ee_distance / std)
 
 
-
 def instance_randomize_object_ee_distance(
     env: ManagerBasedRLEnv,
     std: float,
@@ -258,7 +258,7 @@ def instance_randomize_object_ee_distance(
 ) -> torch.Tensor:
     if not hasattr(env, "rigid_objects_in_focus"):
         return torch.full((env.num_envs, 1), fill_value=-1)
-    
+
     """Reward the agent for reaching the object using tanh-kernel."""
     # extract the used quantities (to enable type-hinting)
     ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
@@ -270,7 +270,6 @@ def instance_randomize_object_ee_distance(
     object_ee_distance = torch.norm(obj_pos_w - ee_w, dim=1)
 
     return 1 - torch.tanh(object_ee_distance / std)
-
 
 
 def object_fingertips_distance(
@@ -310,7 +309,8 @@ def object_fingertips_distance(
     return torch.sum(
         torch.mul(1 / (std + object_fingertips_distance), reward_scale), dim=1
     )
-    
+
+
 def instance_randomize_object_fingertips_distance(
     env: ManagerBasedRLEnv,
     std: float,
@@ -421,7 +421,6 @@ def instance_object_goal_distance(
     if not hasattr(env, "rigid_objects_in_focus"):
         return torch.full((env.num_envs, 1), fill_value=-1)
 
-
     obj_is_lifted = instance_randomize_object_is_lifted(
         env,
         minimal_height,
@@ -443,9 +442,9 @@ def instance_object_goal_distance(
     des_pos_w, _ = combine_frame_transforms(
         robot.data.root_state_w[:, :3], robot.data.root_state_w[:, 3:7], des_pos_b
     )
-    
+
     obj_pos_w = get_obj_pos_w(env, object_cfg)
-    
+
     # distance of the end-effector to the object: (num_envs,)
     distance = torch.norm(des_pos_w - obj_pos_w, dim=1)
     # rewarded if the object is lifted above the threshold
@@ -454,6 +453,7 @@ def instance_object_goal_distance(
     reward = 1.0 / (std + distance)
 
     return obj_is_lifted.float() * reward
+
 
 def joint_vel_l2_clip(
     env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
@@ -470,6 +470,60 @@ def joint_vel_l2_clip(
         ),
         dim=1,
     )
+
+
+class instance_object_displacement(ManagerTermBase):
+
+    def __init__(self, cfg: RewardTermCfg, env: ManagerBasedRLEnv):
+
+        super().__init__(cfg, env)
+
+        self.object_cfg = cfg.params["object_cfg"]
+
+        self.prev_object_pos = torch.full((env.num_envs, 3), 0).to(env.device)
+
+    def __call__(
+        self,
+        env: ManagerBasedRLEnv,
+        object_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    ) -> torch.Tensor:
+        """Penalize joint velocities on the articulation using L2 squared kernel.
+
+        NOTE: Only the joints configured in :attr:`asset_cfg.joint_ids` will have their joint velocities contribute to the term.
+        """
+
+        curr_obj_pos = get_obj_pos_w(env, self.object_cfg)
+        # extract the used quantities (to enable type-hinting)
+        reward = torch.sum(
+            torch.abs(curr_obj_pos - self.prev_object_pos),
+            dim=1,
+        )
+
+        self.prev_object_pos = curr_obj_pos.clone()
+
+        return reward
+
+
+def instance_object_vel_l2(
+    env: ManagerBasedRLEnv,
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+):
+
+    object_vel_w = get_obj_vel_w(env, object_cfg)
+
+    return torch.linalg.vector_norm(object_vel_w, dim=1)
+
+
+
+def robot_link_vel_w_l2(
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot", body_names=["ee_frame"]),
+):
+
+    robot = env.scene[asset_cfg.name]
+    robot_link_vel_w = robot.data.body_state_w[:, asset_cfg.body_ids[0], 7:]
+
+    return torch.linalg.vector_norm(robot_link_vel_w, dim=1)
 
 
 # def undesired_contacts(env: ManagerBasedRLEnv, threshold: float, sensor_cfg: SceneEntityCfg) -> torch.Tensor:object_pos_w

@@ -37,8 +37,8 @@ parser.add_argument(
 parser.add_argument(
     "--algorithm",
     type=str,
-    default="PPO",
-    choices=["PPO", "IPPO", "MAPPO"],
+    default="RPO",
+    choices=["RPO", "PPO", "IPPO", "MAPPO"],
     help="The RL algorithm used for training the skrl agent.",
 )
 
@@ -58,7 +58,7 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default="2, 3, 4",
+    default="4",
     help="A comma separated list of identifiers to be taken from the dataset",
 )
 # append AppLauncher cli args

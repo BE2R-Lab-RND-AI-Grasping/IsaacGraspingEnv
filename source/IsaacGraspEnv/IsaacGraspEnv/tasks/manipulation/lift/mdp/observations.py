@@ -514,3 +514,28 @@ def instance_randomize_obj_orientations_in_robot_root_frame(
         obj_quat_w,
     )
     return object_quat_b
+
+
+def instance_randomize_obj_vel_in_world_frame(
+    env: ManagerBasedRLEnv,
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+) -> torch.Tensor:
+    """The orientation of the cubes in the world frame."""
+    if not hasattr(env, "rigid_objects_in_focus"):
+        return torch.full((env.num_envs, 6), fill_value=-1)
+
+    obj: RigidObjectCollection = env.scene[object_cfg.name]
+
+    obj_ang_vel_w = []
+    obj_lin_vel_w = []
+    for env_id in range(env.num_envs):
+        obj_ang_vel_w.append(
+            obj.data.object_ang_vel_w[env_id, env.rigid_objects_in_focus[env_id][0], :3] / 180 * np.pi 
+        )
+        obj_lin_vel_w.append(
+            obj.data.object_lin_vel_w[env_id, env.rigid_objects_in_focus[env_id][0], :3]
+        )
+    obj_ang_vel_w = torch.stack(obj_ang_vel_w)
+    obj_lin_vel_w = torch.stack(obj_lin_vel_w)
+
+    return torch.cat((obj_lin_vel_w, obj_ang_vel_w), dim=1)

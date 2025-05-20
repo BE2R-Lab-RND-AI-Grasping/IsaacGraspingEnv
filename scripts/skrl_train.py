@@ -40,8 +40,8 @@ parser.add_argument(
 parser.add_argument(
     "--algorithm",
     type=str,
-    default="PPO",
-    choices=["PPO", "IPPO", "MAPPO", "SAC"],
+    default="RPO",
+    choices=["RPO", "PPO", "IPPO", "MAPPO", "SAC"],
     help="The RL algorithm used for training the skrl agent.",
 )
 
@@ -203,7 +203,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         env = gym.wrappers.RecordVideo(env, **video_kwargs)
 
     # convert to single-agent instance if required by the RL algorithm
-    if isinstance(env.unwrapped, DirectMARLEnv) and algorithm in ["ppo"]:
+    if isinstance(env.unwrapped, DirectMARLEnv) and algorithm in ["ppo", "rpo"]:
         env = multi_agent_to_single_agent(env)
 
     # wrap around environment for skrl

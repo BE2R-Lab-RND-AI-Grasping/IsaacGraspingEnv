@@ -57,17 +57,17 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     #     spawn=UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd",
     #                      semantic_tags = [("class","table"), ("color", "gray")],),
     # )
-    # table = AssetBaseCfg(
-    #     prim_path="{ENV_REGEX_NS}/Table",
-    #     init_state=AssetBaseCfg.InitialStateCfg(pos=[0.6, 0, -0.1], rot=[1, 0, 0, 0.0]),
-    #     spawn=sim_utils.CuboidCfg(
-    #         size= [1.4, 0.8, 0.2],
-    #         # rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-    #         # mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
-    #         collision_props=sim_utils.CollisionPropertiesCfg(),
-    #         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.6, 0.6, 0.9), metallic=0.2),
-    #     ),
-    #     )
+    table = AssetBaseCfg(
+        prim_path="{ENV_REGEX_NS}/Table",
+        init_state=AssetBaseCfg.InitialStateCfg(pos=[0.6, 0, -0.1], rot=[1, 0, 0, 0.0]),
+        spawn=sim_utils.CuboidCfg(
+            size= [1.4, 0.8, 0.2],
+            # rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+            # mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.6, 0.6, 0.9), metallic=0.2),
+        ),
+        )
 
     # plane
     # plane = AssetBaseCfg(
@@ -111,7 +111,7 @@ class CommandsCfg:
         debug_vis=True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             # Grasp from front
-            pos_x=(0.6, 0.7), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
+            pos_x=(0.6, 0.7), pos_y=(-0.25, 0.25), pos_z=(0.1, 0.35), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
             # Grasp from top
             # pos_x=(0.4, 0.6), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
         ),
@@ -145,8 +145,8 @@ class ObservationsCfg:
         # joint_vel = ObsTerm(func=mdp.joint_vel_rel)
         
         joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-                                                                                                                          "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-                                                                                                                          "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+                                                                                                                        "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
+                                                                                                                        "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
                                                                                                             "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
                                                                                                             "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
@@ -221,7 +221,7 @@ add_is_contact_param = lambda b: b.update(is_contact_params) or b
 class RewardsCfg:
     """Reward terms for the MDP."""
     
-    fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=2.0 /0.2)
+    fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=1.0/0.2)
 
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
     # For power drills
@@ -248,7 +248,7 @@ class RewardsCfg:
     # )
     hand_object_contact = RewTerm(
         func=mdp.object_hand_contact,
-        weight=0.5/0.2,
+        weight=0.75/0.2,
         params=is_contact_params,
     )
     # action penalty
@@ -257,8 +257,29 @@ class RewardsCfg:
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2_clip,
         weight=-1e-3/0.2,
-        params={"asset_cfg": SceneEntityCfg("robot")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["lbr_.*"])},
     )
+    
+    obj_displacement = RewTerm(
+        func=mdp.instance_object_displacement,
+        weight=-2e-1/0.2,
+        params={"object_cfg": SceneEntityCfg("object")},
+    )
+    
+    
+    obj_vel_l2 = RewTerm(
+        func=mdp.instance_object_vel_l2,
+        weight=-4e-2/0.2,
+        params={"object_cfg": SceneEntityCfg("object")},
+    )
+    
+    ee_vel_l2 = RewTerm(
+        func=mdp.robot_link_vel_w_l2,
+        weight=-4e-2/0.2,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=["lbr_iiwa_link_7"]), },
+    )
+    
+    
     
     # contact_penalty = RewTerm(
     #     func=mdp.undesired_contacts,
