@@ -8,11 +8,37 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/license/mit)
 
+![](doc/img/05-16-25-12-12-42-isaac.gif)
+
 ## Overview
 
-This repository contains environments and agents for learning strategies for grasping objects with a dexterous hand. 
-Accessible Environments:
-- `Isaac-Lift-Cube-Iiwa-IK-Rel-v0` - environment with DP-Flex grasp and manipulator iiwa14. The agent's task is to grab the screwdriver and move the target position.
+This repository contains environments and agents for learning strategies for grasping objects with a dexterous hand. The repository have 9 environments with the same world, reward, and differing vectors of action and observation.
+There are three types of observation:
+- Observation with oracle information about the object. Environment name prefix is `Cube`.
+- Observation with a sampled point cloud on the object. Environment name prefix is `Full-Obj-PC`.
+- Observation with a point cloud built by the camera. Environment name prefix is `PC`.
+
+And three types of action space:
+- Vector of target positions in the robot's configuration space.
+- Vector of target positions for the end effector in Cartesian space. Environment name prefix is `IK-Abs`.
+- Vector of end effector displacement in Cartesian space. Environment name prefix is `IK-Rel`.
+
+Below is the environment with the DP-Flex arm and the kuka iiwa 14 manipulator. The agent's task is to grasp the object and move the target position:
+
+- Action: joint position of manipulator
+    - `Isaac-Lift-Cube-Iiwa-v0` - Observation: object's oracle information,
+    - `Isaac-Full-Obj-PC-Lift-Iiwa-v0` - Observation: a sampled point cloud on the object, 
+    - `Isaac-PC-Lift-Iiwa-v0` - Observation: a point cloud built by the camera
+- Action: absolute pose end-effector of manipulator in Cartesian space
+    - `Isaac-Lift-Cube-Iiwa-IK-Abs-v0` - Observation: object's oracle information,
+    - `Isaac-Full-Obj-PC-Lift-Iiwa-IK-Abs-v0` - Observation: a sampled point cloud on the object, 
+    - `Isaac-PC-Lift-Iiwa-IK-Abs-v0` - Observation: a sampled point cloud on the object.
+- Action: relative pose end-effector of manipulator in Cartesian space
+    - `Isaac-Lift-Cube-Iiwa-IK-Rel-v0` - Observation: object's oracle information,
+    - `Isaac-Full-Obj-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object, 
+    - `Isaac-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object.
+
+Full description of the environment below.
 
 ## Installation
 
@@ -62,8 +88,73 @@ Starts testing of the trained policy
 python scripts/skrl_play.py
 ```
 
+## TODO
 
+- [x] Create a scene with the robot available in the oracle lab with information about the object to debug RL algorithms
+- [x] Write scripts to load and convert dataset of objects in mesh formats to usd format
+- [x] Add a camera to the environment, write an algorithm to segment an object and build an object point cloud from the depth image
+- [x] Validate environments and train policies for each object class
+- [ ] Add Domain Randomization to reduce the sim2real gap
+- [ ] Modify the policy learning algorithm for warm start weights using collected trajectories
+- [ ] Modify the approach for functional capture of objects
+- [ ] Write a Teacher-Student algorithm for generalizing a policy to a set of objects
 
+## Environment
+
+### Observation Space
+
+The observation space includes:
+
+- $H_\text{ee}^b$ - Robot's end-effector (hand wrist frame) pose relative to the robot's base frame
+- $\mathbf{p}^b_i, i \in \text{Fingers}$ - Positions of fingertips in the base frame
+- $\mathbf{q}, \dot{\mathbf{q}}$ - Joint positions and velocities of the robot
+- $\mathbf{p}^b_\text{t}$ - Target position of the object in the base frame
+- $\mathbf{a}_{t-1}$ - Last action taken by the robot
+
+Information about objects and scene supports three types of observation:
+
+- Oracle Information: $H_\text{o}^b$ - Object pose in the base frame
+- Sampled Point Cloud: $\mathbf{p}^b_\text{o}$ - Set of points sampled from the object mesh in the base frame
+- Camera-based Point Cloud: $\mathbf{p}^b_\text{o}$ - Set of points from the object captured by simulated depth cameras in the base frame
+
+The object information is concatenated to the observation vector of the robot.
+
+### Action Space
+
+The framework implements three action modes. All modes include normalized joint position $\mathbf{q}_g$ of gripper. Only the action vector for manipulator control is different:
+1. **Joint Position Control**: joint position of manipulator
+2. **Absolute Cartesian Position** - Manipulator with absolute IK control.  The position value of the joint is calculated by means of differential inverse kinematics. More information in the [IsaacLab](https://isaac-sim.github.io/IsaacLab/main/source/api/lab/isaaclab.controllers.html#isaaclab.controllers.DifferentialIKController) documentation
+3. **Relative Cartesian Position** - Manipulator with relative IK control.
+
+### Reward
+
+The reward function consists of five main components plus regularization terms:
+
+| Name                           | Function                                                                                           |
+| ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Fingertip-Object Distance      | $\sum_i^\text{Fingers} \frac{1}{0.06 + d(\mathbf{p}^b_\text{o},\mathbf{p}^b_i)}$                   |
+| Contact Quality                | $\sum_i^\text{Fingers} f_\text{contact}(d(\mathbf{p}^b_\text{o},\mathbf{p}^b_i)) \geq 2, \; r=0.5$ |
+| Object Lifting                 | $0 \leq z_\text{o} \leq 0.2, r = 10 z_\text{o}$                                                    |
+| Object Lifted                  | $z_\text{o} \geq 0.02, \; r = 1$                                                                   |
+| Target Position Distance       | $\frac{1}{0.04 + d(\\mathbf{p}^b_\text{o},\mathbf{p}^b_\text{t})}$                                 |
+
+## Project Structure
+```
+├── scripts/                # Training, evaluation and utility scripts
+│   ├── autonomous_agent.py # Scripts runs autonomous agent without training using a finite state machine
+│   ├── skrl_play.py        # Scripts runs last trained policy
+│   ├── skrl_train.py       # Scripts start trainig policy process
+├── logs/                   # Training logs and experiment results
+├── source/IsaacGraspEnv/IsaacGraspEnv
+│   ├── assets/             # Assets of objects for grasping
+│   ├── robots/             # USD description files of robots
+│   ├── sim/                # Extended config classes and schemas from IsaacLab
+│   ├── tasks/              # RL environments and task definitions
+│   ├── torch_models/       # Neural network architectures for policies and feature extraction
+│   └── dataset_managers/   # Tools for loading and managing external object datasets
+├── README.md
+└── requirements.txt
+```
 ## Troubleshooting
 
 ### Pylance Missing Indexing of Extensions
