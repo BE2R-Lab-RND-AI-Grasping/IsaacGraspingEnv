@@ -8,6 +8,8 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/license/mit)
 
+![](doc/img/05-16-25-12-12-42-isaac.gif)
+
 ## Overview
 
 This repository contains environments and agents for learning strategies for grasping objects with a dexterous hand. The repository have 9 environments with the same world, reward, and differing vectors of action and observation.
