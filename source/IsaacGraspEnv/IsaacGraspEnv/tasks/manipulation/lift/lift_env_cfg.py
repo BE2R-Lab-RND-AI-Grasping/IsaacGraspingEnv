@@ -144,12 +144,17 @@ class ObservationsCfg:
         # joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized)
         # joint_vel = ObsTerm(func=mdp.joint_vel_rel)
         
+        # joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+        #                                                                                                                 "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
+        #                                                                                                                 "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+        # joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+        #                                                                                                     "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
+        #                                                                                                     "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+        
         joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-                                                                                                                        "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-                                                                                                                        "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+                                                                                                                                "Joint_.*"])})
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-                                                                                                            "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-                                                                                                            "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+                                                                                                            "Joint_.*"])})
         object_position = ObsTerm(func=mdp.instance_randomize_obj_positions_in_robot_root_frame)
         object_quat = ObsTerm(func=mdp.instance_randomize_obj_orientations_in_robot_root_frame)
         target_object_position = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_pose"})
@@ -302,18 +307,28 @@ class TerminationsCfg:
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
-    spring_offset = CurrTerm(
-        func=mdp.set_pd_offset,
-        params={"robot_cfg":SceneEntityCfg("robot", joint_names=["Joint_.*_finray_proxy"]), "pd_offset":-0.62}
+    # spring_offset = CurrTerm(
+    #     func=mdp.set_pd_offset,
+    #     params={"robot_cfg":SceneEntityCfg("robot", joint_names=["Joint_.*_finray_proxy"]), "pd_offset":-0.62}
+    #     )
+    fingertips = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "fingettips_to_object", "weight": 0.0, "num_steps": 8000}
+    )
+    object_contact = CurrTerm(
+            func=mdp.modify_reward_weight, params={"term_name": "hand_object_contact", "weight": 2/0.2, "num_steps": 8000}
         )
-    # action_rate = CurrTerm(
-    #     func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-3, "num_steps": 30000}
-    # )
-
-#     joint_vel = CurrTerm(
-#         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-2, "num_steps": 30000}
-#     )
-
+    target_pos = CurrTerm(
+            func=mdp.modify_reward_weight, params={"term_name": "object_goal_tracking", "weight": 5/0.2, "num_steps": 8000}
+        )
+    joint_vel = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-2/0.2, "num_steps": 30000}
+    )
+    ee_vel = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "ee_vel_l2", "weight": -8e-2/0.2, "num_steps": 30000}
+    )
+    obj_Vel = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "obj_vel_l2", "weight": -8e-2/0.2, "num_steps": 30000}
+    )
 
 ##
 # Environment configuration
@@ -334,7 +349,7 @@ class LiftEnvCfg(ManagerBasedRLEnvCfg):
     rewards: RewardsCfg = RewardsCfg()
     terminations: TerminationsCfg = TerminationsCfg()
     events: EventCfg = EventCfg()
-    # curriculum: CurriculumCfg = CurriculumCfg()
+    curriculum: CurriculumCfg = CurriculumCfg()
 
     def __post_init__(self):
         """Post initialization."""

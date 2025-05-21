@@ -183,6 +183,7 @@ def main():
     # set agent to evaluation mode
     runner.agent.set_running_mode("eval")
 
+    rew_buffer = []
     # reset environment
     obs, _ = env.reset()
     timestep = 0
@@ -193,7 +194,8 @@ def main():
             # agent stepping
             actions = runner.agent.act(obs, timestep=0, timesteps=0)[0]
             # env stepping
-            obs, _, _, _, info = env.step(actions)
+            obs, rew, terminated, truncated, info = env.step(actions)
+            rew_buffer.append(rew.cpu().numpy())
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video

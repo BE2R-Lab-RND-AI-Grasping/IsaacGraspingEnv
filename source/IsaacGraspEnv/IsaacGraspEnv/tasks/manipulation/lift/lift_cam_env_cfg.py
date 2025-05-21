@@ -67,13 +67,17 @@ class ProprioceptionRobotObservation(ObsGroup):
         ee_frame = ObsTerm(func=mdp.frame_in_robot_root_frame)
         fingertips_positions = ObsTerm(func=mdp.pos_fingertips_root_frame) 
 
-        joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-                                                                                                                          "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-                                                                                                                          "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-                                                                                                            "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-                                                                                                            "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+        # joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+        #                                                                                                                   "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
+        #                                                                                                                   "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+        # joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+        #                                                                                                     "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
+        #                                                                                                     "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
 
+        joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+                                                                                                                    "Joint_.*"])})
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+                                                                                                            "Joint_.*"])})
         target_object_position = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_pose"})
         actions = ObsTerm(func=mdp.last_action)
 
