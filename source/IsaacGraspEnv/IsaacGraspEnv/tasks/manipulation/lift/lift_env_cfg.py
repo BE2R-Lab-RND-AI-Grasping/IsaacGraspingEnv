@@ -27,7 +27,6 @@ from . import mdp
 import torch
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-
 ##
 # Scene definition
 ##
@@ -65,7 +64,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
             # rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             # mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
             collision_props=sim_utils.CollisionPropertiesCfg(),
-            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.6, 0.6, 0.9), metallic=0.2),
+            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.1, 0.1, 0.1), metallic=0.2),
         ),
         )
 
@@ -113,7 +112,7 @@ class CommandsCfg:
             # Grasp from front
             pos_x=(0.6, 0.7), pos_y=(-0.25, 0.25), pos_z=(0.1, 0.35), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
             # Grasp from top
-            # pos_x=(0.4, 0.6), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
+            # pos_x=(0.4, 0.6), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.1), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
         ),
     )
 
@@ -157,7 +156,7 @@ class ObservationsCfg:
                                                                                                             "Joint_.*"])})
         object_position = ObsTerm(func=mdp.instance_randomize_obj_positions_in_robot_root_frame)
         object_quat = ObsTerm(func=mdp.instance_randomize_obj_orientations_in_robot_root_frame)
-        target_object_position = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_pose"})
+        target_object_position = ObsTerm(func=mdp.target_position, params={"command_name": "object_pose"})
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self):
@@ -226,7 +225,7 @@ add_is_contact_param = lambda b: b.update(is_contact_params) or b
 class RewardsCfg:
     """Reward terms for the MDP."""
     
-    fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=1.0/0.2)
+    fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=0.5/0.2)
 
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
     # For power drills
@@ -234,7 +233,7 @@ class RewardsCfg:
     # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.13}), weight=1.0/0.2)
     # for screwdrives
     lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.025}), weight=10.0/0.2)
-    lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.025}), weight=1.0/0.2)
+    lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.05}), weight=2.0/0.2)
     
 
     object_goal_tracking = RewTerm(
@@ -243,8 +242,19 @@ class RewardsCfg:
         # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
         # for screwdrives
         params=add_is_contact_param({"std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
-        weight=1.0/0.2, 
+        weight=3.0/0.2, 
     )
+    
+    
+    object_goal_reach = RewTerm(
+        func=mdp.instance_object_reached_target,
+        # For power drills
+        # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
+        # for screwdrives
+        params=add_is_contact_param({"threshold_reach":0.05, "std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
+        weight=10.0/0.2, 
+    )
+    
 
     # object_goal_tracking_fine_grained = RewTerm(
     #     func=mdp.object_goal_distance,
@@ -253,36 +263,43 @@ class RewardsCfg:
     # )
     hand_object_contact = RewTerm(
         func=mdp.object_hand_contact,
-        weight=0.75/0.2,
+        weight=1.0/0.2,
         params=is_contact_params,
     )
     # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-2/0.2)
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-5e-3/0.2)
 
+    # joint_vel = RewTerm(
+    #     func=mdp.joint_vel_l2_clip,
+    #     weight=-1e-3/0.2,
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=["lbr_.*"])},
+    # )
+    
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2_clip,
-        weight=-1e-3/0.2,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["lbr_.*"])},
+        weight=-1e-2/0.2,
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["Joint.*"])},
     )
     
-    obj_displacement = RewTerm(
-        func=mdp.instance_object_displacement,
-        weight=-2e-1/0.2,
-        params={"object_cfg": SceneEntityCfg("object")},
-    )
+    # obj_displacement = RewTerm(
+    #     func=mdp.instance_object_displacement,
+    #     weight=-2e-1/0.2,
+    #     params={"object_cfg": SceneEntityCfg("object")},
+    # )
     
     
-    obj_vel_l2 = RewTerm(
-        func=mdp.instance_object_vel_l2,
-        weight=-4e-2/0.2,
-        params={"object_cfg": SceneEntityCfg("object")},
-    )
+    # obj_vel_l2 = RewTerm(
+    #     func=mdp.instance_object_vel_l2,
+    #     weight=-4e-2/0.2,
+    #     params={"object_cfg": SceneEntityCfg("object")},
+    # )
     
     ee_vel_l2 = RewTerm(
         func=mdp.robot_link_vel_w_l2,
-        weight=-4e-2/0.2,
+        weight=-8e-3/0.2,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=["lbr_iiwa_link_7"]), },
     )
+
     
     
     
@@ -311,23 +328,23 @@ class CurriculumCfg:
     #     func=mdp.set_pd_offset,
     #     params={"robot_cfg":SceneEntityCfg("robot", joint_names=["Joint_.*_finray_proxy"]), "pd_offset":-0.62}
     #     )
-    fingertips = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "fingettips_to_object", "weight": 0.0, "num_steps": 8000}
-    )
-    object_contact = CurrTerm(
-            func=mdp.modify_reward_weight, params={"term_name": "hand_object_contact", "weight": 2/0.2, "num_steps": 8000}
-        )
-    target_pos = CurrTerm(
-            func=mdp.modify_reward_weight, params={"term_name": "object_goal_tracking", "weight": 5/0.2, "num_steps": 8000}
-        )
+    # fingertips = CurrTerm(
+    #     func=mdp.modify_reward_weight, params={"term_name": "fingettips_to_object", "weight": 0.0, "num_steps": 8000}
+    # )
+    # object_contact = CurrTerm(
+    #         func=mdp.modify_reward_weight, params={"term_name": "hand_object_contact", "weight": 2/0.2, "num_steps": 8000}
+    #     )
+    # target_pos = CurrTerm(
+    #         func=mdp.modify_reward_weight, params={"term_name": "object_goal_tracking", "weight": 2/0.2, "num_steps": 8000}
+    #     )
     joint_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-2/0.2, "num_steps": 30000}
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -8e-2/0.2, "num_steps": 15000}
     )
     ee_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "ee_vel_l2", "weight": -8e-2/0.2, "num_steps": 30000}
+        func=mdp.modify_reward_weight, params={"term_name": "ee_vel_l2", "weight": -8e-2/0.2, "num_steps": 15000}
     )
     obj_Vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "obj_vel_l2", "weight": -8e-2/0.2, "num_steps": 30000}
+        func=mdp.modify_reward_weight, params={"term_name": "obj_vel_l2", "weight": -16e-2/0.2, "num_steps": 15000}
     )
 
 ##
@@ -349,13 +366,15 @@ class LiftEnvCfg(ManagerBasedRLEnvCfg):
     rewards: RewardsCfg = RewardsCfg()
     terminations: TerminationsCfg = TerminationsCfg()
     events: EventCfg = EventCfg()
-    curriculum: CurriculumCfg = CurriculumCfg()
+    # curriculum: CurriculumCfg = CurriculumCfg()
+
 
     def __post_init__(self):
         """Post initialization."""
         # general settings
         self.decimation = 2
         self.episode_length_s = 3.0
+        
         # simulation settings
         self.sim.dt = 0.01 #1.0 /120.0  # 100Hz
         self.sim.render_interval = self.decimation
