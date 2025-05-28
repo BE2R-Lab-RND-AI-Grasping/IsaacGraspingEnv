@@ -156,7 +156,7 @@ class ObservationsCfg:
                                                                                                             "Joint_.*"])})
         object_position = ObsTerm(func=mdp.instance_randomize_obj_positions_in_robot_root_frame)
         object_quat = ObsTerm(func=mdp.instance_randomize_obj_orientations_in_robot_root_frame)
-        target_object_position = ObsTerm(func=mdp.target_position, params={"command_name": "object_pose"})
+        target_object_position = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_pose"})
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self):
@@ -197,7 +197,7 @@ class EventCfg:
         func=mdp.reset_joints_by_offset,
         mode="reset",
         params= {
-            "position_range":(-0.05, 0.05),
+            "position_range":(-0.0, 0.00),
             "velocity_range":(-0.00, 0.00),
             "asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*", "Joint_.*"])
         }
