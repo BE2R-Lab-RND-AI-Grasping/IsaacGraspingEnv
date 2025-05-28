@@ -455,6 +455,68 @@ def instance_object_goal_distance(
     return obj_is_lifted.float() * reward
 
 
+def instance_object_reached_target(
+    env: ManagerBasedRLEnv,
+    std: float,
+    minimal_height: float,
+    command_name: str,
+    threshold_reach: float,
+    thumb_rot_cfgs: SceneEntityCfg,
+    thumb_flex_cfgs: SceneEntityCfg,
+    thumb_finray_cfgs: SceneEntityCfg,
+    right_flex_cfgs: SceneEntityCfg,
+    right_finray_cfgs: SceneEntityCfg,
+    left_flex_cfgs: SceneEntityCfg,
+    left_finray_cfgs: SceneEntityCfg,
+    threshold,
+    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+):
+
+    if not hasattr(env, "rigid_objects_in_focus"):
+        return torch.full((env.num_envs, 1), fill_value=-1)
+
+    obj_is_lifted = instance_randomize_object_is_lifted(
+        env,
+        minimal_height,
+        thumb_rot_cfgs,
+        thumb_flex_cfgs,
+        thumb_finray_cfgs,
+        right_flex_cfgs,
+        right_finray_cfgs,  # type: ignore
+        left_flex_cfgs,
+        left_finray_cfgs,
+        threshold,
+    )
+    
+    distance_reward = instance_object_goal_distance(
+        env,
+        std,
+        minimal_height,
+        command_name,
+        thumb_rot_cfgs,
+        thumb_flex_cfgs,
+        thumb_finray_cfgs,
+        right_flex_cfgs,
+        right_finray_cfgs,
+        left_flex_cfgs,
+        left_finray_cfgs,
+        threshold,
+        robot_cfg,
+        object_cfg,
+    )
+    
+    distance = 1 / distance_reward + 0.001 - std
+    
+    reward = torch.where(distance <= threshold_reach, 1.0, 0.0)
+    
+    return obj_is_lifted.float() * reward
+    
+    
+    
+    
+
+
 def joint_vel_l2_clip(
     env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
 ) -> torch.Tensor:
@@ -512,7 +574,6 @@ def instance_object_vel_l2(
     object_vel_w = get_obj_vel_w(env, object_cfg)
 
     return torch.linalg.vector_norm(object_vel_w, dim=1)
-
 
 
 def robot_link_vel_w_l2(

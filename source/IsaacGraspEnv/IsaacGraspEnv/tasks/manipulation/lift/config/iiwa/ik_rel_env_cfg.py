@@ -14,7 +14,7 @@ from . import joint_pos_env_cfg
 ##
 from IsaacGraspEnv.tasks.manipulation.lift.lift_cam_env_cfg import ObjectCamTableSceneCfg, PointCloudObservationsCfg, FullObjPCObservationsCfg
 from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import IIWA_CRINGE_CFG_HIGH_PD_CFG  # isort: skip
-
+import gymnasium as gym
 
 @configclass
 class IiwaCubeLiftEnvCfg(joint_pos_env_cfg.IiwaCubeLiftEnvCfg):
@@ -32,8 +32,9 @@ class IiwaCubeLiftEnvCfg(joint_pos_env_cfg.IiwaCubeLiftEnvCfg):
             joint_names=["lbr_iiwa_joint_.*"],
             body_name="lbr_iiwa_link_7",
             controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
-            scale=0.5,
+            scale=0.05,
             body_offset=DifferentialInverseKinematicsActionCfg.OffsetCfg(pos=[0.0, 0.0, 0.12]),
+            # clip={"lbr_iiwa_joint_[1-6]":(-1.0, 1.0)}
         )
 
 

@@ -193,14 +193,15 @@ class EventCfg:
     #     }
     # )
     
-    # random_initial_position = EventTerm(
-    #     func=mdp.reset_joints_by_offset,
-    #     params= {
-    #         "position_range":(-0.05, 0.05),
-    #         "velocity_range":(-0.00, 0.00),
-    #         "asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*"])
-    #     }
-    # )
+    random_initial_position = EventTerm(
+        func=mdp.reset_joints_by_offset,
+        mode="reset",
+        params= {
+            "position_range":(-0.05, 0.05),
+            "velocity_range":(-0.00, 0.00),
+            "asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*", "Joint_.*"])
+        }
+    )
     # reset_object_position = EventTerm(
     #     func=mdp.reset_root_state_uniform,
     #     mode="reset",
@@ -225,15 +226,15 @@ add_is_contact_param = lambda b: b.update(is_contact_params) or b
 class RewardsCfg:
     """Reward terms for the MDP."""
     
-    fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=0.5/0.2)
+    fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=1.0/0.2/10)
 
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
     # For power drills
-    # lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0/0.2)
-    # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.13}), weight=1.0/0.2)
+    # lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0/0.2/10)
+    # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.13}), weight=1.0/0.2/10)
     # for screwdrives
-    lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.025}), weight=10.0/0.2)
-    lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.05}), weight=2.0/0.2)
+    lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.025}), weight=10.0/0.2/10)
+    lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.05}), weight=1.0/0.2/10)
     
 
     object_goal_tracking = RewTerm(
@@ -242,7 +243,7 @@ class RewardsCfg:
         # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
         # for screwdrives
         params=add_is_contact_param({"std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
-        weight=3.0/0.2, 
+        weight=1.0/0.2/10, 
     )
     
     
@@ -252,51 +253,51 @@ class RewardsCfg:
         # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
         # for screwdrives
         params=add_is_contact_param({"threshold_reach":0.05, "std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
-        weight=10.0/0.2, 
+        weight=5.0/0.2/10, 
     )
     
 
     # object_goal_tracking_fine_grained = RewTerm(
     #     func=mdp.object_goal_distance,
     #     params=add_is_contact_param({"std": 0.05, "minimal_height": 0.2, "command_name": "object_pose"}),
-    #     weight=5.0/0.2,
+    #     weight=5.0/0.2/10,
     # )
     hand_object_contact = RewTerm(
         func=mdp.object_hand_contact,
-        weight=1.0/0.2,
+        weight=0.75/0.2/10,
         params=is_contact_params,
     )
     # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-5e-3/0.2)
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-5e-3/0.2/10)
 
     # joint_vel = RewTerm(
     #     func=mdp.joint_vel_l2_clip,
-    #     weight=-1e-3/0.2,
+    #     weight=-1e-3/0.2/10,
     #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=["lbr_.*"])},
     # )
     
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2_clip,
-        weight=-1e-2/0.2,
+        weight=-5e-3/0.2/10,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=["Joint.*"])},
     )
     
     # obj_displacement = RewTerm(
     #     func=mdp.instance_object_displacement,
-    #     weight=-2e-1/0.2,
+    #     weight=-2e-1/0.2/10,
     #     params={"object_cfg": SceneEntityCfg("object")},
     # )
     
     
     # obj_vel_l2 = RewTerm(
     #     func=mdp.instance_object_vel_l2,
-    #     weight=-4e-2/0.2,
+    #     weight=-4e-2/0.2/10,
     #     params={"object_cfg": SceneEntityCfg("object")},
     # )
     
     ee_vel_l2 = RewTerm(
         func=mdp.robot_link_vel_w_l2,
-        weight=-8e-3/0.2,
+        weight=-8e-3/0.2/10,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=["lbr_iiwa_link_7"]), },
     )
 
@@ -305,7 +306,7 @@ class RewardsCfg:
     
     # contact_penalty = RewTerm(
     #     func=mdp.undesired_contacts,
-    #     weight=-1e-0/0.2,
+    #     weight=-1e-0/0.2/10,
     #     params={"sensor_cfg": SceneEntityCfg("contact_forces_arm", body_names="lbr_.*"), "threshold": 1.0},
     # )
 
@@ -332,19 +333,19 @@ class CurriculumCfg:
     #     func=mdp.modify_reward_weight, params={"term_name": "fingettips_to_object", "weight": 0.0, "num_steps": 8000}
     # )
     # object_contact = CurrTerm(
-    #         func=mdp.modify_reward_weight, params={"term_name": "hand_object_contact", "weight": 2/0.2, "num_steps": 8000}
+    #         func=mdp.modify_reward_weight, params={"term_name": "hand_object_contact", "weight": 2/0.2/10, "num_steps": 8000}
     #     )
     # target_pos = CurrTerm(
-    #         func=mdp.modify_reward_weight, params={"term_name": "object_goal_tracking", "weight": 2/0.2, "num_steps": 8000}
+    #         func=mdp.modify_reward_weight, params={"term_name": "object_goal_tracking", "weight": 2/0.2/10, "num_steps": 8000}
     #     )
     joint_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -8e-2/0.2, "num_steps": 15000}
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -8e-2/0.2/10, "num_steps": 15000}
     )
     ee_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "ee_vel_l2", "weight": -8e-2/0.2, "num_steps": 15000}
+        func=mdp.modify_reward_weight, params={"term_name": "ee_vel_l2", "weight": -8e-2/0.2/10, "num_steps": 15000}
     )
     obj_Vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "obj_vel_l2", "weight": -16e-2/0.2, "num_steps": 15000}
+        func=mdp.modify_reward_weight, params={"term_name": "obj_vel_l2", "weight": -16e-2/0.2/10, "num_steps": 15000}
     )
 
 ##

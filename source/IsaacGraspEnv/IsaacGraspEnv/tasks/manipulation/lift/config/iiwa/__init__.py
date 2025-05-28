@@ -77,6 +77,7 @@ gym.register(
     kwargs={
         "env_cfg_entry_point": f"{__name__}.ik_abs_env_cfg:IiwaCubeLiftEnvCfg",
         "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
+        "skrl_rpo_cfg_entry_point": f"{agents.__name__}:skrl_rpo_cfg.yaml",
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:LiftCubePPORunnerCfg",
     },
     disable_env_checker=True,
@@ -119,6 +120,7 @@ gym.register(
         "env_cfg_entry_point": f"{__name__}.ik_rel_env_cfg:IiwaCubeLiftEnvCfg",
         "robomimic_bc_cfg_entry_point": os.path.join(agents.__path__[0], "robomimic/bc.json"),
         "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
+        "skrl_rpo_cfg_entry_point": f"{agents.__name__}:skrl_rpo_cfg.yaml",
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:LiftCubePPORunnerCfg",
     },
     disable_env_checker=True,

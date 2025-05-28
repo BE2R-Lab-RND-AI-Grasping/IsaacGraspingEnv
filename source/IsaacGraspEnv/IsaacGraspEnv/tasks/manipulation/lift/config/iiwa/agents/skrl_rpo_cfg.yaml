@@ -1,4 +1,4 @@
-seed: 24
+seed: 42
 
 # Models are instantiated using skrl's model instantiator utility
 # https://skrl.readthedocs.io/en/latest/api/utils/model_instantiators.html
@@ -14,7 +14,7 @@ models:
     network:
       - name: net
         input: STATES
-        layers:  [64, 64, 64] #[256, 128, 64]
+        layers:  [256, 64, 64] #[256, 128, 64]
         activations: elu
     output: ACTIONS
   value:  # see deterministic_model parameters
@@ -23,7 +23,7 @@ models:
     network:
       - name: net
         input: STATES
-        layers: [64, 64, 64] #[256, 128, 64]
+        layers: [256, 64, 64] #[256, 128, 64]
         activations: elu
     output: ONE
 
@@ -39,19 +39,19 @@ memory:
 # https://skrl.readthedocs.io/en/latest/api/agents/Rpo.html
 agent:
   class: RPO
-  rollouts: 100
-  learning_epochs: 5
+  rollouts: 30
+  learning_epochs: 10
   mini_batches: 1 # 20 * NUM_ENVS / 1024  # horizon_length * num_actors / minibatch_size
 
   alpha: 0.5
   discount_factor: 0.99
-  lambda: 0.95
+  lambda: 0.98
 
-  learning_rate: 1.0e-03
+  learning_rate: 1.0e-04
   learning_rate_scheduler: KLAdaptiveLR
   learning_rate_scheduler_kwargs:
     kl_threshold: 0.01
-    min_rl: 1e-5
+    min_lr: 1.0e-5
 
   state_preprocessor: RunningStandardScaler
   state_preprocessor_kwargs: null
@@ -61,18 +61,18 @@ agent:
   random_timesteps: 0
   learning_starts: 0
 
-  grad_norm_clip: 1.0
+  grad_norm_clip: 0.5
   ratio_clip: 0.2
   value_clip: 0.2
   clip_predicted_values: True
 
   entropy_loss_scale: 0.01
-  value_loss_scale: 1.0
+  value_loss_scale: 2.0
 
   kl_threshold: 0.0
 
   rewards_shaper_scale: 0.01
-  time_limit_bootstrap: True
+  time_limit_bootstrap: False
   # logging and checkpoint
   experiment:
     directory: "iiwa_lift"
@@ -85,5 +85,5 @@ agent:
 # https://skrl.readthedocs.io/en/latest/api/trainers/sequential.html
 trainer:
   class: SequentialTrainer
-  timesteps: 10000
+  timesteps: 30000
   environment_info: log

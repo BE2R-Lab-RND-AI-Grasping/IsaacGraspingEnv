@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description="Train an RL agent with skrl.")
 parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
-parser.add_argument("--num_envs", type=int, default=256, help="Number of environments to simulate.")
+parser.add_argument("--num_envs", type=int, default=2048, help="Number of environments to simulate.")
 # parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.") # Isaac-Cam-Lift-Cube-Iiwa-v0
 parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
 parser.add_argument("--seed", type=int, default=24, help="Seed used for the environment")
@@ -130,6 +130,9 @@ agent_cfg_entry_point = "skrl_cfg_entry_point" if algorithm in ["ppo"] else f"sk
 @hydra_task_config(args_cli.task, agent_cfg_entry_point)
 def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agent_cfg: dict):
     """Train with skrl agent."""
+    
+    # args_cli.device = "cpu"
+    
     # override configurations with non-hydra CLI arguments
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
     env_cfg.sim.device = args_cli.device if args_cli.device is not None else env_cfg.sim.device
@@ -190,6 +193,10 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # create isaac environment
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
+    
+    env.unwrapped.action_space = gym.spaces.Box(-1.0, 1.0, shape=env.action_space.shape)
+    env.unwrapped.single_action_space = gym.spaces.Box(-1.0, 1.0, shape=(16,))
+    env.env.sim.set_camera_view([1.5,1.5, 1.5], [0.0, 0.0,0.0])
     # wrap for video recording
     if args_cli.video:
         video_kwargs = {
