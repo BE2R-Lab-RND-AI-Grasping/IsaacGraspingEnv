@@ -35,7 +35,8 @@ from dataclasses import MISSING
 
 
 # OBJ_POS = np.array([0.0, 0.0, 0.0])
-OBJ_POS = np.array([0.9, 0.0, 0.07077])
+# OBJ_POS = np.array([0.9, 0.0, 0.07077])
+OBJ_POS = np.array([0.7, 0.0, 0.02])
 # OBJ_POS = np.array([0.0, 0.0, 10.0])
 OBJ_ROT = R.from_euler("xyz", [90.0, 0.0, 0.0], degrees=True)
 
@@ -69,11 +70,13 @@ class IiwaCubeLiftEnvCfg(LiftEnvCfg):
         self.actions.gripper_action = mdp.JointPositionToLimitsActionCfg(
             asset_name="robot",
             joint_names=[
-                "Joint_.*_abduction",
-                "Joint_.*_dynamixel_crank",
-                "Joint_.*_rotation",
+                # "Joint_.*_abduction",
+                # "Joint_.*_dynamixel_crank",
+                # "Joint_.*_rotation"
+                "Joint_.*",
             ],
             rescale_to_limits=True,
+            # clip = {"Joint_.*":(-1.0, 1.0)}
             # scale=1.0
         )
         # Set the body name for the end effector
@@ -109,7 +112,7 @@ class IiwaCubeLiftEnvCfg(LiftEnvCfg):
                     prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy",
                     name="fingertips_thumb",
                     offset=OffsetCfg(
-                        pos=[0.055, 0.02, 0.0],
+                        pos=[-0.055, 0.02, 0.0],
                     ),
                 ),
             ],
