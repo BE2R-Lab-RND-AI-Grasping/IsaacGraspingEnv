@@ -159,6 +159,8 @@ class ObservationsCfg:
         target_object_position = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_pose"})
         actions = ObsTerm(func=mdp.last_action)
 
+        # vectors = ObsTerm(func=mdp.vectors_joint_hand_pc_object, params={"frame_cfg":SceneEntityCfg("ee_frame"), "robot_cfg":SceneEntityCfg("robot", body_names=["Link_.*"], joint_names=["Joint_.*"])})
+
         def __post_init__(self):
             self.enable_corruption = True
             self.concatenate_terms = True

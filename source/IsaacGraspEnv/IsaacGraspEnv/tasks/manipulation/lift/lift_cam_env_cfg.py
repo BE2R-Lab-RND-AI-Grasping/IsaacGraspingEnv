@@ -143,6 +143,40 @@ class FullObjPCObservationsCfg:
     # observation groups
     policy: FullObjPCPolicyCfg = FullObjPCPolicyCfg()
 
+
+
+@configclass
+class VectorsObservationsCfg:
+    """Observation specifications for the MDP."""
+
+    @configclass
+    class VectorsPolicyCfg(ProprioceptionRobotObservation):
+        """Observations for policy group."""
+
+        vectors = ObsTerm(
+            func = mdp.instance_vectors_joint_hand_object_full_pc,
+            params = {
+                "object_cfg": SceneEntityCfg("object"),
+                "robot_cfg": SceneEntityCfg("robot"),
+                "frame_cfg": SceneEntityCfg("ee_frame"),
+                "path_to_point_clouds": MISSING,
+                "scale": MISSING,
+                "num_pc": 100
+                
+            }
+        )
+
+        
+        
+        def __post_init__(self):
+            self.enable_corruption = False
+            self.concatenate_terms = True
+
+    # observation groups
+    policy: VectorsPolicyCfg = VectorsPolicyCfg()
+
+
+
 ##
 # Environment configuration
 ##
@@ -164,3 +198,12 @@ class FullObjPCLiftEnvCfg(LiftEnvCfg):
 
     # Basic settings
     observations: FullObjPCObservationsCfg = FullObjPCObservationsCfg()
+    
+    
+    
+@configclass
+class VectorsLiftEnvCfg(LiftEnvCfg):
+    """Configuration for the lifting environment."""
+
+    # Basic settings
+    observations: VectorsObservationsCfg = VectorsObservationsCfg()

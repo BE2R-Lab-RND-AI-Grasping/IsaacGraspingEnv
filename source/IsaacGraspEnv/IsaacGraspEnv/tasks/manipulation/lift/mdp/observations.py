@@ -312,7 +312,6 @@ def depth2point_cloud(
 #     return obj_pos_w
 
 
-
 def instance_randomize_obj_positions_in_robot_world_frame(
     env: ManagerBasedRLEnv,
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
@@ -324,15 +323,22 @@ def instance_randomize_obj_positions_in_robot_world_frame(
     obj: RigidObjectCollection = env.scene[object_cfg.name]
 
     obj_pos_w = []
-    
+
     target_pos_b = torch.Tensor([-0.05, 0.0, 0.0]).to(device=env.sim.device)
-    
-    
+
     for env_id in range(env.num_envs):
-        target_pos_w = transform_points(target_pos_b.unsqueeze(0), obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3].unsqueeze(0), obj.data.object_quat_w[env_id, env.rigid_objects_in_focus[env_id][0], :4].unsqueeze(0))
+        target_pos_w = transform_points(
+            target_pos_b.unsqueeze(0),
+            obj.data.object_pos_w[
+                env_id, env.rigid_objects_in_focus[env_id][0], :3
+            ].unsqueeze(0),
+            obj.data.object_quat_w[
+                env_id, env.rigid_objects_in_focus[env_id][0], :4
+            ].unsqueeze(0),
+        )
         obj_pos_w.append(
             target_pos_w.squeeze()
-            #obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3] + target_pos_w.squeeze()
+            # obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3] + target_pos_w.squeeze()
         )
     obj_pos_w = torch.stack(obj_pos_w)
 
@@ -381,7 +387,6 @@ class full_obj_point_cloud(ManagerTermBase):
         self._load_point_cloud()
 
         self.last_object_in_focus = copy.deepcopy(env.rigid_objects_in_focus)
-
         # self.current_obs_pc_in_focus = []
         # self._create_current_point_clound_obs()
 
@@ -391,12 +396,14 @@ class full_obj_point_cloud(ManagerTermBase):
             self.current_obs_pc_in_focus.append(
                 self.list_point_clouds[self.last_object_in_focus[env_id][0]].clone()
             )
-            
+
     def _update_current_point_clound_obs(self, obj_in_focus):
         for env_id in range(self.num_envs):
             if self.last_object_in_focus[env_id][0] != obj_in_focus[env_id][0]:
                 last_pc = self.current_obs_pc_in_focus[env_id]
-                self.current_obs_pc_in_focus[env_id] = self.list_point_clouds[obj_in_focus[env_id][0]].clone()
+                self.current_obs_pc_in_focus[env_id] = self.list_point_clouds[
+                    obj_in_focus[env_id][0]
+                ].clone()
                 del last_pc
 
     def _load_point_cloud(self):
@@ -422,7 +429,7 @@ class full_obj_point_cloud(ManagerTermBase):
             return torch.full((env.num_envs, self.num_pc), fill_value=-1)
 
         # self._update_current_point_clound_obs(env.rigid_objects_in_focus)
-        
+
         obj_p_w_o = instance_randomize_obj_positions_in_robot_world_frame(
             env, self.object_cfg
         )
@@ -439,15 +446,16 @@ class full_obj_point_cloud(ManagerTermBase):
         for env_id in range(env.num_envs):
 
             # if self.last_object_in_focus[env_id] == env.rigid_objects_in_focus[env_id]:
-            points_b.append(transform_points(  # observed points in world frame
-                self.list_point_clouds[
-                    env.rigid_objects_in_focus[env_id][0]
-                ],
-                obj_pos_b[env_id],
-                obj_quat_b[env_id],
-            ))
+            points_b.append(
+                transform_points(  # observed points in world frame
+                    self.list_point_clouds[env.rigid_objects_in_focus[env_id][0]],
+                    obj_pos_b[env_id],
+                    obj_quat_b[env_id],
+                )
+            )
         points_b = torch.stack(points_b)
         return points_b
+
 
 def instance_randomize_obj_positions_in_robot_root_frame(
     env: ManagerBasedRLEnv,
@@ -462,24 +470,30 @@ def instance_randomize_obj_positions_in_robot_root_frame(
 
     obj: RigidObjectCollection = env.scene[object_cfg.name]
     target_pos_obj_b = torch.Tensor([-0.05, 0.0, 0.0]).to(env.sim.device)
-    
+
     obj_pos_w = []
     for env_id in range(env.num_envs):
-        target_pos_w = transform_points(target_pos_obj_b.unsqueeze(0), obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3].unsqueeze(0), obj.data.object_quat_w[env_id, env.rigid_objects_in_focus[env_id][0], :4].unsqueeze(0))
+        target_pos_w = transform_points(
+            target_pos_obj_b.unsqueeze(0),
+            obj.data.object_pos_w[
+                env_id, env.rigid_objects_in_focus[env_id][0], :3
+            ].unsqueeze(0),
+            obj.data.object_quat_w[
+                env_id, env.rigid_objects_in_focus[env_id][0], :4
+            ].unsqueeze(0),
+        )
         obj_pos_w.append(
             target_pos_w.squeeze()
-            #obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0]] + target_pos_w.squeeze()
+            # obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0]] + target_pos_w.squeeze()
         )
-        
+
     obj_pos_w = torch.stack(obj_pos_w)
 
     object_pos_b, _ = subtract_frame_transforms(
         robot.data.root_state_w[:, :3], robot.data.root_state_w[:, 3:7], obj_pos_w
     )
-    
-    
-    
-    object_pos_b = object_pos_b 
+
+    object_pos_b = object_pos_b
     return object_pos_b
 
 
@@ -530,7 +544,9 @@ def instance_randomize_obj_vel_in_world_frame(
     obj_lin_vel_w = []
     for env_id in range(env.num_envs):
         obj_ang_vel_w.append(
-            obj.data.object_ang_vel_w[env_id, env.rigid_objects_in_focus[env_id][0], :3] / 180 * np.pi 
+            obj.data.object_ang_vel_w[env_id, env.rigid_objects_in_focus[env_id][0], :3]
+            / 180
+            * np.pi
         )
         obj_lin_vel_w.append(
             obj.data.object_lin_vel_w[env_id, env.rigid_objects_in_focus[env_id][0], :3]
@@ -539,3 +555,104 @@ def instance_randomize_obj_vel_in_world_frame(
     obj_lin_vel_w = torch.stack(obj_lin_vel_w)
 
     return torch.cat((obj_lin_vel_w, obj_ang_vel_w), dim=1)
+
+
+def vectors_joint_hand_object_frame(
+    env: ManagerBasedRLEnv,
+    frame_cfg: SceneEntityCfg,
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+    robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+
+    if not hasattr(env, "rigid_objects_in_focus"):
+        return torch.full((env.num_envs, 3))
+
+    robot: Articulation = env.scene[robot_cfg.name]
+    ee_frame: RigidObject = env.scene[frame_cfg.name]
+    object_collection = env.scene[object_cfg.name]
+
+    object_pos_w = object_collection.data.object_pos_w[
+        list(range(env.num_envs)), np.squeeze(env.rigid_objects_in_focus)
+    ]
+
+    object_pos_ee, __ = subtract_frame_transforms(
+        ee_frame.data.target_pos_w.squeeze(),
+        ee_frame.data.target_quat_w.squeeze(),
+        object_pos_w,
+    )
+    w_pos_ee, w_quat_ee = subtract_frame_transforms(
+        ee_frame.data.target_pos_w.squeeze(), ee_frame.data.target_quat_w.squeeze()
+    )
+
+    bodies_pos_ee = transform_points(
+        robot.data.body_pos_w[:, robot_cfg.body_ids, :3],
+        w_pos_ee.squeeze(),
+        w_quat_ee.squeeze(),
+    )
+
+    vec_hand_bodies_obj_ee = object_pos_ee.unsqueeze(1) - bodies_pos_ee
+
+    vec_hand_bodies_obj_ee = vec_hand_bodies_obj_ee.flatten(1)
+
+    return vec_hand_bodies_obj_ee / 2
+
+
+class instance_vectors_joint_hand_object_full_pc(full_obj_point_cloud):
+
+    def __init__(self, cfg: ObservationTermCfg, env: ManagerBasedRLEnv):
+
+        super().__init__(cfg, env)
+
+        self.ee_frame_cfg = cfg.params["frame_cfg"]
+        self.ee_frame: RigidObject = env.scene[self.ee_frame_cfg.name]
+
+    def __call__(self,
+        env: ManagerBasedRLEnv,
+        frame_cfg: SceneEntityCfg,
+        path_to_point_clouds: str,
+        scale: float,
+        num_pc: int,
+        object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+        robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    ) -> torch.Tensor:
+
+        if not hasattr(env, "rigid_objects_in_focus"):
+            return torch.full((env.num_envs, 3))
+
+        w_pos_ee, w_quat_ee = subtract_frame_transforms(
+            self.ee_frame.data.target_pos_w.squeeze(), self.ee_frame.data.target_quat_w.squeeze()
+        )
+
+        bodies_pos_ee = transform_points(
+            self.robot.data.body_pos_w[:, robot_cfg.body_ids, :3],
+            w_pos_ee.squeeze(),
+            w_quat_ee.squeeze(),
+        )
+        
+        object_pos_ee, object_quat_ee = subtract_frame_transforms(
+            self.object.data.object_pos_w, self.object.data.object_quat_w,
+            self.ee_frame.data.target_pos_w.expand(-1,self.object.num_objects, -1), self.ee_frame.data.target_quat_w.expand(-1,self.object.num_objects, -1),
+        )
+
+        list_vectors2closest_pc = []
+
+        for env_id in range(env.num_envs):
+            pc_pos_ee = transform_points(
+                self.list_point_clouds[env.rigid_objects_in_focus[env_id][0]],
+                object_pos_ee[env_id, env.rigid_objects_in_focus[env_id][0]].squeeze(),
+                object_quat_ee[env_id, env.rigid_objects_in_focus[env_id][0]].squeeze(),
+            )
+
+            vectors = pc_pos_ee.unsqueeze(0).expand(
+                bodies_pos_ee[env_id].shape[0], -1, -1
+            ) - bodies_pos_ee[env_id].unsqueeze(1)
+            min_indeces = torch.linalg.norm(vectors, dim=2).argmin(1)
+            vectors2closest_pc = vectors[
+                list(range(bodies_pos_ee[env_id].shape[0])), min_indeces, :
+            ].flatten()
+
+            list_vectors2closest_pc.append(vectors2closest_pc)
+
+        tensor_vectors2closest_pc = torch.stack(list_vectors2closest_pc)
+
+        return tensor_vectors2closest_pc
