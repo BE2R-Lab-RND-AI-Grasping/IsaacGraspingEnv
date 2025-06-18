@@ -25,7 +25,7 @@ parser.add_argument(
 parser.add_argument(
     "--task",
     type=str,
-    default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0",
+    default="Isaac-Vectors-Lift-Iiwa-IK-Rel-v0", #"Isaac-Full-Obj-PC-Lift-Iiwa-IK-Rel-v0",
     help="Name of the task.",
 )
 
@@ -44,7 +44,7 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default="4",#None,
+    default="2, 3, 4",#None,
     help="A comma separated list of identifiers to be taken from the dataset",
 )
 # append AppLauncher cli args
@@ -65,7 +65,7 @@ import torch
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
 
-from IsaacGraspEnv.dataset_managers import load_object_dataset
+from IsaacGraspEnv.dataset_managers import load_object_dataset, preprocessing_point_cloud_loading
 
 
 def main():
@@ -90,6 +90,14 @@ def main():
         dt_models_filter
     )
     
+    if  args_cli.task ==  "Isaac-Full-Obj-PC-Lift-Iiwa-IK-Rel-v0":
+        env_cfg.observations.policy.point_cloud.params["path_to_point_clouds"] = preprocessing_point_cloud_loading(args_cli.dataset_path, "point_cloud_colorless.ply", dt_models_filter)
+        env_cfg.observations.policy.point_cloud.params["scale"] = 0.01
+        env_cfg.observations.policy.point_cloud.params["num_pc"] = 500
+    elif args_cli.task ==  "Isaac-Vectors-Lift-Iiwa-IK-Rel-v0": 
+        env_cfg.observations.policy.vectors.params["path_to_point_clouds"] = preprocessing_point_cloud_loading(args_cli.dataset_path, "point_cloud_colorless.ply", dt_models_filter)
+        env_cfg.observations.policy.vectors.params["scale"] = 0.01
+        env_cfg.observations.policy.vectors.params["num_pc"] = 500
 
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
