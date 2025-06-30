@@ -6,3 +6,4 @@
 """Manipulation environments for fixed-arm robots."""
 
 from .lift import *  # noqa
+from .testing import *  # noqa
