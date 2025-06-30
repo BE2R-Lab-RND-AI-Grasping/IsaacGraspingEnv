@@ -9,6 +9,8 @@ from isaaclab.utils.math import quat_from_euler_xyz
 
 from .bh_testing_env_cfg import BHTestingEnvCfg
 
+OBJ_POS = torch.tensor([0.5, 0.5, 0.5])
+
 
 class BHTestingEnv(DirectRLEnv):
     cfg: BHTestingEnvCfg
@@ -155,9 +157,7 @@ class BHTestingEnv(DirectRLEnv):
             object: RigidObjectCollection, origins: torch.Tensor, env_ids: Sequence[int]
         ):
             root_state = object.data.default_object_state[env_ids]
-            print(root_state.shape)
-            print(origins.shape)
-            root_state[:, 0, :3] += origins
+            root_state[:, 0, :3] = OBJ_POS + origins
             root_state[:, 0, :3] += (
                 torch.randn_like(root_state[:, 0, :3]) * 0.1
             )  # add some initial randomization
@@ -166,9 +166,6 @@ class BHTestingEnv(DirectRLEnv):
                 roll_pitch_yaw[..., 0], roll_pitch_yaw[..., 1], roll_pitch_yaw[..., 2]
             )
             object.write_object_pose_to_sim(root_state[..., :7], torch.tensor(env_ids))
-            object.write_object_velocity_to_sim(
-                root_state[..., 7:], torch.tensor(env_ids)
-            )
 
         if env_ids is None:
             env_ids = self.robot._ALL_INDICES.tolist()
