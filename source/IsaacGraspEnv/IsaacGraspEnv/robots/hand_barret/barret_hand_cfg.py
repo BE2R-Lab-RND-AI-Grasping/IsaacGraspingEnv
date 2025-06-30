@@ -43,6 +43,7 @@ BH_CFG = ArticulationCfg(
             contact_offset=0.001, rest_offset=0.0015
         ),
         semantic_tags=[("class", "robot"), ("color", "orange")],
+        activate_contact_sensors=True,
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0, 0, 0),
