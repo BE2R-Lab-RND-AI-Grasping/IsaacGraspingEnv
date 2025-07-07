@@ -111,6 +111,7 @@ class randomize_rigid_object_in_focus(ManagerTermBase):
         asset_cfg: SceneEntityCfg,
         out_focus_state: torch.Tensor,
         pose_range: dict[str, tuple[float, float]] = {},
+        only_pose: bool = False,
     ):
 
         for cur_env in env_ids.tolist():
@@ -132,7 +133,7 @@ class randomize_rigid_object_in_focus(ManagerTermBase):
                 + env.scene.env_origins[cur_env, 0:2]
             )
             gravity_vec_w = self.gravity_vec_w[cur_env].clone()
-            
+
             # gravity_vec_b, __ = subtract_frame_transforms(
             #     torch.zeros(self.asset.num_objects, 3, device=env.device), self.asset.data.object_quat_w[cur_env], self.gravity_vec_w[cur_env]
             #     )
@@ -148,10 +149,17 @@ class randomize_rigid_object_in_focus(ManagerTermBase):
 
             gravity_vec_w[object_id, :] = torch.zeros(3, device=env.device)
 
-            self.asset.write_object_state_to_sim(
-                object_state=object_states,
-                env_ids=torch.tensor([cur_env], device=env.device),
-            )
+            if only_pose:
+                self.asset.write_object_pose_to_sim(
+                    object_pose=object_states[:, :7],
+                    env_ids=torch.tensor([cur_env], device=env.device),
+                )
+            else:
+                self.asset.write_object_state_to_sim(
+                    object_state=object_states,
+                    env_ids=torch.tensor([cur_env], device=env.device),
+                )
+
             self.list_id_rigid_objects_in_focus[cur_env][0] = object_id
 
             # Gravity compensate
@@ -163,3 +171,4 @@ class randomize_rigid_object_in_focus(ManagerTermBase):
                 torch.zeros(self.asset.num_objects, 3, device=env.device),
                 env_ids=torch.tensor([cur_env], device=env.device),
             )
+
