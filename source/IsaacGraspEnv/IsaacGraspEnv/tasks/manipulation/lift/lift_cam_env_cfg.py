@@ -21,7 +21,7 @@ from .lift_env_cfg import LiftEnvCfg, ObjectTableSceneCfg
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-
+import torch
 
 # Old value
 # CAM_POS = np.array([1.93, -0.3553, 0.35891])
@@ -145,35 +145,44 @@ class FullObjPCObservationsCfg:
 
 
 
-@configclass
-class VectorsObservationsCfg:
-    """Observation specifications for the MDP."""
+# @configclass
+# class VectorsObservationsCfg:
+#     """Observation specifications for the MDP."""
 
-    @configclass
-    class VectorsPolicyCfg(ProprioceptionRobotObservation):
-        """Observations for policy group."""
+#     @configclass
+#     class VectorsPolicyCfg(ProprioceptionRobotObservation):
+#         """Observations for policy group."""
 
-        vectors = ObsTerm(
-            func = mdp.instance_vectors_joint_hand_object_full_pc,
-            params = {
-                "object_cfg": SceneEntityCfg("object"),
-                "robot_cfg": SceneEntityCfg("robot"),
-                "frame_cfg": SceneEntityCfg("ee_frame"),
-                "path_to_point_clouds": MISSING,
-                "scale": MISSING,
-                "num_pc": 100
+#         # vectors = ObsTerm(
+#         #     func = mdp.instance_vectors_joint_hand_object_full_pc,
+#         #     params = {
+#         #         "object_cfg": SceneEntityCfg("object"),
+#         #         "robot_cfg": SceneEntityCfg("robot"),
+#         #         "frame_cfg": SceneEntityCfg("ee_frame"),
+#         #         "path_to_point_clouds": MISSING,
+#         #         "scale": MISSING,
+#         #         "num_pc": 100
                 
-            }
-        )
+#         #     }
+#         # )
 
-        
-        
-        def __post_init__(self):
-            self.enable_corruption = False
-            self.concatenate_terms = True
+#         vectors = ObsTerm(
+#             func = mdp.instance_vectors_joint_hand_key_points,
+#             params = {
+#                 "object_cfg": SceneEntityCfg("object"),
+#                 "robot_cfg": SceneEntityCfg("robot"),
+#                 "frame_cfg": SceneEntityCfg("ee_frame"),
+#                 "grasping_reference": torch.zeros(3,10)
+                
+#             }
+#         )
 
-    # observation groups
-    policy: VectorsPolicyCfg = VectorsPolicyCfg()
+#         def __post_init__(self):
+#             self.enable_corruption = False
+#             self.concatenate_terms = True
+
+#     # observation groups
+#     policy: VectorsPolicyCfg = VectorsPolicyCfg()
 
 
 
@@ -198,12 +207,3 @@ class FullObjPCLiftEnvCfg(LiftEnvCfg):
 
     # Basic settings
     observations: FullObjPCObservationsCfg = FullObjPCObservationsCfg()
-    
-    
-    
-@configclass
-class VectorsLiftEnvCfg(LiftEnvCfg):
-    """Configuration for the lifting environment."""
-
-    # Basic settings
-    observations: VectorsObservationsCfg = VectorsObservationsCfg()

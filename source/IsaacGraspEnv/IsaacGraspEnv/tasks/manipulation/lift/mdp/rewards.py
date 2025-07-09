@@ -20,7 +20,78 @@ if TYPE_CHECKING:
 from .observations import (
     instance_randomize_obj_positions_in_robot_world_frame as get_obj_pos_w,
     instance_randomize_obj_vel_in_world_frame as get_obj_vel_w,
+    instance_vectors_joint_hand_key_points
 )
+
+
+# def object_hand_contact(
+#     env: ManagerBasedRLEnv,
+#     thumb_rot_cfgs: SceneEntityCfg,
+#     thumb_flex_cfgs: SceneEntityCfg,
+#     thumb_finray_cfgs: SceneEntityCfg,
+#     right_flex_cfgs: SceneEntityCfg,
+#     right_finray_cfgs: SceneEntityCfg,
+#     left_flex_cfgs: SceneEntityCfg,
+#     left_finray_cfgs: SceneEntityCfg,
+#     threshold,
+# ) -> torch.Tensor:
+#     """"""
+#     # extract the used quantities (to enable type-hinting)
+#     thumb_sensors: list[ContactSensor] = [
+#         env.scene.sensors[thumb_cfg.name]
+#         for thumb_cfg in [thumb_rot_cfgs, thumb_flex_cfgs, thumb_finray_cfgs]
+#     ]
+#     right_sensor: list[ContactSensor] = [
+#         env.scene.sensors[right_cfg.name]
+#         for right_cfg in [right_flex_cfgs, right_finray_cfgs]
+#     ]
+#     left_sensor: list[ContactSensor] = [
+#         env.scene.sensors[left_cfg.name]
+#         for left_cfg in [left_flex_cfgs, left_finray_cfgs]
+#     ]
+#     # check if contact force is above threshold
+#     is_contact_thumb = torch.sum(
+#         torch.cat(
+#             [
+#                 torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+#                 for sensor in thumb_sensors
+#             ],
+#             dim=-1,
+#         ),
+#         dim=1,
+#         keepdim=True,
+#     )
+#     is_contact_right = torch.sum(
+#         torch.cat(
+#             [
+#                 torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+#                 for sensor in right_sensor
+#             ],
+#             dim=-1,
+#         ),
+#         dim=1,
+#         keepdim=True,
+#     )
+#     is_contact_left = torch.sum(
+#         torch.cat(
+#             [
+#                 torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+#                 for sensor in left_sensor
+#             ],
+#             dim=-1,
+#         ),
+#         dim=1,
+#         keepdim=True,
+#     )
+
+#     # sum over contacts for each environment
+#     res = torch.sum(
+#         torch.logical_and(
+#             torch.logical_or(is_contact_right, is_contact_left), is_contact_thumb
+#         ),
+#         dim=1,
+#     )
+#     return res
 
 
 def object_hand_contact(
@@ -84,12 +155,65 @@ def object_hand_contact(
     )
 
     # sum over contacts for each environment
-    res = torch.sum(
-        torch.logical_and(
-            torch.logical_or(is_contact_right, is_contact_left), is_contact_thumb
-        ),
-        dim=1,
-    )
+    res = torch.cat([is_contact_thumb, is_contact_right, is_contact_left], dim=-1).sum(dim=1)
+    return res
+
+def object_hand_force_contact(
+    env: ManagerBasedRLEnv,
+    thumb_rot_cfgs: SceneEntityCfg,
+    thumb_flex_cfgs: SceneEntityCfg,
+    thumb_finray_cfgs: SceneEntityCfg,
+    right_flex_cfgs: SceneEntityCfg,
+    right_finray_cfgs: SceneEntityCfg,
+    left_flex_cfgs: SceneEntityCfg,
+    left_finray_cfgs: SceneEntityCfg,
+    threshold,
+) -> torch.Tensor:
+    """"""
+    # extract the used quantities (to enable type-hinting)
+    thumb_sensors: list[ContactSensor] = [
+        env.scene.sensors[thumb_cfg.name]
+        for thumb_cfg in [thumb_rot_cfgs, thumb_flex_cfgs, thumb_finray_cfgs]
+    ]
+    right_sensor: list[ContactSensor] = [
+        env.scene.sensors[right_cfg.name]
+        for right_cfg in [right_flex_cfgs, right_finray_cfgs]
+    ]
+    left_sensor: list[ContactSensor] = [
+        env.scene.sensors[left_cfg.name]
+        for left_cfg in [left_flex_cfgs, left_finray_cfgs]
+    ]
+    # check if contact force is above threshold
+    contact_force_thumb = torch.cat(
+            [
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
+                for sensor in thumb_sensors
+            ],
+            dim=-1,
+        )
+    contact_force_right = torch.cat(
+            [
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
+                for sensor in right_sensor
+            ],
+            dim=-1,
+        )
+    contact_force_left = torch.cat(
+            [
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
+                for sensor in left_sensor
+            ],
+            dim=-1,
+        )
+    
+    # sum over contacts for each environment
+    contact_forces_finger = torch.cat(
+            [contact_force_thumb, contact_force_right, contact_force_left],
+            dim=-1,
+        )
+    
+    res = torch.where(contact_forces_finger > threshold, contact_forces_finger, 0.0).sum(dim=1)
+    
     return res
 
 
@@ -347,9 +471,12 @@ def instance_randomize_object_fingertips_distance(
 
     reward_scale = torch.tensor([0.04, 0.02, 0.02]).to(env.sim.device)
 
-    return torch.sum(
+        
+    reward_out = torch.sum(
         torch.mul(1 / (std + object_fingertips_distance), reward_scale), dim=1
     )
+
+    return reward_out
 
 
 def object_goal_distance(
@@ -565,6 +692,45 @@ class instance_object_displacement(ManagerTermBase):
 
         return reward
 
+class instance_vectors_norm(ManagerTermBase):
+    
+    def __init__(self, cfg: RewardTermCfg, env: ManagerBasedRLEnv):
+
+        super().__init__(cfg, env)
+
+        self.name_obs_vector = cfg.params["name_obs_vector"]
+        self.prev_object_pos = torch.full((env.num_envs, 3), 0).to(env.device)
+        
+        # self.obs_vectors = instance_vectors_joint_hand_key_points()
+        
+        id_obs_vector = env.observation_manager.active_terms["policy"].index(self.name_obs_vector)
+        size_obs = env.observation_manager.group_obs_term_dim["policy"][id_obs_vector][0]
+        index_obs_vector = sum([env.observation_manager.group_obs_term_dim["policy"][i][0] for i in range(id_obs_vector)])
+        
+        
+        self.unpack_vectors4obs = lambda env: env.observation_manager._obs_buffer["policy"][:,index_obs_vector:index_obs_vector+size_obs]
+
+
+    def __call__(
+        self,
+        env: ManagerBasedRLEnv,
+        name_obs_vector: str, 
+    ) -> torch.Tensor:
+        
+        
+        vectors = self.unpack_vectors4obs(env).reshape(env.num_envs,-1,3)
+        
+        norm_vec = torch.linalg.norm(vectors, dim=-1).sum(dim=1)
+        
+        return norm_vec
+    
+    
+# ==== Debugging code ====
+# hist_id = 0
+# for m,  shape in  enumerate(env.observation_manager.group_obs_term_dim["policy"]):
+#     print(env.observation_manager._obs_buffer["policy"][-1, hist_id:hist_id+shape[0]], shape[0], env.observation_manager.active_terms["policy"][m])
+#     hist_id += shape[0]
+# ========================
 
 def instance_object_vel_l2(
     env: ManagerBasedRLEnv,

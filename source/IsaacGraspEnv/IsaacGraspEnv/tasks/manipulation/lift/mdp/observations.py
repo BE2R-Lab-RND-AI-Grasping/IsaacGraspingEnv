@@ -6,6 +6,9 @@
 from __future__ import annotations
 import copy
 
+from source.IsaacGraspEnv.IsaacGraspEnv.debug_function.viz_frames import (
+    o3d_viz_body_key_points_obj_frames,
+)
 import torch
 from typing import TYPE_CHECKING, List, Type
 
@@ -529,6 +532,63 @@ def instance_randomize_obj_orientations_in_robot_root_frame(
     )
     return object_quat_b
 
+def instance_randomize_obj_positions_in_robot_ee_frame(
+    env: ManagerBasedRLEnv,
+    frame_cfg,
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+) -> torch.Tensor:
+    """The orientation of the cubes in the world frame."""
+    if not hasattr(env, "rigid_objects_in_focus"):
+        return torch.full((env.num_envs, 3), fill_value=-1)
+
+    ee_frame: RigidObject = env.scene[frame_cfg.name]
+    obj: RigidObjectCollection = env.scene[object_cfg.name]
+    
+    object_pos_w = obj.data.object_pos_w[
+        list(range(env.num_envs)), np.squeeze(env.rigid_objects_in_focus)
+    ]
+
+    object_quat_w = obj.data.object_quat_w[
+        list(range(env.num_envs)), np.squeeze(env.rigid_objects_in_focus)
+    ]
+
+    object_pos_ee, __ = subtract_frame_transforms(
+        ee_frame.data.target_pos_w.squeeze(),
+        ee_frame.data.target_quat_w.squeeze(),
+        object_pos_w,
+        object_quat_w,
+    )
+    return object_pos_ee
+
+
+def instance_randomize_obj_orientations_in_robot_ee_frame(
+    env: ManagerBasedRLEnv,
+    frame_cfg,
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+) -> torch.Tensor:
+    """The orientation of the cubes in the world frame."""
+    if not hasattr(env, "rigid_objects_in_focus"):
+        return torch.full((env.num_envs, 4), fill_value=-1)
+
+    ee_frame: RigidObject = env.scene[frame_cfg.name]
+    obj: RigidObjectCollection = env.scene[object_cfg.name]
+    
+    object_pos_w = obj.data.object_pos_w[
+        list(range(env.num_envs)), np.squeeze(env.rigid_objects_in_focus)
+    ]
+    
+    object_quat_w = obj.data.object_quat_w[
+        list(range(env.num_envs)), np.squeeze(env.rigid_objects_in_focus)
+    ]
+
+    __, object_quat_ee = subtract_frame_transforms(
+        ee_frame.data.target_pos_w.squeeze(),
+        ee_frame.data.target_quat_w.squeeze(),
+        object_pos_w,
+        object_quat_w,
+    )
+    return object_quat_ee
+
 
 def instance_randomize_obj_vel_in_world_frame(
     env: ManagerBasedRLEnv,
@@ -606,7 +666,8 @@ class instance_vectors_joint_hand_object_full_pc(full_obj_point_cloud):
         self.ee_frame_cfg = cfg.params["frame_cfg"]
         self.ee_frame: RigidObject = env.scene[self.ee_frame_cfg.name]
 
-    def __call__(self,
+    def __call__(
+        self,
         env: ManagerBasedRLEnv,
         frame_cfg: SceneEntityCfg,
         path_to_point_clouds: str,
@@ -620,7 +681,8 @@ class instance_vectors_joint_hand_object_full_pc(full_obj_point_cloud):
             return torch.full((env.num_envs, 3))
 
         w_pos_ee, w_quat_ee = subtract_frame_transforms(
-            self.ee_frame.data.target_pos_w.squeeze(), self.ee_frame.data.target_quat_w.squeeze()
+            self.ee_frame.data.target_pos_w.squeeze(),
+            self.ee_frame.data.target_quat_w.squeeze(),
         )
 
         bodies_pos_ee = transform_points(
@@ -628,10 +690,12 @@ class instance_vectors_joint_hand_object_full_pc(full_obj_point_cloud):
             w_pos_ee.squeeze(),
             w_quat_ee.squeeze(),
         )
-        
+
         object_pos_ee, object_quat_ee = subtract_frame_transforms(
-            self.object.data.object_pos_w, self.object.data.object_quat_w,
-            self.ee_frame.data.target_pos_w.expand(-1,self.object.num_objects, -1), self.ee_frame.data.target_quat_w.expand(-1,self.object.num_objects, -1),
+            self.object.data.object_pos_w,
+            self.object.data.object_quat_w,
+            self.ee_frame.data.target_pos_w.expand(-1, self.object.num_objects, -1),
+            self.ee_frame.data.target_quat_w.expand(-1, self.object.num_objects, -1),
         )
 
         list_vectors2closest_pc = []
@@ -655,4 +719,107 @@ class instance_vectors_joint_hand_object_full_pc(full_obj_point_cloud):
 
         tensor_vectors2closest_pc = torch.stack(list_vectors2closest_pc)
 
+        return tensor_vectors2closest_pc
+
+
+class instance_vectors_joint_hand_key_points(ManagerTermBase):
+
+    def __init__(self, cfg: ObservationTermCfg, env: ManagerBasedRLEnv):
+
+        super().__init__(cfg, env)
+
+        self.body_frame_key = cfg.params["body_frame_key"]
+        self.joint_position_key = cfg.params["joint_position_key"]
+
+        self.object_cfg = cfg.params["object_cfg"]
+        self.object: RigidObjectCollection = env.scene[self.object_cfg.name]
+
+        self.robot_cfg = cfg.params["robot_cfg"]
+        self.robot: RigidObject = env.scene[self.robot_cfg.name]
+
+        self.last_object_in_focus = copy.deepcopy(env.rigid_objects_in_focus)
+        # self.current_obs_pc_in_focus = []
+        # self._create_current_point_clound_obs()
+
+        self.ee_frame_cfg = cfg.params["frame_cfg"]
+        self.ee_frame: RigidObject = env.scene[self.ee_frame_cfg.name]
+
+        self.obj_key_points_ref = self.mapping_reference_n_sim_hand(
+            cfg.params["grasping_reference_path"]
+        ).repeat(env.num_envs,1,1).to(env.device)
+
+    def mapping_reference_n_sim_hand(self, grasping_reference_path):
+        
+        with open(grasping_reference_path, "rb") as f:
+    
+            grasping_reference = np.load(f, allow_pickle=True)
+        
+
+        robot_body_names = [self.robot.body_names[m] for m in self.robot_cfg.body_ids]
+
+        ordered_grasping_reference = []
+        for grasp_ref in grasping_reference:
+            one_obj_ref = []
+            for body_name in robot_body_names:
+                one_obj_ref.append(grasp_ref[self.body_frame_key][body_name])
+
+            ordered_grasping_reference.append(one_obj_ref)
+
+        return torch.tensor(ordered_grasping_reference)
+
+    def __call__(
+        self,
+        env: ManagerBasedRLEnv,
+        frame_cfg: SceneEntityCfg,
+        grasping_reference_path: str,
+        object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+        robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+        body_frame_key: str = "key_points",
+        joint_position_key: str = "qpos",
+    ) -> torch.Tensor:
+
+        if not hasattr(env, "rigid_objects_in_focus"):
+            return torch.full((env.num_envs, 3 * self.object_cfg.num_bodies))
+
+        w_pos_ee, w_quat_ee = subtract_frame_transforms(
+            self.ee_frame.data.target_pos_w.squeeze(),
+            self.ee_frame.data.target_quat_w.squeeze(),
+        )
+
+        bodies_pos_ee = transform_points(
+            self.robot.data.body_pos_w[:, robot_cfg.body_ids, :3],
+            w_pos_ee.squeeze(),
+            w_quat_ee.squeeze(),
+        )
+
+        object_pos_ee, object_quat_ee = subtract_frame_transforms(
+            self.ee_frame.data.target_pos_w.expand(-1, self.object.num_objects, -1),
+            self.ee_frame.data.target_quat_w.expand(-1, self.object.num_objects, -1),
+            self.object.data.object_pos_w,
+            self.object.data.object_quat_w,
+        )
+
+        list_vectors2grasping_reference = []
+
+        for env_id in range(env.num_envs):
+            ee_key_points_ref = transform_points(
+                self.obj_key_points_ref[env.rigid_objects_in_focus[env_id][0]],
+                object_pos_ee[env_id, env.rigid_objects_in_focus[env_id][0]].squeeze(),
+                object_quat_ee[env_id, env.rigid_objects_in_focus[env_id][0]].squeeze(),
+            )
+
+            vectors = ee_key_points_ref - bodies_pos_ee[env_id]
+
+            list_vectors2grasping_reference.append(vectors.flatten())
+
+        tensor_vectors2closest_pc = torch.stack(list_vectors2grasping_reference)
+
+        # For Debug
+        # o3d_viz_body_key_points_obj_frames(
+        #     bodies_pos_ee[env_id],
+        #     ee_key_points_ref,
+        #     "/home/yefim-home/Downloads/Telegram Desktop/dataset/power_drills/model_1/object_convex_decomposition_meter_unit.obj",
+        #     object_pos_ee[env.rigid_objects_in_focus[env_id][0], 0],
+        #     object_quat_ee[env.rigid_objects_in_focus[env_id][0], 0]
+        # )
         return tensor_vectors2closest_pc

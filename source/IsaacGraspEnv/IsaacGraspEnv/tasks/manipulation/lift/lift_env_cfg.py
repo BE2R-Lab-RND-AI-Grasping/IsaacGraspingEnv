@@ -80,14 +80,14 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
      Check the prim_path filters, IsaacSim does not throw an exception or error if the filter path does not exist.
      =====================
     '''
-    contact_forces_thumb_rot = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_thumb_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_thumb_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_right_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_right_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_left_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_left_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_arm = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_[1-7]",update_period=0.0, history_length=6)
+    contact_forces_thumb_rot = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
+    contact_forces_thumb_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
+    contact_forces_thumb_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
+    contact_forces_right_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
+    contact_forces_right_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
+    contact_forces_left_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
+    contact_forces_left_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
+    contact_forces_arm = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_[1-7]",update_period=0.0, history_length=1)
     # lights
     light = AssetBaseCfg(
         prim_path="/World/light",
@@ -110,11 +110,13 @@ class CommandsCfg:
         debug_vis=True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             # Grasp from front
-            pos_x=(0.6, 0.7), pos_y=(-0.25, 0.25), pos_z=(0.1, 0.35), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
+            pos_x=(0.5, 0.7), pos_y=(-0.25, 0.25), pos_z=(0.2, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
             # Grasp from top
             # pos_x=(0.4, 0.6), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.1), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
         ),
     )
+    
+    
 
 
 @configclass
@@ -180,7 +182,8 @@ class EventCfg:
         params={
             "asset_cfg": SceneEntityCfg("object"),
             "out_focus_state": [0.0, 0.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            "pose_range": {"x": (0.75, 0.75), "y": (0.0, 0.0), "z": (0.02, 0.02), "roll": (0.0, 0.0)},
+            # "pose_range": {"x": (0.75, 0.75), "y": (0.0, 0.0), "z": (0.02, 0.02), "roll": (0.0, 0.0)}, # For Screws
+            "pose_range": {"x": (0.95, 0.95), "y": (0.0, 0.0), "z": (0.07077, 0.07077), "roll": (np.pi/2, np.pi/2)}, # Power Drills
 
         },
     )
@@ -199,7 +202,7 @@ class EventCfg:
         func=mdp.reset_joints_by_offset,
         mode="reset",
         params= {
-            "position_range":(-0.0, 0.00),
+            "position_range":(-0.01, 0.01),
             "velocity_range":(-0.00, 0.00),
             "asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*", "Joint_.*"])
         }
@@ -220,7 +223,7 @@ is_contact_params = {"thumb_rot_cfgs": SceneEntityCfg("contact_forces_thumb_rot"
             "right_flex_cfgs": SceneEntityCfg("contact_forces_right_flex"),
             "right_finray_cfgs": SceneEntityCfg("contact_forces_right_finray"),
             "left_flex_cfgs": SceneEntityCfg("contact_forces_left_flex"),
-            "left_finray_cfgs": SceneEntityCfg("contact_forces_left_finray"), "threshold": 1.0}
+            "left_finray_cfgs": SceneEntityCfg("contact_forces_left_finray"), "threshold": 30.0}
 
 add_is_contact_param = lambda b: b.update(is_contact_params) or b
 
@@ -228,15 +231,17 @@ add_is_contact_param = lambda b: b.update(is_contact_params) or b
 class RewardsCfg:
     """Reward terms for the MDP."""
     
-    fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=1.0/0.2/10)
+    # fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=1.0/0.2/10)
+
+    norm_vectors = RewTerm(func=mdp.instance_vectors_norm, params={"name_obs_vector":"vectors"}, weight= -1/12*4/5*5/3 /0.2)#-5.0/0.2/10) # Weight (1) normalization ~ 1, (2) ~ value reward, (3) extened to [-1, 1]
 
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
     # For power drills
     # lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0/0.2/10)
     # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.13}), weight=1.0/0.2/10)
     # for screwdrives
-    lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.025}), weight=10.0/0.2/10)
-    lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.05}), weight=1.0/0.2/10)
+    # lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.025}), weight=10.0/0.2/10)
+    # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.05}), weight=1.0/0.2/10)
     
 
     object_goal_tracking = RewTerm(
@@ -245,7 +250,7 @@ class RewardsCfg:
         # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
         # for screwdrives
         params=add_is_contact_param({"std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
-        weight=1.0/0.2/10, 
+        weight=1/30 * 3/5 * 5/3 /0.2, #1.0/0.2/10, 
     )
     
     
@@ -255,7 +260,7 @@ class RewardsCfg:
         # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
         # for screwdrives
         params=add_is_contact_param({"threshold_reach":0.05, "std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
-        weight=5.0/0.2/10, 
+        weight=1/5 * 5/5 * 5/3 / 0.2, #5.0/0.2/10, 
     )
     
 
@@ -266,11 +271,18 @@ class RewardsCfg:
     # )
     hand_object_contact = RewTerm(
         func=mdp.object_hand_contact,
-        weight=0.75/0.2/10,
+        weight= 1/4 * 2/5 * 5/3 /0.2, #0.75/0.2/10,
         params=is_contact_params,
     )
+    hand_object_contact_force = RewTerm(
+        func=mdp.object_hand_force_contact,
+        weight= 1/500 * 3/5 * 5/3 /0.2, #0.01/0.2/10,
+        params=is_contact_params,
+    )
+    
+    
     # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-5e-3/0.2/10)
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1/300 * 3/5 * 5/3 / 0.2)#-5e-3/0.2/10)
 
     # joint_vel = RewTerm(
     #     func=mdp.joint_vel_l2_clip,
@@ -280,7 +292,7 @@ class RewardsCfg:
     
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2_clip,
-        weight=-5e-3/0.2/10,
+        weight= -1/10 * 1/5 * 5/3 / 0.2, # -5e-3/0.2/10,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=["Joint.*"])},
     )
     
@@ -299,7 +311,7 @@ class RewardsCfg:
     
     ee_vel_l2 = RewTerm(
         func=mdp.robot_link_vel_w_l2,
-        weight=-8e-3/0.2/10,
+        weight= -1/45 * 2/5 * 5/3 / 0.2, #-8e-3/0.2/10,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=["lbr_iiwa_link_7"]), },
     )
 
