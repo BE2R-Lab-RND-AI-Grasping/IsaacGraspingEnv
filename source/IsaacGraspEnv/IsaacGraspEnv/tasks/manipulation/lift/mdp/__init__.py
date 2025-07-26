@@ -8,7 +8,9 @@
 from isaaclab.envs.mdp import *  # noqa: F401, F403
 
 from .observations import *  # noqa: F401, F403
+from .observations_vectors import *  # noqa: F401, F403
 from .rewards import *  # noqa: F401, F403
+from .rewards_vectors import *  # noqa: F401, F403
 from .terminations import *  # noqa: F401, F403
 from .commands import *  # noqa: F401, F403
 from .models import *  # noqa: F401, F403
