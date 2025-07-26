@@ -25,7 +25,8 @@ parser.add_argument(
 )
 parser.add_argument("--num_envs", type=int, default=8, help="Number of environments to simulate.")
 # parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
-parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+# parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Vectors-Lift-Iiwa-IK-Rel-v0", help="Name of the task.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint.")
 parser.add_argument(
     "--ml_framework",
@@ -37,7 +38,7 @@ parser.add_argument(
 parser.add_argument(
     "--algorithm",
     type=str,
-    default="RPO",
+    default="PPO",
     choices=["RPO", "PPO", "IPPO", "MAPPO"],
     help="The RL algorithm used for training the skrl agent.",
 )
@@ -46,7 +47,8 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_path",
     type=str,
-    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers",#None,
+    # default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers",#None,
+    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/power_drills",#None,
     help="Absolute path to dataset. Dataset directory must have folders with models.",
 )
 parser.add_argument(
@@ -58,7 +60,7 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default="4", # 2, 3, 
+    default="1", # 2, 3, 
     help="A comma separated list of identifiers to be taken from the dataset",
 )
 # append AppLauncher cli args
@@ -102,6 +104,8 @@ import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import get_checkpoint_path, load_cfg_from_registry, parse_env_cfg
 from isaaclab_rl.skrl import SkrlVecEnvWrapper
 from IsaacGraspEnv.dataset_managers import load_object_dataset
+
+from IsaacGraspEnv.debug_function.reward_analyze import RewardAnalyzer
 
 # config shortcuts
 algorithm = args_cli.algorithm.lower()
@@ -151,7 +155,7 @@ def main():
     # create isaac environment
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
     env.env.sim.set_camera_view([3.5,3.5, 2.5], [0.0, 0.0,0.0])
-    
+    reward_log = RewardAnalyzer(env.env.reward_manager, env.env.max_episode_length, env.env.num_envs)
     # env.unwrapped.action_space = gym.spaces.Box(-1.0, 1.0, shape=env.action_space.shape)
     # env.unwrapped.single_action_space = gym.spaces.Box(-1.0, 1.0, shape=(16,))
     # wrap for video recording
@@ -192,6 +196,7 @@ def main():
     # reset environment
     obs, _ = env.reset()
     timestep = 0
+    m=0
     # simulate environment
     while simulation_app.is_running():
         # run everything in inference mode
@@ -199,22 +204,31 @@ def main():
             # agent stepping
             actions = runner.agent.act(obs, timestep=0, timesteps=0)[0]
             
-            ee_pos = obs[:,0:3]
-            target_pos = obs[:,57:60]
-            object_pos = obs[:,50:53]
+            # ee_pos = obs[:,0:3]
+            # target_pos = obs[:,57:60]
+            # object_pos = obs[:,50:53]
             
-            mask = torch.where(
-                torch.linalg.norm(object_pos-target_pos, dim=1) <= threshold, 0.0, 1.0)
+            # mask = torch.where(
+            #     torch.linalg.norm(object_pos-target_pos, dim=1) <= threshold, 0.0, 1.0)
             
-            actions[:,0:3] = actions[:,0:3] * mask.unsqueeze(1)
+            # actions[:,0:3] = actions[:,0:3] * mask.unsqueeze(1)
             
-            unit_quat = torch.tensor([1.0, 0.0, 0.0, 0.0])
+            # unit_quat = torch.tensor([1.0, 0.0, 0.0, 0.0])
             
-            actions[:,3:7] = unit_quat.repeat((env.num_envs,1))
+            # actions[:,3:7] = unit_quat.repeat((env.num_envs,1))
             
             # env stepping
+            reward_log.step_update()
             obs, rew, terminated, truncated, info = env.step(actions)
             rew_buffer.append(rew.cpu().numpy())
+            for i in range(env.env.num_envs):
+                if terminated[i] or truncated[i]:
+                    reward_log.episode_update(i)
+                    if truncated[i]:
+                        m += 1
+                    
+            if m > 20:
+                break
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video
@@ -223,7 +237,7 @@ def main():
 
     # close the simulator
     env.close()
-
+    reward_log.plot()
 
 if __name__ == "__main__":
     # run the main function

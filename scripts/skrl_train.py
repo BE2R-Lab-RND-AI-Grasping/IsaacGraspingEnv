@@ -22,9 +22,9 @@ parser = argparse.ArgumentParser(description="Train an RL agent with skrl.")
 parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument("--video_interval", type=int, default=2000, help="Interval between video recordings (in steps).")
-parser.add_argument("--num_envs", type=int, default=2048, help="Number of environments to simulate.")
+parser.add_argument("--num_envs", type=int, default=512, help="Number of environments to simulate.")
 # parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.") # Isaac-Cam-Lift-Cube-Iiwa-v0
-parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Vectors-Lift-Iiwa-IK-Rel-v0", help="Name of the task.")
 parser.add_argument("--seed", type=int, default=24, help="Seed used for the environment")
 parser.add_argument(
     "--distributed", action="store_true", default=False, help="Run training with multiple GPUs or nodes."
@@ -40,7 +40,7 @@ parser.add_argument(
 parser.add_argument(
     "--algorithm",
     type=str,
-    default="RPO",
+    default="PPO",
     choices=["RPO", "PPO", "IPPO", "MAPPO", "SAC"],
     help="The RL algorithm used for training the skrl agent.",
 )
@@ -49,7 +49,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_path",
     type=str,
-    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers",#None,
+    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/power_drills",#None,
     help="Absolute path to dataset. Dataset directory must have folders with models.",
 )
 parser.add_argument(
@@ -61,7 +61,7 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default="4", # "2, 3, 4"
+    default="1", # "2, 3, 4"
     help="A comma separated list of identifiers to be taken from the dataset",
 )
 
