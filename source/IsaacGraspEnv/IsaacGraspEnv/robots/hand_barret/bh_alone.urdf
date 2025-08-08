@@ -27,12 +27,12 @@
     <axis xyz="1 0 0"></axis>
     <limit effort="1000" lower="-2" upper="2" velocity="2"></limit>
   </joint>
-  <joint name="base_joint_R" type="revolute">
+  <joint name="base_joint_Y" type="revolute">
     <parent link="root_link_3"></parent>
     <child link="root_link_4"></child>
     <origin rpy="0 0 0" xyz="0 0 0"></origin>
-    <axis xyz="1 0 0"></axis>
-    <limit effort="1000" lower="0" upper="6.28" velocity="2"></limit>
+    <axis xyz="0 0 1"></axis>
+    <limit effort="1000" lower="-3.14" upper="3.14" velocity="2"></limit>
   </joint>
   <joint name="base_joint_P" type="revolute">
     <parent link="root_link_4"></parent>
@@ -41,12 +41,12 @@
     <axis xyz="0 1 0"></axis>
     <limit effort="1000" lower="-3.14" upper="3.14" velocity="2"></limit>
   </joint>
-  <joint name="base_joint_Y" type="revolute">
+  <joint name="base_joint_R" type="revolute">
     <parent link="root_link_5"></parent>
     <child link="base_link"></child>
     <origin rpy="0 0 0" xyz="0 0 0"></origin>
-    <axis xyz="0 0 1"></axis>
-    <limit effort="1000" lower="-3.14" upper="3.14" velocity="2"></limit>
+    <axis xyz="1 0 0"></axis>
+    <limit effort="1000" lower="-6.28" upper="6.28" velocity="2"></limit>
   </joint>
   <link name="base_link">
     <visual>
@@ -69,7 +69,7 @@
   </joint>
   <link name="hand_base_link"></link>
   <joint name="bh_base_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0"></origin>
+    <origin rpy="0 0 0" xyz="0 0 -0.12"></origin>
     <parent link="hand_base_link"></parent>
     <child link="bh_base_link"></child>
   </joint>
