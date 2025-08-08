@@ -33,18 +33,31 @@ class BHTestingSceneCfg(InteractiveSceneCfg):
     )
     robot = BH_CFG.replace(prim_path="{ENV_REGEX_NS}/Hand")
     object = RigidObjectCollectionCfg(rigid_objects=MISSING)
-    contact_sensor_1 = ContactSensorCfg(
+    contact_sensor_thumb_1 = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Hand/bh_finger_12_link",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+    )
+    contact_sensor_thumb_2 = ContactSensorCfg(
         prim_path="{ENV_REGEX_NS}/Hand/bh_finger_13_link",
         filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
     )
-    contact_sensor_2 = ContactSensorCfg(
+    contact_sensor_right_1 = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Hand/bh_finger_22_link",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+    )
+    contact_sensor_right_2 = ContactSensorCfg(
         prim_path="{ENV_REGEX_NS}/Hand/bh_finger_23_link",
         filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
     )
-    contact_sensor_3 = ContactSensorCfg(
+    contact_sensor_left_1 = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Hand/bh_finger_32_link",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+    )
+    contact_sensor_left_2 = ContactSensorCfg(
         prim_path="{ENV_REGEX_NS}/Hand/bh_finger_33_link",
         filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
     )
+
     ee_frame: FrameTransformerCfg = FrameTransformerCfg(
         prim_path="{ENV_REGEX_NS}/Hand/root_link_0",
         target_frames=[
@@ -115,15 +128,39 @@ class BHTestingCamSceneCfg(BHTestingSceneCfg):
     )
 
 
+PRESERVE_ORDER = True
+USE_DEFAULT_OFFSET = False
+
+
 @configclass
 class ActionsCfg:
-    cartesian_action = mdp.JointVelocityActionCfg(
-        asset_name="robot", joint_names=["base_joint.*"], preserve_order=True
-    )
-    gripper_action = mdp.JointPositionToLimitsActionCfg(
+    cartesian_action = mdp.JointPositionActionCfg(
         asset_name="robot",
-        joint_names=["bh.*"],
-        rescale_to_limits=True,
+        joint_names=[
+            "base_joint_z",
+            "base_joint_y",
+            "base_joint_x",
+            "base_joint_R",
+            "base_joint_P",
+            "base_joint_Y",
+        ],
+        preserve_order=PRESERVE_ORDER,
+        use_default_offset=USE_DEFAULT_OFFSET,
+    )
+    gripper_action = mdp.JointPositionActionCfg(
+        asset_name="robot",
+        joint_names=[
+            "bh_j32_joint",
+            "bh_j33_joint",
+            "bh_j11_joint",
+            "bh_j12_joint",
+            "bh_j13_joint",
+            "bh_j21_joint",
+            "bh_j22_joint",
+            "bh_j23_joint",
+        ],
+        preserve_order=PRESERVE_ORDER,
+        use_default_offset=USE_DEFAULT_OFFSET,
     )
 
 
@@ -214,10 +251,13 @@ class EventCfg:
             "pose_range": {
                 "x": (0.0, 0.0),
                 "y": (0.0, 0.0),
-                "z": (0.3, 0.8),
-                "roll": (pi / 4, 3 * pi / 4),
-                "pitch": (-pi / 4, pi / 4),
-                "yaw": (pi / 4, 3 * pi / 4),
+                "z": (0.5, 0.5),
+                # "roll": (pi / 4, 3 * pi / 4),
+                # "pitch": (-pi / 4, pi / 4),
+                # "yaw": (pi / 4, 3 * pi / 4),
+                "roll": (0, 0),
+                "pitch": (0, 0),
+                "yaw": (0, 0),
             },
             "only_pose": True,
         },
@@ -237,12 +277,36 @@ class TerminationsCfg:
 class RewardsCfg:
     """Reward terms for the MDP."""
 
-    is_alive = RewardTermCfg(func=mdp.is_alive, weight=1.0)
+    # is_alive = RewardTermCfg(func=mdp.is_alive, weight=1.0)
+    fingettips_to_object = RewardTermCfg(
+        func=mdp.instance_randomize_object_fingertips_distance,
+        params={"std": 0.06},
+        weight=1.0,
+    )
+    figner_object_contact = RewardTermCfg(
+        func=mdp.object_hand_contact,
+        params={
+            "thumb_cfgs": [
+                SceneEntityCfg("contact_sensor_thumb_1"),
+                SceneEntityCfg("contact_sensor_thumb_2"),
+            ],
+            "right_cfgs": [
+                SceneEntityCfg("contact_sensor_right_1"),
+                SceneEntityCfg("contact_sensor_right_2"),
+            ],
+            "left_cfgs": [
+                SceneEntityCfg("contact_sensor_left_1"),
+                SceneEntityCfg("contact_sensor_left_2"),
+            ],
+            "threshold": 0.01,
+        },
+        weight=1.0,
+    )
 
 
 @configclass
 class BHTestingManagerEnvCfg(ManagerBasedRLEnvCfg):
-    scene = BHTestingSceneCfg(num_envs=1, env_spacing=10)
+    scene = BHTestingSceneCfg(num_envs=1, env_spacing=1)
     actions = ActionsCfg()
     observations = ProPrioceptionObservationsCfg()
     # commands = CommandsCfg()
@@ -255,7 +319,7 @@ class BHTestingManagerEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 2
-        self.episode_length_s = 3.0
+        self.episode_length_s = 5.0
         # simulation settings
         self.sim.dt = 0.01  # 1.0 /120.0  # 100Hz
         self.sim.render_interval = self.decimation
