@@ -92,6 +92,60 @@ from .observations import (
 #     return res
 
 
+def object_hand_contact(
+    env: ManagerBasedRLEnv,
+    thumb_cfgs: list[SceneEntityCfg],
+    right_cfgs: list[SceneEntityCfg],
+    left_cfgs: list[SceneEntityCfg],
+    threshold,
+) -> torch.Tensor:
+    """"""
+    # extract the used quantities (to enable type-hinting)
+    thumb_sensors = [env.scene.sensors[cfg.name] for cfg in thumb_cfgs]
+    right_sensors = [env.scene.sensors[cfg.name] for cfg in right_cfgs]
+    left_sensors = [env.scene.sensors[cfg.name] for cfg in left_cfgs]
+    # check if contact force is above threshold
+    is_contact_thumb = torch.sum(
+        torch.cat(
+            [
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+                for sensor in thumb_sensors
+            ],
+            dim=-1,
+        ),
+        dim=1,
+        keepdim=True,
+    )
+    is_contact_right = torch.sum(
+        torch.cat(
+            [
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+                for sensor in right_sensors
+            ],
+            dim=-1,
+        ),
+        dim=1,
+        keepdim=True,
+    )
+    is_contact_left = torch.sum(
+        torch.cat(
+            [
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+                for sensor in left_sensors
+            ],
+            dim=-1,
+        ),
+        dim=1,
+        keepdim=True,
+    )
+    # print(is_contact_thumb, is_contact_right, is_contact_left)
+    # sum over contacts for each environment
+    res = torch.cat([is_contact_thumb, is_contact_right, is_contact_left], dim=-1).sum(
+        dim=1
+    )
+    return res
+
+
 def object_is_lifted(
     env: ManagerBasedRLEnv,
     minimal_height: float,
