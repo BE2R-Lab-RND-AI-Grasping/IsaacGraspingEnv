@@ -6,7 +6,12 @@
 from dataclasses import MISSING
 
 import isaaclab.sim as sim_utils
-from isaaclab.assets import ArticulationCfg, AssetBaseCfg, DeformableObjectCfg, RigidObjectCfg
+from isaaclab.assets import (
+    ArticulationCfg,
+    AssetBaseCfg,
+    DeformableObjectCfg,
+    RigidObjectCfg,
+)
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -32,6 +37,7 @@ from scipy.spatial.transform import Rotation as R
 # Scene definition
 ##
 
+
 @configclass
 class ObjectTableSceneCfg(InteractiveSceneCfg):
     """Configuration for the lift scene with a robot and a object.
@@ -43,7 +49,7 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     robot: ArticulationCfg = MISSING
     # end-effector sensor: will be populated by agent env cfg
     ee_frame: FrameTransformerCfg = MISSING
-    
+
     thumb_ft_frame: FrameTransformerCfg = MISSING
     right_ft_frame: FrameTransformerCfg = MISSING
     left_ft_frame: FrameTransformerCfg = MISSING
@@ -61,13 +67,15 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Table",
         init_state=AssetBaseCfg.InitialStateCfg(pos=[0.6, 0, -0.1], rot=[1, 0, 0, 0.0]),
         spawn=sim_utils.CuboidCfg(
-            size= [1.4, 0.8, 0.2],
+            size=[1.4, 0.8, 0.2],
             # rigid_props=sim_utils.RigidBodyPropertiesCfg(),
             # mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
             collision_props=sim_utils.CollisionPropertiesCfg(),
-            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.6, 0.6, 0.9), metallic=0.2),
+            visual_material=sim_utils.PreviewSurfaceCfg(
+                diffuse_color=(0.6, 0.6, 0.9), metallic=0.2
+            ),
         ),
-        )
+    )
 
     # plane
     # plane = AssetBaseCfg(
@@ -76,14 +84,53 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     #     # init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, 0.0]),
     #     spawn=GroundPlaneCfg(),
     # )
-    contact_forces_thumb_rot = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_thumb_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_thumb_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_right_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_right_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_left_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_left_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=6)
-    contact_forces_arm = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_[1-7]",update_period=0.0, history_length=6)
+    contact_forces_thumb_rot = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+        update_period=0.0,
+        history_length=6,
+    )
+    contact_forces_thumb_flex = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+        update_period=0.0,
+        history_length=6,
+    )
+    contact_forces_thumb_finray = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+        update_period=0.0,
+        history_length=6,
+    )
+    contact_forces_right_flex = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/Link_right_flexion",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+        update_period=0.0,
+        history_length=6,
+    )
+    contact_forces_right_finray = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/Link_right_finray_proxy",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+        update_period=0.0,
+        history_length=6,
+    )
+    contact_forces_left_flex = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/Link_left_flexion",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+        update_period=0.0,
+        history_length=6,
+    )
+    contact_forces_left_finray = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/Link_left_finray_proxy",
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],
+        update_period=0.0,
+        history_length=6,
+    )
+    contact_forces_arm = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_[1-7]",
+        update_period=0.0,
+        history_length=6,
+    )
     # lights
     light = AssetBaseCfg(
         prim_path="/World/light",
@@ -107,7 +154,12 @@ class CommandsCfg:
         debug_vis=False,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             # Grasp from front
-            pos_x=(0.8, 0.9), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
+            pos_x=(0.8, 0.9),
+            pos_y=(-0.25, 0.25),
+            pos_z=(0.25, 0.5),
+            roll=(0.0, 0.0),
+            pitch=(0.0, 0.0),
+            yaw=(0.0, 0.0),
             # Grasp from top
             # pos_x=(0.4, 0.6), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
         ),
@@ -119,8 +171,15 @@ class ActionsCfg:
     """Action specifications for the MDP."""
 
     # will be set by agent env cfg
-    arm_action: mdp.JointPositionActionCfg | mdp.DifferentialInverseKinematicsActionCfg = MISSING
-    gripper_action: mdp.BinaryJointPositionActionCfg | mdp.JointPositionActionCfg | mdp.JointPositionToLimitsActionCfg | mdp.EMAJointPositionToLimitsActionCfg = MISSING
+    arm_action: (
+        mdp.JointPositionActionCfg | mdp.DifferentialInverseKinematicsActionCfg
+    ) = MISSING
+    gripper_action: (
+        mdp.BinaryJointPositionActionCfg
+        | mdp.JointPositionActionCfg
+        | mdp.JointPositionToLimitsActionCfg
+        | mdp.EMAJointPositionToLimitsActionCfg
+    ) = MISSING
 
 
 @configclass
@@ -135,20 +194,52 @@ class ObservationsCfg:
         # joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["Joint_right_abduction", "Joint_right_dynamixel_crank",
         #                                                                                                      "Joint_left_abduction", "Joint_left_dynamixel_crank",
         #                                                                                                      "Joint_thumb_rotation", "Joint_thumb_abduction", "Joint_thumb_dynamixel_crank"])})
-        fingertips_positions = ObsTerm(func=mdp.pos_fingertips_root_frame) 
-        
+        fingertips_positions = ObsTerm(func=mdp.pos_fingertips_root_frame)
+
         # joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized)
         # joint_vel = ObsTerm(func=mdp.joint_vel_rel)
-        
-        joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-                                                                                                                          "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-                                                                                                                          "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-                                                                                                            "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-                                                                                                            "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
-        object_position = ObsTerm(func=mdp.instance_randomize_obj_positions_in_robot_root_frame)
-        object_quat = ObsTerm(func=mdp.instance_randomize_obj_orientations_in_robot_root_frame)
-        target_object_position = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_pose"})
+
+        joint_pos = ObsTerm(
+            func=mdp.joint_pos_limit_normalized,
+            params={
+                "asset_cfg": SceneEntityCfg(
+                    "robot",
+                    joint_names=[
+                        "lbr_.*",
+                        "Joint_.*_abduction",
+                        "Joint_.*_dynamixel_crank",
+                        "Joint_.*_rotation",
+                        "Joint_.*_flexion",
+                        "Joint_.*_finray_proxy",
+                    ],
+                )
+            },
+        )
+        joint_vel = ObsTerm(
+            func=mdp.joint_vel_rel,
+            params={
+                "asset_cfg": SceneEntityCfg(
+                    "robot",
+                    joint_names=[
+                        "lbr_.*",
+                        "Joint_.*_abduction",
+                        "Joint_.*_dynamixel_crank",
+                        "Joint_.*_rotation",
+                        "Joint_.*_flexion",
+                        "Joint_.*_finray_proxy",
+                    ],
+                )
+            },
+        )
+        object_position = ObsTerm(
+            func=mdp.instance_randomize_obj_positions_in_robot_root_frame
+        )
+        object_quat = ObsTerm(
+            func=mdp.instance_randomize_obj_orientations_in_robot_root_frame
+        )
+        target_object_position = ObsTerm(
+            func=mdp.generated_commands, params={"command_name": "object_pose"}
+        )
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self):
@@ -163,18 +254,23 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    
     randomize_cubes_in_focus = EventTerm(
         func=mdp.randomize_rigid_object_in_focus,
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("object"),
-            "out_focus_state": torch.tensor([0.0, 0.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
-            "pose_range": {"x": (0.9, 0.9), "y": (0.0, 0.0), "z": (0.07077, 0.07077), "roll": (1.57, 1.57)},
-
+            "out_focus_state": torch.tensor(
+                [0.0, 0.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+            ),
+            "pose_range": {
+                "x": (0.9, 0.9),
+                "y": (0.0, 0.0),
+                "z": (0.07077, 0.07077),
+                "roll": (1.57, 1.57),
+            },
         },
     )
-    
+
     reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
     # startup_object = EventTerm(func=mdp.setup_objects_to_environments,
     #     mode="startup",
@@ -184,7 +280,7 @@ class EventCfg:
     #         "models_filter": ["1", "4", "5", "10"],
     #     }
     # )
-    
+
     # random_initial_position = EventTerm(
     #     func=mdp.reset_joints_by_offset,
     #     params= {
@@ -203,31 +299,49 @@ class EventCfg:
     #     },
     # )
 
-is_contact_params = {"thumb_rot_cfgs": SceneEntityCfg("contact_forces_thumb_rot"),
-            "thumb_flex_cfgs": SceneEntityCfg("contact_forces_thumb_flex"),
-            "thumb_finray_cfgs": SceneEntityCfg("contact_forces_thumb_finray"),
-            "right_flex_cfgs": SceneEntityCfg("contact_forces_right_flex"),
-            "right_finray_cfgs": SceneEntityCfg("contact_forces_right_finray"),
-            "left_flex_cfgs": SceneEntityCfg("contact_forces_left_flex"),
-            "left_finray_cfgs": SceneEntityCfg("contact_forces_left_finray"), "threshold": 1.0}
+
+is_contact_params = {
+    "thumb_rot_cfgs": SceneEntityCfg("contact_forces_thumb_rot"),
+    "thumb_flex_cfgs": SceneEntityCfg("contact_forces_thumb_flex"),
+    "thumb_finray_cfgs": SceneEntityCfg("contact_forces_thumb_finray"),
+    "right_flex_cfgs": SceneEntityCfg("contact_forces_right_flex"),
+    "right_finray_cfgs": SceneEntityCfg("contact_forces_right_finray"),
+    "left_flex_cfgs": SceneEntityCfg("contact_forces_left_flex"),
+    "left_finray_cfgs": SceneEntityCfg("contact_forces_left_finray"),
+    "threshold": 1.0,
+}
 
 add_is_contact_param = lambda b: b.update(is_contact_params) or b
+
 
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
-    
-    fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=2.0 /0.2)
+
+    fingettips_to_object = RewTerm(
+        func=mdp.instance_randomize_object_fingertips_distance,
+        params={"std": 0.06},
+        weight=2.0 / 0.2,
+    )
 
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
-    lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0/0.2)
-    lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.13}), weight=1.0/0.2)
-    
+    lifting_object = RewTerm(
+        func=mdp.instance_randomize_object_lift,
+        params=add_is_contact_param({"minimal_height": 0.2}),
+        weight=10.0 / 0.2,
+    )
+    lifted_object = RewTerm(
+        func=mdp.instance_randomize_object_is_lifted,
+        params=add_is_contact_param({"minimal_height": 0.13}),
+        weight=1.0 / 0.2,
+    )
 
     object_goal_tracking = RewTerm(
         func=mdp.instance_object_goal_distance,
-        params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
-        weight=1.0/0.2, 
+        params=add_is_contact_param(
+            {"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}
+        ),
+        weight=1.0 / 0.2,
     )
 
     # object_goal_tracking_fine_grained = RewTerm(
@@ -237,22 +351,25 @@ class RewardsCfg:
     # )
     hand_object_contact = RewTerm(
         func=mdp.object_hand_contact,
-        weight=0.5/0.2,
+        weight=0.5 / 0.2,
         params=is_contact_params,
     )
     # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-2/0.2)
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1e-2 / 0.2)
 
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2_clip,
-        weight=-1e-3/0.2,
+        weight=-1e-3 / 0.2,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
-    
+
     contact_penalty = RewTerm(
         func=mdp.undesired_contacts,
-        weight=-1e-0/0.2,
-        params={"sensor_cfg": SceneEntityCfg("contact_forces_arm", body_names="lbr_.*"), "threshold": 1.0},
+        weight=-1e-0 / 0.2,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_forces_arm", body_names="lbr_.*"),
+            "threshold": 1.0,
+        },
     )
 
 
@@ -263,20 +380,26 @@ class TerminationsCfg:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
     object_dropping = DoneTerm(
-        func=mdp.instance_object_root_height_below_minimum, params={"minimum_height": -0.05, "object_cfg": SceneEntityCfg("object")}
+        func=mdp.instance_object_root_height_below_minimum,
+        params={"minimum_height": -0.05, "object_cfg": SceneEntityCfg("object")},
     )
 
 
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
+
     spring_offset = CurrTerm(
         func=mdp.set_pd_offset,
-        params={"robot_cfg":SceneEntityCfg("robot", joint_names=["Joint_.*_finray_proxy"]), "pd_offset":-0.62}
-        )
+        params={
+            "robot_cfg": SceneEntityCfg("robot", joint_names=["Joint_.*_finray_proxy"]),
+            "pd_offset": -0.62,
+        },
+    )
     # action_rate = CurrTerm(
     #     func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-3, "num_steps": 30000}
     # )
+
 
 #     joint_vel = CurrTerm(
 #         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-2, "num_steps": 30000}
@@ -310,7 +433,7 @@ class LiftEnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 2
         self.episode_length_s = 3.0
         # simulation settings
-        self.sim.dt = 0.01 #1.0 /120.0  # 100Hz
+        self.sim.dt = 0.01  # 1.0 /120.0  # 100Hz
         self.sim.render_interval = self.decimation
 
         self.sim.physx.gpu_found_lost_aggregate_pairs_capacity = 1024 * 1024 * 4
@@ -328,11 +451,14 @@ class LiftEnvCfg(ManagerBasedRLEnvCfg):
         # self.sim.physx.max_depenetration_velocity = 1000.0
         # self.sim.physx.default_buffer_size_multiplier = 5.0
 
-        self.sim.physx.max_position_iteration_count=192  # Important to avoid interpenetration.
-        self.sim.physx.max_velocity_iteration_count=1
-        self.sim.physx.bounce_threshold_velocity=0.2
-        self.sim.physx.friction_offset_threshold=0.01
-        self.sim.physx.friction_correlation_distance=0.00625
-        self.sim.physx.gpu_max_rigid_contact_count=2**23
-        self.sim.physx.gpu_max_rigid_patch_count=2**23
-        self.sim.physx.gpu_max_num_partitions=1  # Important for stable simulation.
+        self.sim.physx.max_position_iteration_count = (
+            192  # Important to avoid interpenetration.
+        )
+        self.sim.physx.max_velocity_iteration_count = 1
+        self.sim.physx.bounce_threshold_velocity = 0.2
+        self.sim.physx.friction_offset_threshold = 0.01
+        self.sim.physx.friction_correlation_distance = 0.00625
+        self.sim.physx.gpu_max_rigid_contact_count = 2**23
+        self.sim.physx.gpu_max_rigid_patch_count = 2**23
+        self.sim.physx.gpu_max_num_partitions = 1  # Important for stable simulation.
+

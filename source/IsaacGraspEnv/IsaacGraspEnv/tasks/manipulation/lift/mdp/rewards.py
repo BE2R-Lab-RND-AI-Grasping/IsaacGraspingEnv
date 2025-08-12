@@ -17,36 +17,93 @@ from isaaclab.sensors import ContactSensor
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
-from .observations import ( 
+from .observations import (
     instance_randomize_obj_positions_in_robot_world_frame as get_obj_pos_w,
 )
 
 
+# def object_hand_contact(
+#     env: ManagerBasedRLEnv,
+#     thumb_rot_cfgs: SceneEntityCfg,
+#     thumb_flex_cfgs: SceneEntityCfg,
+#     thumb_finray_cfgs: SceneEntityCfg,
+#     right_flex_cfgs: SceneEntityCfg,
+#     right_finray_cfgs: SceneEntityCfg,
+#     left_flex_cfgs: SceneEntityCfg,
+#     left_finray_cfgs: SceneEntityCfg,
+#     threshold,
+# ) -> torch.Tensor:
+#     """"""
+#     # extract the used quantities (to enable type-hinting)
+#     thumb_sensors: list[ContactSensor] = [
+#         env.scene.sensors[thumb_cfg.name]
+#         for thumb_cfg in [thumb_rot_cfgs, thumb_flex_cfgs, thumb_finray_cfgs]
+#     ]
+#     right_sensor: list[ContactSensor] = [
+#         env.scene.sensors[right_cfg.name]
+#         for right_cfg in [right_flex_cfgs, right_finray_cfgs]
+#     ]
+#     left_sensor: list[ContactSensor] = [
+#         env.scene.sensors[left_cfg.name]
+#         for left_cfg in [left_flex_cfgs, left_finray_cfgs]
+#     ]
+#     # check if contact force is above threshold
+#     is_contact_thumb = torch.sum(
+#         torch.cat(
+#             [
+#                 torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+#                 for sensor in thumb_sensors
+#             ],
+#             dim=-1,
+#         ),
+#         dim=1,
+#         keepdim=True,
+#     )
+#     is_contact_right = torch.sum(
+#         torch.cat(
+#             [
+#                 torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+#                 for sensor in right_sensor
+#             ],
+#             dim=-1,
+#         ),
+#         dim=1,
+#         keepdim=True,
+#     )
+#     is_contact_left = torch.sum(
+#         torch.cat(
+#             [
+#                 torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+#                 for sensor in left_sensor
+#             ],
+#             dim=-1,
+#         ),
+#         dim=1,
+#         keepdim=True,
+#     )
+
+#     # sum over contacts for each environment
+#     res = torch.sum(
+#         torch.logical_and(
+#             torch.logical_or(is_contact_right, is_contact_left), is_contact_thumb
+#         ),
+#         dim=1,
+#     )
+#     return res
+
+
 def object_hand_contact(
     env: ManagerBasedRLEnv,
-    thumb_rot_cfgs: SceneEntityCfg,
-    thumb_flex_cfgs: SceneEntityCfg,
-    thumb_finray_cfgs: SceneEntityCfg,
-    right_flex_cfgs: SceneEntityCfg,
-    right_finray_cfgs: SceneEntityCfg,
-    left_flex_cfgs: SceneEntityCfg,
-    left_finray_cfgs: SceneEntityCfg,
+    thumb_cfgs: list[SceneEntityCfg],
+    right_cfgs: list[SceneEntityCfg],
+    left_cfgs: list[SceneEntityCfg],
     threshold,
 ) -> torch.Tensor:
     """"""
     # extract the used quantities (to enable type-hinting)
-    thumb_sensors: list[ContactSensor] = [
-        env.scene.sensors[thumb_cfg.name]
-        for thumb_cfg in [thumb_rot_cfgs, thumb_flex_cfgs, thumb_finray_cfgs]
-    ]
-    right_sensor: list[ContactSensor] = [
-        env.scene.sensors[right_cfg.name]
-        for right_cfg in [right_flex_cfgs, right_finray_cfgs]
-    ]
-    left_sensor: list[ContactSensor] = [
-        env.scene.sensors[left_cfg.name]
-        for left_cfg in [left_flex_cfgs, left_finray_cfgs]
-    ]
+    thumb_sensors = [env.scene.sensors[cfg.name] for cfg in thumb_cfgs]
+    right_sensors = [env.scene.sensors[cfg.name] for cfg in right_cfgs]
+    left_sensors = [env.scene.sensors[cfg.name] for cfg in left_cfgs]
     # check if contact force is above threshold
     is_contact_thumb = torch.sum(
         torch.cat(
@@ -63,7 +120,7 @@ def object_hand_contact(
         torch.cat(
             [
                 torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
-                for sensor in right_sensor
+                for sensor in right_sensors
             ],
             dim=-1,
         ),
@@ -74,20 +131,17 @@ def object_hand_contact(
         torch.cat(
             [
                 torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
-                for sensor in left_sensor
+                for sensor in left_sensors
             ],
             dim=-1,
         ),
         dim=1,
         keepdim=True,
     )
-
+    # print(is_contact_thumb, is_contact_right, is_contact_left)
     # sum over contacts for each environment
-    res = torch.sum(
-        torch.logical_and(
-            torch.logical_or(is_contact_right, is_contact_left), is_contact_thumb
-        ),
-        dim=1,
+    res = torch.cat([is_contact_thumb, is_contact_right, is_contact_left], dim=-1).sum(
+        dim=1
     )
     return res
 
@@ -248,7 +302,6 @@ def object_ee_distance(
     return 1 - torch.tanh(object_ee_distance / std)
 
 
-
 def instance_randomize_object_ee_distance(
     env: ManagerBasedRLEnv,
     std: float,
@@ -258,7 +311,7 @@ def instance_randomize_object_ee_distance(
 ) -> torch.Tensor:
     if not hasattr(env, "rigid_objects_in_focus"):
         return torch.full((env.num_envs, 1), fill_value=-1)
-    
+
     """Reward the agent for reaching the object using tanh-kernel."""
     # extract the used quantities (to enable type-hinting)
     ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
@@ -270,7 +323,6 @@ def instance_randomize_object_ee_distance(
     object_ee_distance = torch.norm(obj_pos_w - ee_w, dim=1)
 
     return 1 - torch.tanh(object_ee_distance / std)
-
 
 
 def object_fingertips_distance(
@@ -310,7 +362,8 @@ def object_fingertips_distance(
     return torch.sum(
         torch.mul(1 / (std + object_fingertips_distance), reward_scale), dim=1
     )
-    
+
+
 def instance_randomize_object_fingertips_distance(
     env: ManagerBasedRLEnv,
     std: float,
@@ -333,6 +386,7 @@ def instance_randomize_object_fingertips_distance(
     thumb_pos_w = thumb_ft_frame.data.target_pos_w[..., 0, :]
     right_pos_w = right_ft_frame.data.target_pos_w[..., 0, :]
     left_pos_w = left_ft_frame.data.target_pos_w[..., 0, :]
+
     # Distance of the end-effector to the object: (num_envs,)
     object_fingertips_distance = torch.cat(
         [
@@ -343,7 +397,7 @@ def instance_randomize_object_fingertips_distance(
         dim=-1,
     )
 
-    object_fingertips_distance = torch.clip(object_fingertips_distance, 0.03, 0.8)
+    # object_fingertips_distance = torch.clip(object_fingertips_distance, 0.03, 0.8)
 
     reward_scale = torch.tensor([0.04, 0.02, 0.02]).to(env.sim.device)
 
@@ -421,7 +475,6 @@ def instance_object_goal_distance(
     if not hasattr(env, "rigid_objects_in_focus"):
         return torch.full((env.num_envs, 1), fill_value=-1)
 
-
     obj_is_lifted = instance_randomize_object_is_lifted(
         env,
         minimal_height,
@@ -443,9 +496,9 @@ def instance_object_goal_distance(
     des_pos_w, _ = combine_frame_transforms(
         robot.data.root_state_w[:, :3], robot.data.root_state_w[:, 3:7], des_pos_b
     )
-    
+
     obj_pos_w = get_obj_pos_w(env, object_cfg)
-    
+
     # distance of the end-effector to the object: (num_envs,)
     distance = torch.norm(des_pos_w - obj_pos_w, dim=1)
     # rewarded if the object is lifted above the threshold
@@ -454,6 +507,7 @@ def instance_object_goal_distance(
     reward = 1.0 / (std + distance)
 
     return obj_is_lifted.float() * reward
+
 
 def joint_vel_l2_clip(
     env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")

@@ -47,6 +47,13 @@ parser.add_argument(
     default=None,
     help="A comma separated list of identifiers to be taken from the dataset",
 )
+parser.add_argument(
+    "--object_kinematic_enabled", # True or False
+    action="store_true",
+    default=False,
+    help="Enable kinematic for the object.",
+)
+
 # append AppLauncher cli args
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
@@ -87,9 +94,9 @@ def main():
     env_cfg.scene.object.rigid_objects =  load_object_dataset(
         args_cli.dataset_path,
         args_cli.usd_file_name,
-        dt_models_filter
+        dt_models_filter,
+        kinematic_enabled=args_cli.object_kinematic_enabled
     )
-    
 
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)

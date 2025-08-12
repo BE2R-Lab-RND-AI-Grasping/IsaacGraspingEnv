@@ -11,13 +11,14 @@ OBJ_POS = np.array([0.9, 0.0, 0.07077])
 # OBJ_POS = np.array([0.0, 0.0, 10.0])
 OBJ_ROT = R.from_euler("xyz", [90.0, 0.0, 0.0], degrees=True)
 
+
 def get_filtered_folder_name_in_dirs(path_to_models, models_filter):
     dir_check = lambda dir: dir.is_dir() and dir.name.split("_")[-1].isdigit()
     if models_filter:
         dt_filter = lambda dir: dir.name.split("_")[-1] in models_filter
     else:
         dt_filter = lambda dir: True
-        
+
     list_folder_names = [
         dir.name
         for dir in path_to_models.iterdir()
@@ -28,11 +29,13 @@ def get_filtered_folder_name_in_dirs(path_to_models, models_filter):
     return list_folder_names
 
 
-def load_object_dataset(path_to_models, usd_file_name, models_filter=None):
+def load_object_dataset(
+    path_to_models, usd_file_name, models_filter=None, kinematic_enabled=None
+):
     path_to_models = pathlib.Path(path_to_models)
-    
+
     list_obj_models = get_filtered_folder_name_in_dirs(path_to_models, models_filter)
-    
+
     num_obj_models = len(list_obj_models)
     dict_obj_models = {}
     for o_model in list_obj_models:
@@ -54,6 +57,9 @@ def load_object_dataset(path_to_models, usd_file_name, models_filter=None):
                 collision_props=sim_utils.CollisionPropertiesCfg(
                     contact_offset=0.001, rest_offset=0.0001
                 ),
+                rigid_props=sim_utils.RigidBodyPropertiesCfg(
+                    kinematic_enabled=kinematic_enabled
+                ),
                 semantic_tags=[("class", "object"), ("color", "red")],
             ),
         )
@@ -65,13 +71,11 @@ def preprocessing_point_cloud_loading(path_to_models, pc_file_name, models_filte
 
     path_to_models = pathlib.Path(path_to_models)
     list_obj_models = get_filtered_folder_name_in_dirs(path_to_models, models_filter)
-    
-    
+
     list_path_to_pc = []
     for o_model in list_obj_models:
-        
+
         list_path_to_pc.append(str(path_to_models / o_model / pc_file_name))
-        
+
     return list_path_to_pc
-    
-    
+
