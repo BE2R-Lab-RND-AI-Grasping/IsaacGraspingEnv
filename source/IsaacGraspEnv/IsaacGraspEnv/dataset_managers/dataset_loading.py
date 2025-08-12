@@ -7,8 +7,9 @@ from scipy.spatial.transform import Rotation as R
 import numpy as np
 import pathlib
 
-OBJ_POS = np.array([0.9, 0.0, 0.07077])
+# OBJ_POS = np.array([0.9, 0.0, 0.07077])
 # OBJ_POS = np.array([0.0, 0.0, 10.0])
+OBJ_POS = np.array([0.7, 0.0, 0.02])
 OBJ_ROT = R.from_euler("xyz", [90.0, 0.0, 0.0], degrees=True)
 
 def get_filtered_folder_name_in_dirs(path_to_models, models_filter):

@@ -21,7 +21,7 @@ from .lift_env_cfg import LiftEnvCfg, ObjectTableSceneCfg
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-
+import torch
 
 # Old value
 # CAM_POS = np.array([1.93, -0.3553, 0.35891])
@@ -67,13 +67,17 @@ class ProprioceptionRobotObservation(ObsGroup):
         ee_frame = ObsTerm(func=mdp.frame_in_robot_root_frame)
         fingertips_positions = ObsTerm(func=mdp.pos_fingertips_root_frame) 
 
-        joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-                                                                                                                          "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-                                                                                                                          "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
-                                                                                                            "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
-                                                                                                            "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+        # joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+        #                                                                                                                   "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
+        #                                                                                                                   "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
+        # joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+        #                                                                                                     "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
+        #                                                                                                     "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
 
+        joint_pos = ObsTerm(func=mdp.joint_pos_limit_normalized, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+                                                                                                                    "Joint_.*"])})
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
+                                                                                                            "Joint_.*"])})
         target_object_position = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_pose"})
         actions = ObsTerm(func=mdp.last_action)
 
@@ -138,6 +142,49 @@ class FullObjPCObservationsCfg:
 
     # observation groups
     policy: FullObjPCPolicyCfg = FullObjPCPolicyCfg()
+
+
+
+# @configclass
+# class VectorsObservationsCfg:
+#     """Observation specifications for the MDP."""
+
+#     @configclass
+#     class VectorsPolicyCfg(ProprioceptionRobotObservation):
+#         """Observations for policy group."""
+
+#         # vectors = ObsTerm(
+#         #     func = mdp.instance_vectors_joint_hand_object_full_pc,
+#         #     params = {
+#         #         "object_cfg": SceneEntityCfg("object"),
+#         #         "robot_cfg": SceneEntityCfg("robot"),
+#         #         "frame_cfg": SceneEntityCfg("ee_frame"),
+#         #         "path_to_point_clouds": MISSING,
+#         #         "scale": MISSING,
+#         #         "num_pc": 100
+                
+#         #     }
+#         # )
+
+#         vectors = ObsTerm(
+#             func = mdp.instance_vectors_joint_hand_key_points,
+#             params = {
+#                 "object_cfg": SceneEntityCfg("object"),
+#                 "robot_cfg": SceneEntityCfg("robot"),
+#                 "frame_cfg": SceneEntityCfg("ee_frame"),
+#                 "grasping_reference": torch.zeros(3,10)
+                
+#             }
+#         )
+
+#         def __post_init__(self):
+#             self.enable_corruption = False
+#             self.concatenate_terms = True
+
+#     # observation groups
+#     policy: VectorsPolicyCfg = VectorsPolicyCfg()
+
+
 
 ##
 # Environment configuration

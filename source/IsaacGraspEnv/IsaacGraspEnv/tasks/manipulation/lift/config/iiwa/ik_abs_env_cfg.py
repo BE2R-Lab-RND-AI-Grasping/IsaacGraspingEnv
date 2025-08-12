@@ -103,3 +103,15 @@ class IiwaCubeFullObjPCLiftEnvCfg_PLAY(IiwaCubeFullObjPCLiftEnvCfg):
         self.scene.env_spacing = 2.5
         # disable randomization for play
         self.observations.policy.enable_corruption = False
+
+
+@configclass
+class IiwaVectorsLiftEnvCfg(IiwaCubeLiftEnvCfg):
+
+    # Basic settings
+    observations: FullObjPCObservationsCfg = FullObjPCObservationsCfg()
+
+    
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()

@@ -79,6 +79,7 @@ class randomize_rigid_object_in_focus(ManagerTermBase):
         self.list_id_rigid_objects_in_focus = [[0] for __ in range(env.num_envs)]
         env.rigid_objects_in_focus = self.list_id_rigid_objects_in_focus
 
+        self.out_focus_state = torch.Tensor(cfg.params.get("out_focus_state", [])).to(env.sim.device)
         # self.mem_flag_disactive_sim_objs = torch.full((self.asset.num_objects, self.asset.num_instances, 1), fill_value=0, dtype=torch.uint8)
 
         x = torch.linspace(
@@ -108,9 +109,9 @@ class randomize_rigid_object_in_focus(ManagerTermBase):
         self,
         env: ManagerBasedEnv,
         env_ids: torch.Tensor,
-        asset_cfg: SceneEntityCfg,
-        out_focus_state: torch.Tensor,
+        out_focus_state: list[float],
         pose_range: dict[str, tuple[float, float]] = {},
+        asset_cfg: SceneEntityCfg = SceneEntityCfg("object"),
     ):
 
         for cur_env in env_ids.tolist():
@@ -123,7 +124,7 @@ class randomize_rigid_object_in_focus(ManagerTermBase):
             # Randomly select an object to bring into focus
             object_id = random.randint(0, self.asset.num_objects - 1)
             # Create object state tensor
-            object_states = torch.stack([out_focus_state] * self.asset.num_objects).to(
+            object_states = torch.stack([self.out_focus_state] * self.asset.num_objects).to(
                 device=env.device
             )
             # Place the rest object on grid in out focus state
