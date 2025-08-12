@@ -38,7 +38,7 @@ def instance_randomize_obj_positions_in_robot_ee_frame(
     frame_cfg,
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
 ) -> torch.Tensor:
-    """The orientation of the cubes in the world frame."""
+    """The orientation of the cubes in the robot end-effector frame."""
     if not hasattr(env, "rigid_objects_in_focus"):
         return torch.full((env.num_envs, 3), fill_value=-1)
 
@@ -67,7 +67,7 @@ def instance_randomize_obj_orientations_in_robot_ee_frame(
     frame_cfg,
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
 ) -> torch.Tensor:
-    """The orientation of the cubes in the world frame."""
+    """The orientation of the cubes in the robot end-effector frame."""
     if not hasattr(env, "rigid_objects_in_focus"):
         return torch.full((env.num_envs, 4), fill_value=-1)
 
@@ -96,7 +96,14 @@ def instance_randomize_obj_vel_in_robot_frame(
     robot_cfg:  SceneEntityCfg,
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
 ) -> torch.Tensor:
-    """The orientation of the cubes in the world frame."""
+    """Calculate the velocity of the objects in the robot frame.
+        Calculating is based on twist transformation from the world frame to the robot frame.
+        Simple working example of the transformation in file `scripts/testing/exp_2_general_vel.py`
+    Args:
+        env (ManagerBasedRLEnv): The environment instance.
+        robot_cfg (SceneEntityCfg): The configuration for the robot.
+        object_cfg (SceneEntityCfg, optional): The configuration for the object. Defaults to SceneEntityCfg("object").
+    """
     if not hasattr(env, "rigid_objects_in_focus"):
         return torch.full((env.num_envs, 6), fill_value=-1)
 
@@ -147,11 +154,6 @@ def instance_randomize_obj_vel_in_robot_frame(
         
         body_velocity_object.append(body_vel_obj)
         
-        
-        
-        
-        
-        
     body_velocity_object = torch.stack(body_velocity_object)
 
     return body_velocity_object
@@ -163,6 +165,7 @@ def vectors_joint_hand_object_frame(
     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
     robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
 ) -> torch.Tensor:
+    """Calculate the vectors from the robot hand to the object in the robot end-effector frame."""
 
     if not hasattr(env, "rigid_objects_in_focus"):
         return torch.full((env.num_envs, 3))
@@ -200,7 +203,7 @@ def vectors_joint_hand_object_frame(
 class instance_vectors_joint_hand_object_full_pc(full_obj_point_cloud):
 
     def __init__(self, cfg: ObservationTermCfg, env: ManagerBasedRLEnv):
-
+        """Class observation term to compute the vectors from the robot hand to full object point cloud in the robot end-effector frame."""
         super().__init__(cfg, env)
 
         self.ee_frame_cfg = cfg.params["frame_cfg"]
@@ -216,7 +219,20 @@ class instance_vectors_joint_hand_object_full_pc(full_obj_point_cloud):
         object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
         robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
     ) -> torch.Tensor:
+        """Calculate the vectors from the robot hand to the full object point cloud in the robot end-effector frame.
 
+        Args:
+            env (ManagerBasedRLEnv): The environment instance.
+            frame_cfg (SceneEntityCfg): The configuration for the frame.
+            path_to_point_clouds (str): The path to the full point clouds.
+            scale (float): The scale factor for the point clouds.
+            num_pc (int): The number of points in point clouds.
+            object_cfg (SceneEntityCfg, optional): The configuration for the object. Defaults to SceneEntityCfg("object").
+            robot_cfg (SceneEntityCfg, optional): The configuration for the robot. Defaults to SceneEntityCfg("robot").
+    
+        Returns:
+            torch.Tensor: The vectors from the robot hand to the full object point cloud in the robot end-effector frame.
+        """
         if not hasattr(env, "rigid_objects_in_focus"):
             return torch.full((env.num_envs, 3))
 
@@ -265,7 +281,7 @@ class instance_vectors_joint_hand_object_full_pc(full_obj_point_cloud):
 class instance_vectors_joint_hand_key_points(ManagerTermBase):
 
     def __init__(self, cfg: ObservationTermCfg, env: ManagerBasedRLEnv):
-
+        """Class observation term to compute the vectors from the robot hand to the key points in the robot end-effector frame."""
         super().__init__(cfg, env)
 
         self.body_frame_key = cfg.params["body_frame_key"]
@@ -318,6 +334,21 @@ class instance_vectors_joint_hand_key_points(ManagerTermBase):
         body_frame_key: str = "key_points",
         joint_position_key: str = "qpos",
     ) -> torch.Tensor:
+        """Compute the vectors from the robot hand to the key points in the robot end-effector frame. The key points are defined in the grasping reference file.
+        joint_position_key is not used in this function, but it is required for the config to be valid.
+
+        Args:
+            env (ManagerBasedRLEnv): The environment instance.
+            frame_cfg (SceneEntityCfg): The configuration for the frame.
+            grasping_reference_path (str): The path to the grasping reference file. The file should contain list of dictionaries with keys defined in body_frame_key.
+            object_cfg (SceneEntityCfg, optional): The configuration for the object. Defaults to SceneEntityCfg("object").
+            robot_cfg (SceneEntityCfg, optional): The configuration for the robot. Defaults to SceneEntityCfg("robot").
+            body_frame_key (str, optional): The dictionary key for the body frame in the grasping reference file. Defaults to "key_points".
+            joint_position_key (str, optional): The dictionary key for the joint position in the grasping reference file. Defaults to "qpos".
+
+        Returns:
+            torch.Tensor: The computed vectors from the robot hand to the key points in the robot end-effector frame.
+        """
 
         if not hasattr(env, "rigid_objects_in_focus"):
             return torch.full((env.num_envs, 3 * self.object_cfg.num_bodies))
@@ -369,7 +400,12 @@ class instance_vectors_joint_hand_key_points(ManagerTermBase):
 class instance_target_end_effector_orientation(ManagerTermBase):
 
     def __init__(self, cfg: ObservationTermCfg, env: ManagerBasedRLEnv):
-
+        """Class observation term to compute the target end-effector orientation in the robot end-effector frame.
+        The target orientation is defined in the grasping reference file. 
+        Args:
+            cfg (ObservationTermCfg): The configuration for the observation term.
+            env (ManagerBasedRLEnv): The environment instance.
+        """
         super().__init__(cfg, env)
 
         self.body_quat_key = cfg.params["body_quat_key"]
@@ -416,7 +452,19 @@ class instance_target_end_effector_orientation(ManagerTermBase):
         robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
         body_quat_key: str = "body_quat_obj",
     ) -> torch.Tensor:
-
+        """Compute the target end-effector orientation in the robot end-effector frame.
+        Grasping reference file should contain list of dictionaries with keys defined in body_quat_key.
+        In the file, the key should contain the quaternion of the end-effector in the object frame.
+        Args:
+            env (ManagerBasedRLEnv): The environment instance.
+            frame_cfg (SceneEntityCfg): The configuration for the frame.
+            grasping_reference_path (str): The path to the grasping reference file.
+            object_cfg (SceneEntityCfg, optional): The configuration for the object. Defaults to SceneEntityCfg("object").
+            robot_cfg (SceneEntityCfg, optional): The configuration for the robot. Defaults to SceneEntityCfg("robot").
+            body_quat_key (str, optional): The dictionary key for the body quaternion in object frame in the grasping reference file. Defaults to "body_quat_obj".
+        Returns:
+            torch.Tensor: The target end-effector orientation in the robot end-effector frame.
+        """
         if not hasattr(env, "rigid_objects_in_focus"):
             return torch.full((env.num_envs, 4))
 
@@ -455,7 +503,9 @@ class instance_target_end_effector_orientation(ManagerTermBase):
 class frame_in_init_ee_frame(ManagerTermBase):
 
     def __init__(self, cfg: ObservationTermCfg, env: ManagerBasedRLEnv):
-
+        """Class observation term to compute the current end-effector frame in the initial end-effector frame, which defined in initial_ee_frame_root.
+        The first step of the environment is not used to compute the initial end-effector frame, because the robot configuration equal to the configuration in usd file.
+        """
         self.initial_ee_pos_root = (
             torch.Tensor(cfg.params["initial_ee_frame_root"]["pos"])
             .unsqueeze(0)
@@ -475,7 +525,14 @@ class frame_in_init_ee_frame(ManagerTermBase):
         initial_ee_frame_root: dict,
         ee_frame_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
     ) -> torch.Tensor:
-        """The position of the object in the robot's root frame."""
+        """Compute the current end-effector frame in the initial end-effector frame, which defined in initial_ee_frame_root.
+        Args:
+            env (ManagerBasedRLEnv): The environment instance.
+            initial_ee_frame_root (dict): The initial end-effector frame in the root frame. The dictionary should contain "pos" and "quat" keys.
+            ee_frame_cfg (SceneEntityCfg, optional): The configuration for the end-effector frame. Defaults to SceneEntityCfg("ee_frame").
+        Returns:
+            torch.Tensor: The current end-effector frame in the initial end-effector frame.
+        """
         ee_frame: RigidObject = env.scene[ee_frame_cfg.name]
         ee_pos_b = ee_frame.data.target_pos_source[:, 0]
         ee_quat_b = ee_frame.data.target_quat_source[:, 0]

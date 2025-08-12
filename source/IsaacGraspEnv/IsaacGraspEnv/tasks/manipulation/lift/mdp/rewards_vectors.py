@@ -20,6 +20,11 @@ from .observations_vectors import instance_vectors_joint_hand_key_points
 class instance_object_displacement(ManagerTermBase):
 
     def __init__(self, cfg: RewardTermCfg, env: ManagerBasedRLEnv):
+        '''Class to compute the displacement of the ojbect relative to its previous position
+        Args:
+            cfg (RewardTermCfg): Configuration for the reward term.
+            env (ManagerBasedRLEnv): The environment instance.
+        '''
 
         super().__init__(cfg, env)
 
@@ -30,11 +35,13 @@ class instance_object_displacement(ManagerTermBase):
     def __call__(
         self,
         env: ManagerBasedRLEnv,
-        object_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+        object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
     ) -> torch.Tensor:
-        """Penalize joint velocities on the articulation using L2 squared kernel.
-
-        NOTE: Only the joints configured in :attr:`asset_cfg.joint_ids` will have their joint velocities contribute to the term.
+        """Penalize the displacement of the object from its previous position.
+        
+        Args:
+            env (ManagerBasedRLEnv): The environment instance.
+            object_cfg (SceneEntityCfg, optional): Configuration of the object. Defaults to SceneEntityCfg("object").
         """
 
         curr_obj_pos = get_obj_pos_w(env, self.object_cfg)
@@ -51,7 +58,12 @@ class instance_object_displacement(ManagerTermBase):
 class instance_vectors_norm(ManagerTermBase):
     
     def __init__(self, cfg: RewardTermCfg, env: ManagerBasedRLEnv):
+        """Class to compute the norm of vectors in the observation space.
 
+        Args:
+            cfg (RewardTermCfg): Configuration for the reward term.
+            env (ManagerBasedRLEnv): The environment instance.
+        """
         super().__init__(cfg, env)
 
         self.name_obs_vector = cfg.params["name_obs_vector"]
@@ -73,7 +85,16 @@ class instance_vectors_norm(ManagerTermBase):
         name_obs_vector: str, 
     ) -> torch.Tensor:
         
-        
+        """Compute the norm of vectors in the observation space.
+
+        Args:
+            env (ManagerBasedRLEnv): The environment instance.
+            name_obs_vector (str): The name of the observation term is defined in the configuration.
+
+        Returns:
+            torch.Tensor: The computed norm of the observation vectors.
+        """
+
         vectors = self.unpack_vectors4obs(env).reshape(env.num_envs,-1,3)
         
         norm_vec = torch.linalg.norm(vectors, dim=-1).sum(dim=1)
