@@ -60,7 +60,7 @@ git clone git@github.com:BE2R-Lab-RND-AI-Grasping/IsaacGraspingEnv.git
 python -m pip install -e source/IsaacGraspEnv
 ```
 
-- Download dataset of objects and extract zip: [link](https://disk.yandex.ru/d/NPZwTWIzPU2gvg)
+- Download dataset of objects and extract zip: [link](https://disk.yandex.ru/d/oxoJPxib3dM5Pg)
 
 - Run scripts for converting obj files in usd:
 
