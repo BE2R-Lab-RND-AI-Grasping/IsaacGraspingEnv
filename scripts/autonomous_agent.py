@@ -57,7 +57,6 @@ from IsaacGraspEnv.dataset_managers.dataset_loading import load_object_dataset
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
 
-
 def main():
     """Random actions agent with Isaac Lab environment."""
     # create environment configuration
@@ -66,7 +65,7 @@ def main():
         # args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
     )
     # env_cfg.terminations.time_out = None
-    env_cfg.episode_length_s = 2.5
+    env_cfg.episode_length_s = 3
     if args_cli.model_filter:
         dt_models_filter = args_cli.model_filter.replace(" ", "").split(",")
     else:
@@ -78,7 +77,6 @@ def main():
         args_cli.usd_file_name,
         dt_models_filter
     )
-    
 
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
@@ -123,7 +121,7 @@ def main():
             if time_step < 100:
                 delta_ee_pos = (obj_pos - ee_pos) / 2
             else:
-                delta_ee_pos = (target_pos - obj_pos) / 2
+                delta_ee_pos = (target_pos - ee_pos) / 2
             delta_ee_ang = torch.zeros(3, device=env.unwrapped.device)
 
             if time_step == 0:

@@ -57,17 +57,17 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
     #     spawn=UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd",
     #                      semantic_tags = [("class","table"), ("color", "gray")],),
     # )
-    table = AssetBaseCfg(
-        prim_path="{ENV_REGEX_NS}/Table",
-        init_state=AssetBaseCfg.InitialStateCfg(pos=[0.6, 0, -0.1], rot=[1, 0, 0, 0.0]),
-        spawn=sim_utils.CuboidCfg(
-            size= [1.4, 0.8, 0.2],
-            # rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            # mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
-            collision_props=sim_utils.CollisionPropertiesCfg(),
-            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.6, 0.6, 0.9), metallic=0.2),
-        ),
-        )
+    # table = AssetBaseCfg(
+    #     prim_path="{ENV_REGEX_NS}/Table",
+    #     init_state=AssetBaseCfg.InitialStateCfg(pos=[0.6, 0, -0.1], rot=[1, 0, 0, 0.0]),
+    #     spawn=sim_utils.CuboidCfg(
+    #         size= [1.4, 0.8, 0.2],
+    #         # rigid_props=sim_utils.RigidBodyPropertiesCfg(),
+    #         # mass_props=sim_utils.MassPropertiesCfg(mass=1.0),
+    #         collision_props=sim_utils.CollisionPropertiesCfg(),
+    #         visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.6, 0.6, 0.9), metallic=0.2),
+    #     ),
+    #     )
 
     # plane
     # plane = AssetBaseCfg(
@@ -90,12 +90,6 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
     )
 
-
-##
-# MDP settings
-##
-
-
 @configclass
 class CommandsCfg:
     """Command terms for the MDP."""
@@ -104,7 +98,7 @@ class CommandsCfg:
         asset_name="robot",
         body_name=MISSING,  # will be set by agent env cfg
         resampling_time_range=(5.0, 5.0),
-        debug_vis=False,
+        debug_vis=True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             # Grasp from front
             pos_x=(0.8, 0.9), pos_y=(-0.25, 0.25), pos_z=(0.25, 0.5), roll=(0.0, 0.0), pitch=(0.0, 0.0), yaw=(0.0, 0.0)
@@ -169,7 +163,7 @@ class EventCfg:
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("object"),
-            "out_focus_state": torch.tensor([0.0, 0.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "out_focus_state": [0.0, 0.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
             "pose_range": {"x": (0.9, 0.9), "y": (0.0, 0.0), "z": (0.07077, 0.07077), "roll": (1.57, 1.57)},
 
         },
@@ -220,13 +214,20 @@ class RewardsCfg:
     fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=2.0 /0.2)
 
     # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
+    # For power drills
     lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0/0.2)
     lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.13}), weight=1.0/0.2)
+    # for screwdrives
+    # lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.025}), weight=10.0/0.2)
+    # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.025}), weight=1.0/0.2)
     
 
     object_goal_tracking = RewTerm(
         func=mdp.instance_object_goal_distance,
+        # For power drills
         params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
+        # for screwdrives
+        # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
         weight=1.0/0.2, 
     )
 
