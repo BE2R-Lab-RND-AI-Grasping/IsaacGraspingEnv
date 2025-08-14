@@ -148,6 +148,15 @@ def main():
     time_step = 0
     time_arr = []
 
+    list_obs_term_name = env.observation_manager.active_terms["policy"] #["ee_frame", "object_position", "target_object_position"]
+
+    dict_obs_term_unpack = {}
+    for term in list_obs_term_name:
+        id_obs_vector = env.observation_manager.active_terms["policy"].index(term)
+        size_obs = env.observation_manager.group_obs_term_dim["policy"][id_obs_vector][0]
+        index_obs_vector = sum([env.observation_manager.group_obs_term_dim["policy"][i][0] for i in range(id_obs_vector)])
+        dict_obs_term_unpack[term] = lambda env, s_id=index_obs_vector, size=size_obs: env.observation_manager._obs_buffer["policy"][:,s_id:s_id+size]
+
     init_position = []
     succes = []
     effort_limits = {
@@ -170,12 +179,17 @@ def main():
     while simulation_app.is_running():
         # run everything in inference mode
         with torch.inference_mode():
-            ee_pos = obs["policy"][0, 0:3]
-            # Closed Kinematics
+
+            ee_quat_root = env.scene.sensors["ee_frame"].data.target_quat_source.squeeze()
+            ee_pos_root = env.scene.sensors["ee_frame"].data.target_pos_source.squeeze()
+            
+            
+            ee_pos = transform_points(dict_obs_term_unpack["ee_frame"](env)[:, 0:3], ee_pos_root, ee_quat_root)[0] # Unpack the ee_frame observation
+            # Closed Kinematics 
             # obj_pos = obs["policy"][0,56:59]  # + torch.Tensor([0.0, 0.0, 0.11]) #4: + torch.Tensor([-0.05, 0.0, 0.1])  #3: + torch.Tensor([-0.05, 0.0, 0.1]) # 2: + torch.Tensor([-0.05, 0.0, 0.1]) #1: + torch.Tensor([-0.1, 0.0, 0.12])
             # target_pos = obs["policy"][0,63:66]
-            obj_pos = obs["policy"][0, 50:53]
-            target_pos = obs["policy"][0, 57:60]
+            obj_pos = transform_points(dict_obs_term_unpack["object_position"](env), ee_pos_root, ee_quat_root)[0]
+            target_pos = transform_points(dict_obs_term_unpack["target_object_position"](env), ee_pos_root, ee_quat_root)[0]
             time_arr.append(env.env.sim.current_time)
             for act_name in applied_efforts_act.keys():
                 applied_efforts_act[act_name].append(
