@@ -56,9 +56,6 @@ import numpy as np
 from IsaacGraspEnv.dataset_managers.dataset_loading import load_object_dataset
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
-from isaaclab.markers.config import FRAME_MARKER_CFG  # isort: skip
-from isaaclab.sensors import FrameTransformerCfg
-from isaaclab.sensors.frame_transformer.frame_transformer_cfg import OffsetCfg
 
 def main():
     """Random actions agent with Isaac Lab environment."""
@@ -115,7 +112,7 @@ def main():
         # run everything in inference mode
         with torch.inference_mode():
             ee_pos = obs["policy"][0,0:3]
-            obj_pos = obs["policy"][0,56:59]+ torch.Tensor([0.0, 0.0, 0.11]) #4: + torch.Tensor([-0.05, 0.0, 0.1])  #3: + torch.Tensor([-0.05, 0.0, 0.1]) # 2: + torch.Tensor([-0.05, 0.0, 0.1]) #1: + torch.Tensor([-0.1, 0.0, 0.12])
+            obj_pos = obs["policy"][0,56:59]
             target_pos = obs["policy"][0,63:66]
             time_arr.append(env.env.sim.current_time)
             for act_name in applied_efforts_act.keys():
