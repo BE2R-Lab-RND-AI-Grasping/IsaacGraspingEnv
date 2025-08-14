@@ -23,7 +23,7 @@ parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0"
 parser.add_argument(
     "--dataset_path",
     type=str,
-    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers", #"wrenches",#None,
+    default=None,
     help="Absolute path to dataset. Dataset directory must have folders with models.",
 )
 parser.add_argument(
@@ -35,7 +35,7 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default="4",#None,
+    default=None,
     help="A comma separated list of identifiers to be taken from the dataset",
 )
 AppLauncher.add_app_launcher_args(parser)

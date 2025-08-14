@@ -46,7 +46,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_path",
     type=str,
-    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers",#None,
+    default=None,
     help="Absolute path to dataset. Dataset directory must have folders with models.",
 )
 parser.add_argument(
@@ -58,7 +58,7 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default="2, 3, 4",
+    default=None,
     help="A comma separated list of identifiers to be taken from the dataset",
 )
 # append AppLauncher cli args
