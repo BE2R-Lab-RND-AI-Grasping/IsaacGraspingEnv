@@ -666,8 +666,7 @@ def binary_contact(
     # check if contact force is above threshold
     contact_thumb = torch.cat(
             [
-                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
-                sensor.data.force_matrix_w[:, :, 0, 2].abs() > threshold
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
                 for sensor in thumb_sensors
             ],
             dim=-1,
@@ -675,16 +674,14 @@ def binary_contact(
     
     contact_right = torch.cat(
             [
-                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
-                sensor.data.force_matrix_w[:, :, 0, 2].abs() > threshold
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
                 for sensor in right_sensor
             ],
             dim=-1)
     
     contact_left = torch.cat(
             [
-                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
-                sensor.data.force_matrix_w[:, :, 0, 2].abs() > threshold
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
                 for sensor in left_sensor
             ],
             dim=-1,
@@ -723,24 +720,21 @@ def contact_force(
     # check if contact force is above threshold
     contact_force_thumb = torch.cat(
             [
-                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
-                sensor.data.force_matrix_w[:, :, 0,2].abs()
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
                 for sensor in thumb_sensors
             ],
             dim=-1,
         )
     contact_force_right = torch.cat(
             [
-                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
-                sensor.data.force_matrix_w[:, :, 0,2].abs()
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
                 for sensor in right_sensor
             ],
             dim=-1,
         )
     contact_force_left = torch.cat(
             [
-                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
-                sensor.data.force_matrix_w[:, :, 0,2].abs()
+                torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
                 for sensor in left_sensor
             ],
             dim=-1,
