@@ -16,8 +16,8 @@ from IsaacGraspEnv.tasks.manipulation.lift.lift_cam_env_cfg import (
     ObjectCamTableSceneCfg,
     PointCloudObservationsCfg,
     FullObjPCObservationsCfg,
-    VectorsObservationsCfg
 )
+from IsaacGraspEnv.tasks.manipulation.lift.lift_vec_env_cfg import VectorsObservationsCfg
 from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import (
     IIWA_CRINGE_CFG_HIGH_PD_CFG,
 )  # isort: skip
