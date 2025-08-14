@@ -80,32 +80,11 @@ def main():
         args_cli.usd_file_name,
         dt_models_filter
     )
-    #         # Listens to the required transforms
-    marker_cfg = FRAME_MARKER_CFG.copy()
-    marker_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
-    marker_cfg.prim_path = "/Visuals/FrameTransformer"
-    env_cfg.scene.target_ft_obj = FrameTransformerCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_0",
-        debug_vis=True,
-        visualizer_cfg=marker_cfg,
-        target_frames=[
-            FrameTransformerCfg.FrameCfg(
-                prim_path="{ENV_REGEX_NS}/Object_model_4",
-                name="target_model_4",
-                offset=OffsetCfg(
-                    pos=[-0.05, 0.0, 0.0],
-                ),
-            ),
-        ],
-    )
 
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.env.sim.set_camera_view([2.5,1, 1], [0.0, 0.0,0.0])
     env.env.sim.set_render_mode(env.env.sim.RenderMode.FULL_RENDERING)
-    
-    env.scene.articulations["robot"].root_physx_view.prim_paths
-    
     # env.env.sim.set_render_mode(env.env.sim.RenderMode.NO_GUI_OR_RENDERING)
     # print info (this is vectorized environment)
     print(f"[INFO]: Gym observation space: {env.observation_space}")
