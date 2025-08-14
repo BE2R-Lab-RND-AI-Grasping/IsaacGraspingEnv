@@ -65,7 +65,7 @@ python -m pip install -e source/IsaacGraspEnv
 - Run scripts for converting obj files in usd:
 
 ```bash
-python ./scripts/dataset_loader/dataset_usd_converter.py --dataset_path <PATH_TO_DATASET> --name_point_cloud point_cloud_colorless.ply --obj_file_name object_convex_decomposition_meter_unit.obj --path_usd <PATH_TO_USD>
+python ./scripts/dataset_loader/dataset_usd_converter.py --dataset_path <ABSOLUTE_PATH_TO_DATASET> --name_point_cloud point_cloud_colorless.ply --obj_file_name object_convex_decomposition_meter_unit.obj --path_usd <ABSOLUTE_PATH_TO_USD>
 ```
 
 - Verify that the extension is correctly installed by running the following command:
