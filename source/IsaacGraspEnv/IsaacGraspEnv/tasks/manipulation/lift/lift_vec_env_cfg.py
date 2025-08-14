@@ -28,6 +28,17 @@ import torch
 ##
 
 
+is_contact_params = {"thumb_rot_cfgs": SceneEntityCfg("contact_forces_thumb_rot"),
+            "thumb_flex_cfgs": SceneEntityCfg("contact_forces_thumb_flex"),
+            "thumb_finray_cfgs": SceneEntityCfg("contact_forces_thumb_finray"),
+            "right_flex_cfgs": SceneEntityCfg("contact_forces_right_flex"),
+            "right_finray_cfgs": SceneEntityCfg("contact_forces_right_finray"),
+            "left_flex_cfgs": SceneEntityCfg("contact_forces_left_flex"),
+            "left_finray_cfgs": SceneEntityCfg("contact_forces_left_finray"), "threshold": 30.0}
+
+add_is_contact_param = lambda b: b.update(is_contact_params) or b
+
+
 @configclass
 class ProprioceptionRobotObservation(ObsGroup):
     # ee_frame = ObsTerm(func=mdp.frame_in_robot_root_frame)
@@ -42,6 +53,11 @@ class ProprioceptionRobotObservation(ObsGroup):
     #                                                                                                     "Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation",
     #                                                                                                     "Joint_.*_flexion", "Joint_.*_finray_proxy"])})
 
+    ee_twist_ee = ObsTerm(
+        func=mdp.robot_body_vel_in_body_frame,
+        params={"robot_cfg": SceneEntityCfg("robot", body_names=["lbr_iiwa_link_7"])}
+    )
+    
     joint_pos = ObsTerm(
         func=mdp.joint_pos_limit_normalized,
         params={
@@ -50,6 +66,16 @@ class ProprioceptionRobotObservation(ObsGroup):
     )
     # joint_vel = ObsTerm(func=mdp.joint_vel_rel, params={"asset_cfg":SceneEntityCfg("robot", joint_names=["lbr_.*",
     #                                                                                                     "Joint_.*"])})
+
+    binary_object_contact = ObsTerm(
+        mdp.binary_contact,
+        params=is_contact_params
+        )
+    
+    contact_forces = ObsTerm(
+        mdp.contact_force,
+        params=is_contact_params
+    )
 
     # =============== For Debugging (TODO: Delite after it) =======================
     # object_position = ObsTerm(func=mdp.instance_randomize_obj_positions_in_robot_root_frame)
@@ -68,6 +94,11 @@ class ProprioceptionRobotObservation(ObsGroup):
         params={"robot_cfg": SceneEntityCfg("robot", body_names=["lbr_iiwa_link_7"]), "object_cfg": SceneEntityCfg("object")}
     )
     
+    object_displacement = ObsTerm(
+        func=mdp.instance_randomize_obj_displacement,
+        params={"object_cfg": SceneEntityCfg("object"), "frame_cfg": SceneEntityCfg("ee_frame"), "initial_object_position_base":(0.95, 0.0, 0.070777)})
+        
+
     # ======================================
 
     relative_target_quat_current = ObsTerm(

@@ -20,6 +20,7 @@ from isaaclab.utils.math import (
     skew_symmetric_matrix,
     quat_mul,
 )
+from isaaclab.sensors import ContactSensor
 from kornia.geometry.liegroup import Se3
 from kornia.geometry.quaternion import Quaternion
 import open3d as o3d
@@ -31,6 +32,8 @@ from .observations import full_obj_point_cloud
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
+
+
 
 
 def instance_randomize_obj_positions_in_robot_ee_frame(
@@ -54,8 +57,8 @@ def instance_randomize_obj_positions_in_robot_ee_frame(
     ]
 
     object_pos_ee, __ = subtract_frame_transforms(
-        ee_frame.data.target_pos_w.squeeze(0),
-        ee_frame.data.target_quat_w.squeeze(0),
+        ee_frame.data.target_pos_w.squeeze(1),
+        ee_frame.data.target_quat_w.squeeze(1),
         object_pos_w,
         object_quat_w,
     )
@@ -83,8 +86,8 @@ def instance_randomize_obj_orientations_in_robot_ee_frame(
     ]
 
     __, object_quat_ee = subtract_frame_transforms(
-        ee_frame.data.target_pos_w.squeeze(0),
-        ee_frame.data.target_quat_w.squeeze(0),
+        ee_frame.data.target_pos_w.squeeze(1),
+        ee_frame.data.target_quat_w.squeeze(1),
         object_pos_w,
         object_quat_w,
     )
@@ -157,6 +160,72 @@ def instance_randomize_obj_vel_in_robot_frame(
     body_velocity_object = torch.stack(body_velocity_object)
 
     return body_velocity_object
+
+def robot_body_vel_in_body_frame(
+    env: ManagerBasedRLEnv,
+    robot_cfg:  SceneEntityCfg,
+    ) -> torch.Tensor:
+    
+    robot: RigidObject = env.scene[robot_cfg.name]
+    
+    body_velocity_body = []
+    
+    for env_id in range(env.num_envs):
+        body_pos_w = robot.data.body_pos_w[env_id, robot_cfg.body_ids].squeeze()
+        body_quat_w = robot.data.body_quat_w[env_id, robot_cfg.body_ids].squeeze()
+        kornia_body_quat_w = Quaternion(body_quat_w)
+        H_w_body = Se3(kornia_body_quat_w, body_pos_w)
+        
+        body_vel_w = robot.data.body_vel_w[env_id, robot_cfg.body_ids].squeeze()
+        body_lin_vel_w = body_vel_w[:3]
+        body_ang_vel_w = body_vel_w[3:]
+                
+        body_sp_vel_w = - skew_symmetric_matrix(body_ang_vel_w)[0] @ body_pos_w + body_lin_vel_w
+        w_twist_body_w = torch.cat([body_sp_vel_w, body_ang_vel_w])
+        
+        b_twist_body_w = H_w_body.inverse().adjoint() @ w_twist_body_w
+
+        body_vel_w_b = (Se3.exp(b_twist_body_w).matrix() @ torch.cat([torch.zeros(3), torch.ones(1)]))[:3]
+
+        body_velocity_body.append(torch.cat([body_vel_w_b, b_twist_body_w[3:]]))
+
+    return torch.stack(body_velocity_body)
+
+
+class instance_randomize_obj_displacement(ManagerTermBase):
+    
+    def __init__(self,
+        cfg: ObservationTermCfg,
+        env: ManagerBasedRLEnv,
+    ):
+        super().__init__(cfg, env)
+        
+        tuple_initial_obj_pos_b = cfg.params["initial_object_position_base"]
+        self.initial_objects_position_b = torch.Tensor(tuple_initial_obj_pos_b).to(env.device)
+        
+        self.initial_objects_position_b.repeat(env.num_envs, 1)
+        
+    def __call__(
+        self,
+        env: ManagerBasedRLEnv,
+        frame_cfg: SceneEntityCfg,
+        initial_object_position_base: tuple,
+        object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+        ) -> torch.Tensor:
+        
+        ee_frame: RigidObject = env.scene[frame_cfg.name]
+        
+        
+        object_pos_ee = instance_randomize_obj_positions_in_robot_ee_frame(env, frame_cfg, object_cfg)
+        
+        init_obj_pos_ee, __ = subtract_frame_transforms(
+            ee_frame.data.target_pos_source.squeeze(1),
+            ee_frame.data.target_quat_source.squeeze(1),
+            self.initial_objects_position_b,
+            )
+        
+        return object_pos_ee - init_obj_pos_ee
+    
 
 
 def vectors_joint_hand_object_frame(
@@ -562,3 +631,125 @@ def generated_commands_rel_frame(
     command_frame_ee = torch.cat([command_pos_ee, command_quat_ee], dim=-1)
 
     return command_pos_ee #command_frame_ee
+
+
+# ====================================
+# ======= Forces Sensors =============
+# ====================================
+
+
+def binary_contact(
+    env: ManagerBasedRLEnv, 
+    thumb_rot_cfgs: SceneEntityCfg,
+    thumb_flex_cfgs: SceneEntityCfg,
+    thumb_finray_cfgs: SceneEntityCfg,
+    right_flex_cfgs: SceneEntityCfg,
+    right_finray_cfgs: SceneEntityCfg,
+    left_flex_cfgs: SceneEntityCfg,
+    left_finray_cfgs: SceneEntityCfg,
+    threshold,
+) -> torch.Tensor:
+    """"""
+    # extract the used quantities (to enable type-hinting)
+    thumb_sensors: list[ContactSensor] = [
+        env.scene.sensors[thumb_cfg.name]
+        for thumb_cfg in [thumb_rot_cfgs, thumb_flex_cfgs, thumb_finray_cfgs]
+    ]
+    right_sensor: list[ContactSensor] = [
+        env.scene.sensors[right_cfg.name]
+        for right_cfg in [right_flex_cfgs, right_finray_cfgs]
+    ]
+    left_sensor: list[ContactSensor] = [
+        env.scene.sensors[left_cfg.name]
+        for left_cfg in [left_flex_cfgs, left_finray_cfgs]
+    ]
+    # check if contact force is above threshold
+    contact_thumb = torch.cat(
+            [
+                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+                sensor.data.force_matrix_w[:, :, 0, 2].abs() > threshold
+                for sensor in thumb_sensors
+            ],
+            dim=-1,
+            )
+    
+    contact_right = torch.cat(
+            [
+                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+                sensor.data.force_matrix_w[:, :, 0, 2].abs() > threshold
+                for sensor in right_sensor
+            ],
+            dim=-1)
+    
+    contact_left = torch.cat(
+            [
+                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold
+                sensor.data.force_matrix_w[:, :, 0, 2].abs() > threshold
+                for sensor in left_sensor
+            ],
+            dim=-1,
+        )
+
+    # sum over contacts for each environment
+    res = torch.cat([contact_thumb, contact_right, contact_left], dim=-1)
+    return res
+    
+def contact_force(
+    env: ManagerBasedRLEnv,
+    thumb_rot_cfgs: SceneEntityCfg,
+    thumb_flex_cfgs: SceneEntityCfg,
+    thumb_finray_cfgs: SceneEntityCfg,
+    right_flex_cfgs: SceneEntityCfg,
+    right_finray_cfgs: SceneEntityCfg,
+    left_flex_cfgs: SceneEntityCfg,
+    left_finray_cfgs: SceneEntityCfg,
+    threshold,
+    ) -> torch.Tensor:
+    
+    """"""
+    # extract the used quantities (to enable type-hinting)
+    thumb_sensors: list[ContactSensor] = [
+        env.scene.sensors[thumb_cfg.name]
+        for thumb_cfg in [thumb_rot_cfgs, thumb_flex_cfgs, thumb_finray_cfgs]
+    ]
+    right_sensor: list[ContactSensor] = [
+        env.scene.sensors[right_cfg.name]
+        for right_cfg in [right_flex_cfgs, right_finray_cfgs]
+    ]
+    left_sensor: list[ContactSensor] = [
+        env.scene.sensors[left_cfg.name]
+        for left_cfg in [left_flex_cfgs, left_finray_cfgs]
+    ]
+    # check if contact force is above threshold
+    contact_force_thumb = torch.cat(
+            [
+                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
+                sensor.data.force_matrix_w[:, :, 0,2].abs()
+                for sensor in thumb_sensors
+            ],
+            dim=-1,
+        )
+    contact_force_right = torch.cat(
+            [
+                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
+                sensor.data.force_matrix_w[:, :, 0,2].abs()
+                for sensor in right_sensor
+            ],
+            dim=-1,
+        )
+    contact_force_left = torch.cat(
+            [
+                # torch.norm(sensor.data.force_matrix_w[:, :, 0], dim=-1)
+                sensor.data.force_matrix_w[:, :, 0,2].abs()
+                for sensor in left_sensor
+            ],
+            dim=-1,
+        )
+    
+    # sum over contacts for each environment
+    contact_forces_finger = torch.cat(
+            [contact_force_thumb, contact_force_right, contact_force_left],
+            dim=-1,
+        )
+    
+    return contact_forces_finger
