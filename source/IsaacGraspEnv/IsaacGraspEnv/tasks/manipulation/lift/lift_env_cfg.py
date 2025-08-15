@@ -80,14 +80,14 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
      Check the prim_path filters, IsaacSim does not throw an exception or error if the filter path does not exist.
      =====================
     '''
-    contact_forces_thumb_rot = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
-    contact_forces_thumb_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
-    contact_forces_thumb_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
-    contact_forces_right_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
-    contact_forces_right_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
-    contact_forces_left_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
-    contact_forces_left_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1)
-    contact_forces_arm = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_[1-7]",update_period=0.0, history_length=1)
+    contact_forces_thumb_rot = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
+    contact_forces_thumb_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
+    contact_forces_thumb_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
+    contact_forces_right_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
+    contact_forces_right_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
+    contact_forces_left_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
+    contact_forces_left_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
+    contact_forces_arm = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_[1-7]",update_period=0.0, history_length=1, track_contact_points=True)
     # lights
     light = AssetBaseCfg(
         prim_path="/World/light",
