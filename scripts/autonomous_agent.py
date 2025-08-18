@@ -185,10 +185,10 @@ def main():
             
             
             ee_pos = transform_points(dict_obs_term_unpack["ee_frame"](env)[:, 0:3], ee_pos_root, ee_quat_root)[0] # Unpack the ee_frame observation
-            # Closed Kinematics 
+            # Closed Kinematics
             # obj_pos = obs["policy"][0,56:59]  # + torch.Tensor([0.0, 0.0, 0.11]) #4: + torch.Tensor([-0.05, 0.0, 0.1])  #3: + torch.Tensor([-0.05, 0.0, 0.1]) # 2: + torch.Tensor([-0.05, 0.0, 0.1]) #1: + torch.Tensor([-0.1, 0.0, 0.12])
             # target_pos = obs["policy"][0,63:66]
-            obj_pos = transform_points(dict_obs_term_unpack["object_position"](env), ee_pos_root, ee_quat_root)[0]
+            obj_pos = transform_points(dict_obs_term_unpack["object_position"](env), ee_pos_root, ee_quat_root)[0] + torch.Tensor([0.05, 0.0, 0.0])
             target_pos = transform_points(dict_obs_term_unpack["target_object_position"](env), ee_pos_root, ee_quat_root)[0]
             time_arr.append(env.env.sim.current_time)
             for act_name in applied_efforts_act.keys():
@@ -203,7 +203,7 @@ def main():
                     .computed_effort.tolist()[0]
                 )
             if time_step < 75:
-                delta_ee_pos = (obj_pos - ee_pos) * 5
+                delta_ee_pos = (obj_pos - ee_pos) * 10
             else:
                 delta_ee_pos = (target_pos - ee_pos) * 5
             delta_ee_ang = torch.zeros(3, device=env.unwrapped.device)
@@ -230,10 +230,10 @@ def main():
                 gripper_joint[3:] = (
                     torch.ones(gripper_joint[3:].shape[0], device=env.unwrapped.device)
                     * ramp
-                    * 0.1
+                    * 1.0
                 )
 
-            if obj_pos.numpy()[2] > 0.13:
+            if obj_pos.numpy()[2] > 0.16:
                 # save the grasping reference
                 # get the body names and joint names
                 body_names = env.env.scene.articulations["robot"].body_names
@@ -253,9 +253,9 @@ def main():
                 obj_quat_w = env.env.scene.rigid_object_collections[
                     "object"
                 ].data.object_quat_w[0, env.env.rigid_objects_in_focus[0][0]]
-                # w_pos_obj, w_quat_obj = subtract_frame_transforms(
-                #     obj_pos_w, obj_quat_w
-                # )
+                w_pos_obj, w_quat_obj = subtract_frame_transforms(
+                    obj_pos_w, obj_quat_w
+                )
                 # bodies_pos_obj = transform_points(
                 #     bodies_pos_w,
                 #     w_pos_obj, w_quat_obj
@@ -268,6 +268,7 @@ def main():
                 )
                 d_body_name_pos = {}
                 d_body_name_quat = {}
+                
                 for body_name, b_pos_o, b_quat_o in zip(
                     body_names, bodies_pos_obj.numpy(), bodies_quat_obj.numpy()
                 ):
@@ -277,12 +278,25 @@ def main():
                     j_name: j_pos
                     for j_name, j_pos in zip(joint_names, joint_pos.numpy())
                 }
+                
+                d_contact_sensor_name_pos = {}
+                l_contact_sensor_keys = [key for key in env.env.scene.sensors.keys() if key.find("contact_forces") > -1]
+                
+                for cs_key in l_contact_sensor_keys:
+                    c_contact_sensor = env.env.scene.sensors[cs_key]
+                    contact_pos_w = c_contact_sensor.data.contact_pos_w
+                    
+                    if contact_pos_w is not None and not np.isnan(contact_pos_w.sum().numpy()):
+                        contact_pos_obj = transform_points(contact_pos_w.squeeze(1,2), w_pos_obj, w_quat_obj)
+                        d_contact_sensor_name_pos[cs_key] = contact_pos_obj.numpy()
+                
 
                 grasping_reference = {
                     "qpos": d_joint_name_pos,
                     "key_points": d_body_name_pos,
                     "body_quat_obj": d_body_name_quat,
                     "object_frame": [obj_pos_w.numpy(), obj_quat_w.numpy()],
+                    "contact_points_obj": d_contact_sensor_name_pos
                 }
                 # with open('grasping_reference.npy', 'wb') as f:
                 #     np.save(f, np.array([grasping_reference]))
