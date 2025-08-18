@@ -79,15 +79,16 @@ class ObjectTableSceneCfg(InteractiveSceneCfg):
      ======WARNING========
      Check the prim_path filters, IsaacSim does not throw an exception or error if the filter path does not exist.
      =====================
-    '''
-    contact_forces_thumb_rot = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
-    contact_forces_thumb_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
-    contact_forces_thumb_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
-    contact_forces_right_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
-    contact_forces_right_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
-    contact_forces_left_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
-    contact_forces_left_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, history_length=1, track_contact_points=True)
-    contact_forces_arm = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_[1-7]",update_period=0.0, history_length=1, track_contact_points=True)
+    # '''
+    contact_forces_thumb_rot = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_rotation", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, track_contact_points=True, max_contact_data_count_per_prim=50)
+    contact_forces_thumb_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, track_contact_points=True, max_contact_data_count_per_prim=50)
+    contact_forces_thumb_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_thumb_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, track_contact_points=True, max_contact_data_count_per_prim=50)
+    contact_forces_right_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, track_contact_points=True, max_contact_data_count_per_prim=50)
+    contact_forces_right_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_right_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, track_contact_points=True, max_contact_data_count_per_prim=50)
+    contact_forces_left_flex = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_flexion", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, track_contact_points=True, max_contact_data_count_per_prim=50)
+    contact_forces_left_finray = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/Link_left_finray_proxy", filter_prim_paths_expr=["{ENV_REGEX_NS}/Object_*"],update_period=0.0, track_contact_points=True, max_contact_data_count_per_prim=50)
+
+    contact_forces_arm = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_[1-7]",update_period=0.0)
     # lights
     light = AssetBaseCfg(
         prim_path="/World/light",
@@ -243,13 +244,19 @@ class RewardsCfg:
     # lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.025}), weight=10.0/0.2/10)
     # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.05}), weight=1.0/0.2/10)
     
+    endeffector_orientation = RewTerm(
+        func=mdp.distance_frame_orientation_to_target,
+        params={"observation_term": "relative_target_quat_current"},
+        weight = 1
+    )
+    
 
     object_goal_tracking = RewTerm(
         func=mdp.instance_object_goal_distance,
         # For power drills
         params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
         # for screwdrives
-        params=add_is_contact_param({"std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
+        # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
         weight=1/30 * 3/5 * 5/3 /0.2, #1.0/0.2/10, 
     )
     

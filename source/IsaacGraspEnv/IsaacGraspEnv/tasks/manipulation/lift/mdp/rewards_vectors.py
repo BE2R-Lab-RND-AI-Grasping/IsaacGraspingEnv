@@ -6,6 +6,7 @@ import torch
 from typing import TYPE_CHECKING
 
 from isaaclab.managers import SceneEntityCfg, RewardTermCfg, ManagerTermBase
+from isaaclab.utils.math import quat_unique
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
@@ -15,7 +16,26 @@ from .observations import (
 
 )
 
+
+
 from .observations_vectors import instance_vectors_joint_hand_key_points
+
+
+def quatenion_distance(q1: torch.Tensor) -> torch.Tensor:
+    """Compute the norm of the quaternoion"""
+    
+    q1 = quat_unique(q1)
+    return 1 - torch.linalg.norm(q1, dim=-1)
+    
+def create_extractor_obs_term4vectors(env: ManagerBasedRLEnv, name_obs_vector: str):
+    
+    id_obs_vector = env.observation_manager.active_terms["policy"].index(name_obs_vector)
+    size_obs = env.observation_manager.group_obs_term_dim["policy"][id_obs_vector][0]
+    index_obs_vector = sum([env.observation_manager.group_obs_term_dim["policy"][i][0] for i in range(id_obs_vector)])
+    
+    unpack_vectors4obs = lambda env=env: env.observation_manager.compute_group("policy")[:,index_obs_vector:index_obs_vector+size_obs]
+    
+    return unpack_vectors4obs
 
 class instance_object_displacement(ManagerTermBase):
 
@@ -70,13 +90,7 @@ class instance_vectors_norm(ManagerTermBase):
         self.prev_object_pos = torch.full((env.num_envs, 3), 0).to(env.device)
         
         # self.obs_vectors = instance_vectors_joint_hand_key_points()
-        
-        id_obs_vector = env.observation_manager.active_terms["policy"].index(self.name_obs_vector)
-        size_obs = env.observation_manager.group_obs_term_dim["policy"][id_obs_vector][0]
-        index_obs_vector = sum([env.observation_manager.group_obs_term_dim["policy"][i][0] for i in range(id_obs_vector)])
-        
-        
-        self.unpack_vectors4obs = lambda env: env.observation_manager._obs_buffer["policy"][:,index_obs_vector:index_obs_vector+size_obs]
+        self.unpack_vectors4obs = create_extractor_obs_term4vectors(env, self.name_obs_vector)
 
 
     def __call__(
@@ -95,10 +109,37 @@ class instance_vectors_norm(ManagerTermBase):
             torch.Tensor: The computed norm of the observation vectors.
         """
 
-        vectors = self.unpack_vectors4obs(env).reshape(env.num_envs,-1,3)
+        vectors = self.unpack_vectors4obs().reshape(env.num_envs,-1,3)
         
         norm_vec = torch.linalg.norm(vectors, dim=-1).sum(dim=1)
         
         return norm_vec
     
-    
+
+class distance_frame_orientation_to_target(ManagerTermBase):
+    def __init__(self, cfg: RewardTermCfg, env: ManagerBasedRLEnv):
+        """Class to compute the norm of quaternion in the observation space.
+
+        Args:
+            cfg (RewardTermCfg): Configuration for the reward term.
+            env (ManagerBasedRLEnv): The environment instance.
+        """
+        super().__init__(cfg, env)
+
+        self.observation_term = cfg.params["observation_term"]
+        
+        # self.obs_vectors = instance_vectors_joint_hand_key_points()
+        self.unpack_vectors4obs = create_extractor_obs_term4vectors(env, self.observation_term)
+
+
+    def __call__(
+        self,
+        env: ManagerBasedRLEnv,
+        observation_term: str = "relative_target_quat_current"
+    ) -> torch.Tensor:
+
+        ee_quat_target = self.unpack_vectors4obs()
+        
+        res = quatenion_distance(ee_quat_target)
+        
+        return res
