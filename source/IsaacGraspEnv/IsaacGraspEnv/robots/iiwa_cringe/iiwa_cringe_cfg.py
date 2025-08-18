@@ -23,8 +23,8 @@ import numpy as np
 
 # relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/iiwa_cringe/usd/iiwa_cringe_v2_open.usd"
 # relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/iiwa_cringe/usd/iiwa_cringe_v1.usd"
-# relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa.usd"
-relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa_table.usd"
+relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa.usd"
+# relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa_table.usd"
 ABSOLUTE_PATH = Path(relative_path).resolve()
 
 # INIT_Q_IIWA = np.array([-2.9, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
