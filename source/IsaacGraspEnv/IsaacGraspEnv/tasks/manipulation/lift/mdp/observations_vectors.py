@@ -547,14 +547,14 @@ class instance_target_end_effector_orientation(ManagerTermBase):
         list_grasping_reference = []
 
         for env_id in range(env.num_envs):
-            ee_quat_ref_target = quat_mul(
+            ref_target_quat_ee = quat_mul(
                 self.ee_quat_reference_obj[
                     env.rigid_objects_in_focus[env_id][0]
                 ].squeeze(),
                 object_quat_ee[env_id, env.rigid_objects_in_focus[env_id][0]].squeeze(),
             )
 
-            list_grasping_reference.append(ee_quat_ref_target)
+            list_grasping_reference.append(ref_target_quat_ee)
 
         tensor_quat_grasp_ref = torch.stack(list_grasping_reference)
 
