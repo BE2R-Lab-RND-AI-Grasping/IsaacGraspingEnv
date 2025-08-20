@@ -246,7 +246,7 @@ class RewardsCfg:
     
     endeffector_orientation = RewTerm(
         func=mdp.distance_frame_orientation_to_target,
-        params={"observation_term": "relative_target_quat_current"},
+        params={"observation_term": "relative_target_quat_current", "frame_cfg": SceneEntityCfg("ee_frame")},
         weight = 1
     )
     
@@ -285,6 +285,16 @@ class RewardsCfg:
         func=mdp.object_hand_force_contact,
         weight= 1/500 * 3/5 * 5/3 /0.2, #0.01/0.2/10,
         params=is_contact_params,
+    )
+    
+    hand_target_contact = RewTerm(
+        func = mdp.desired_contact_points_displacement,
+        weight = 1.0,
+        params = add_is_contact_param({"object_cfg": SceneEntityCfg("object"), 
+                                    "grasping_reference_path":"/home/yefim-home/Documents/work/IsaacGraspingEnv/grasping_reference.npy",
+                                    "contact_key": "contact_points_obj",
+                                    "position_threshold": 0.05,
+                                    })
     )
     
     

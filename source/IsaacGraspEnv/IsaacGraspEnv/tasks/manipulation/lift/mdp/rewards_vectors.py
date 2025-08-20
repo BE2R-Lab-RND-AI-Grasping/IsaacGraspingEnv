@@ -5,27 +5,29 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 
+from isaaclab.assets import RigidObject, RigidObjectCollection
 from isaaclab.managers import SceneEntityCfg, RewardTermCfg, ManagerTermBase
-from isaaclab.utils.math import quat_unique
+from isaaclab.utils.math import (
+    quat_unique,
+    subtract_frame_transforms,
+    combine_frame_transforms,
+    quat_mul,
+    transform_points
+)
+
+import numpy as np
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
 from .observations import (
     instance_randomize_obj_positions_in_robot_world_frame as get_obj_pos_w,
-
+    instance_randomize_obj_orientations_in_world_frame as get_obj_quat_w,
 )
 
 
 
 from .observations_vectors import instance_vectors_joint_hand_key_points
-
-
-def quatenion_distance(q1: torch.Tensor) -> torch.Tensor:
-    """Compute the norm of the quaternoion"""
-    
-    q1 = quat_unique(q1)
-    return 1 - torch.linalg.norm(q1, dim=-1)
     
 def create_extractor_obs_term4vectors(env: ManagerBasedRLEnv, name_obs_vector: str):
     
@@ -128,6 +130,9 @@ class distance_frame_orientation_to_target(ManagerTermBase):
 
         self.observation_term = cfg.params["observation_term"]
         
+        self.frame_cfg = cfg.params["frame_cfg"]
+        self.frame: RigidObject = env.scene[self.frame_cfg.name]
+        
         # self.obs_vectors = instance_vectors_joint_hand_key_points()
         self.unpack_vectors4obs = create_extractor_obs_term4vectors(env, self.observation_term)
 
@@ -135,11 +140,115 @@ class distance_frame_orientation_to_target(ManagerTermBase):
     def __call__(
         self,
         env: ManagerBasedRLEnv,
+        frame_cfg: SceneEntityCfg,
         observation_term: str = "relative_target_quat_current"
     ) -> torch.Tensor:
 
-        ee_quat_target = self.unpack_vectors4obs()
+        target_quat_ee = self.unpack_vectors4obs()
         
-        res = quatenion_distance(ee_quat_target)
+        ee_quat_w = self.frame.data.target_quat_w.squeeze(1)
+        
+        w_quat_target = quat_mul(ee_quat_w,target_quat_ee) # R^w_ee @ R^ee_target
+        
+        res = 1 - torch.linalg.vecdot(ee_quat_w, w_quat_target)
         
         return res
+    
+class desired_contact_points_displacement(ManagerTermBase):
+    
+    
+    def __init__(self, cfg: RewardTermCfg, env: ManagerBasedRLEnv):
+        """Class to compute reward displacement contact points on object and amount of forces
+        Reference: https://arxiv.org/pdf/2112.03028
+
+        Args:
+            cfg (RewardTermCfg): reward confing
+            env (ManagerBasedRLEnv): environment
+        """
+        
+        
+        super().__init__(cfg, env)
+        
+        self.contact_key = cfg.params["contact_key"]
+        self.grasping_reference_path = cfg.params["grasping_reference_path"]
+        
+        self.object_cfg = cfg.params["object_cfg"]
+        self.object: RigidObjectCollection = env.scene[self.object_cfg.name]
+        
+        self.t_contact_terms_keys = tuple([key for key in cfg.params if key.find("cfgs") > -1])
+        self.d_contact_sensor_cfgs = {key: cfg.params[key] for key in self.t_contact_terms_keys}
+        self.d_contact_sensors = {key: env.scene[cfg.name] for key, cfg in self.d_contact_sensor_cfgs.items()}
+        
+        instance_contact_ref_pos_obj = self.mapping_reference_n_sim_hand(self.grasping_reference_path, self.t_contact_terms_keys).to(env.device)
+        ref_contact_shape = instance_contact_ref_pos_obj.shape
+        self.contact_ref_pos_obj = instance_contact_ref_pos_obj.squeeze(-2).repeat(env.num_envs, 1, 1)  # (num_envs, num_contact_sensors, 3)
+        
+    def mapping_reference_n_sim_hand(self, grasping_reference_path, ordered_keys):
+
+        with open(grasping_reference_path, "rb") as f:
+
+            grasping_reference = np.load(f, allow_pickle=True)
+
+
+        ordered_contact_reference = []
+        for grasp_ref in grasping_reference:
+            one_contact_pos_ref = []
+            for contact_sensor_key in ordered_keys:
+                sensor_name = self.d_contact_sensor_cfgs[contact_sensor_key].name
+                if sensor_name in grasp_ref[self.contact_key]:
+                    one_contact_pos_ref.append(grasp_ref[self.contact_key][self.d_contact_sensor_cfgs[contact_sensor_key].name])
+                else:
+                    arr_nan = np.zeros((1,3))
+                    arr_nan.fill(np.nan)
+                    one_contact_pos_ref.append(arr_nan)
+
+            ordered_contact_reference.append(one_contact_pos_ref)
+            
+        
+
+        return torch.Tensor(ordered_contact_reference)
+
+
+    def __call__(self,
+                env: ManagerBasedRLEnv,
+                object_cfg: SceneEntityCfg,
+                grasping_reference_path: str,
+                contact_key: str,
+                thumb_rot_cfgs: SceneEntityCfg,
+                thumb_flex_cfgs: SceneEntityCfg,
+                thumb_finray_cfgs: SceneEntityCfg,
+                right_flex_cfgs: SceneEntityCfg,
+                right_finray_cfgs: SceneEntityCfg,
+                left_flex_cfgs: SceneEntityCfg,
+                left_finray_cfgs: SceneEntityCfg,
+                threshold: float,
+                position_threshold: float):
+
+        
+        obj_pos_w = get_obj_pos_w(env, self.object_cfg)
+        obj_quat_w = get_obj_quat_w(env, self.object_cfg)
+        
+        
+        w_pos_obj, w_quat_obj = subtract_frame_transforms(
+            obj_pos_w, obj_quat_w
+        )
+        
+        l_contact_pos_obj = []
+        l_indicator_contact = []
+        for key in self.t_contact_terms_keys:
+            contact_sensor = self.d_contact_sensors[key]
+            contact_pos_w = contact_sensor.data.contact_pos_w.squeeze(-2, -3)  # (num_envs, num_contact_sensors, 3)
+            
+            l_contact_pos_obj.append(subtract_frame_transforms(obj_pos_w, obj_quat_w, contact_pos_w)[0])
+            l_indicator_contact.append(torch.where(torch.norm(contact_sensor.data.force_matrix_w[:, :, 0], dim=-1) > threshold, 1.0, 0.0))
+            
+            
+        contact_pos_obj = torch.stack(l_contact_pos_obj, dim=1)  # (num_envs, num_contact_sensors, 3)
+        indicator_contact = torch.stack(l_indicator_contact, dim=1).squeeze(-1)  # (num_envs, num_contact_sensors)
+        
+        norm_pos = torch.norm(contact_pos_obj - self.contact_ref_pos_obj,dim=-1)
+        indicator_desired_contact_vector = torch.where(norm_pos < position_threshold, 1.0, 0.0)  # (num_envs, num_contact_sensors)
+        
+        first_term_reward_contact = torch.linalg.vecdot(indicator_contact, indicator_desired_contact_vector, dim=1)/ torch.linalg.vecdot(indicator_desired_contact_vector, indicator_desired_contact_vector, dim=1)  # (num_envs, )
+    
+        return first_term_reward_contact
