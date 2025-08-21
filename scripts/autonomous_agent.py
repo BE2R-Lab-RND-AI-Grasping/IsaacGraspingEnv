@@ -23,7 +23,7 @@ parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0"
 parser.add_argument(
     "--dataset_path",
     type=str,
-    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers", #"wrenches",#None,
+    default=None,
     help="Absolute path to dataset. Dataset directory must have folders with models.",
 )
 parser.add_argument(
@@ -35,7 +35,7 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default="4",#None,
+    default=None,
     help="A comma separated list of identifiers to be taken from the dataset",
 )
 AppLauncher.add_app_launcher_args(parser)
@@ -56,9 +56,6 @@ import numpy as np
 from IsaacGraspEnv.dataset_managers.dataset_loading import load_object_dataset
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
-from isaaclab.markers.config import FRAME_MARKER_CFG  # isort: skip
-from isaaclab.sensors import FrameTransformerCfg
-from isaaclab.sensors.frame_transformer.frame_transformer_cfg import OffsetCfg
 
 def main():
     """Random actions agent with Isaac Lab environment."""
@@ -80,32 +77,11 @@ def main():
         args_cli.usd_file_name,
         dt_models_filter
     )
-    #         # Listens to the required transforms
-    marker_cfg = FRAME_MARKER_CFG.copy()
-    marker_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
-    marker_cfg.prim_path = "/Visuals/FrameTransformer"
-    env_cfg.scene.target_ft_obj = FrameTransformerCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/lbr_iiwa_link_0",
-        debug_vis=True,
-        visualizer_cfg=marker_cfg,
-        target_frames=[
-            FrameTransformerCfg.FrameCfg(
-                prim_path="{ENV_REGEX_NS}/Object_model_4",
-                name="target_model_4",
-                offset=OffsetCfg(
-                    pos=[-0.05, 0.0, 0.0],
-                ),
-            ),
-        ],
-    )
 
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
     env.env.sim.set_camera_view([2.5,1, 1], [0.0, 0.0,0.0])
     env.env.sim.set_render_mode(env.env.sim.RenderMode.FULL_RENDERING)
-    
-    env.scene.articulations["robot"].root_physx_view.prim_paths
-    
     # env.env.sim.set_render_mode(env.env.sim.RenderMode.NO_GUI_OR_RENDERING)
     # print info (this is vectorized environment)
     print(f"[INFO]: Gym observation space: {env.observation_space}")

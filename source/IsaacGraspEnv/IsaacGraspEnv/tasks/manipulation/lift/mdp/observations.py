@@ -298,6 +298,27 @@ def depth2point_cloud(
     return pcs.clone()
 
 
+def instance_randomize_obj_positions_in_robot_world_frame(
+    env: ManagerBasedRLEnv,
+    object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
+) -> torch.Tensor:
+    """The position of the object in the world frame."""
+    if not hasattr(env, "rigid_objects_in_focus"):
+        return torch.full((env.num_envs, 3), fill_value=-1)
+
+    obj: RigidObjectCollection = env.scene[object_cfg.name]
+
+    obj_pos_w = []
+    for env_id in range(env.num_envs):
+        obj_pos_w.append(
+            obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3]
+        )
+    obj_pos_w = torch.stack(obj_pos_w)
+
+    return obj_pos_w
+
+
+
 # def instance_randomize_obj_positions_in_robot_world_frame(
 #     env: ManagerBasedRLEnv,
 #     object_cfg: SceneEntityCfg = SceneEntityCfg("object"),
@@ -309,9 +330,15 @@ def depth2point_cloud(
 #     obj: RigidObjectCollection = env.scene[object_cfg.name]
 
 #     obj_pos_w = []
+    
+#     target_pos_b = torch.Tensor([-0.05, 0.0, 0.0]).to(device=env.sim.device)
+    
+    
 #     for env_id in range(env.num_envs):
+#         target_pos_w = transform_points(target_pos_b.unsqueeze(0), obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3].unsqueeze(0), obj.data.object_quat_w[env_id, env.rigid_objects_in_focus[env_id][0], :4].unsqueeze(0))
 #         obj_pos_w.append(
-#             obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3]
+#             target_pos_w.squeeze()
+#             #obj.data.object_pos_w[env_id, env.rigid_objects_in_focus[env_id][0], :3] + target_pos_w.squeeze()
 #         )
 #     obj_pos_w = torch.stack(obj_pos_w)
 
@@ -503,8 +530,8 @@ def instance_randomize_obj_positions_in_robot_root_frame(
     robot: RigidObject = env.scene[robot_cfg.name]
 
     obj: RigidObjectCollection = env.scene[object_cfg.name]
-    target_pos_obj_b = torch.Tensor([-0.05, 0.0, 0.0]).to(env.sim.device)
-
+    target_pos_obj_b = torch.Tensor([0.0, 0.0, 0.0]).to(env.sim.device)
+    
     obj_pos_w = []
     for env_id in range(env.num_envs):
         target_pos_w = transform_points(
