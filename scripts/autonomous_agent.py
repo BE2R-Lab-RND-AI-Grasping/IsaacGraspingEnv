@@ -33,7 +33,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_path",
     type=str,
-    default=None,
+    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/power_drills",
     help="Absolute path to dataset. Dataset directory must have folders with models.",
 )
 parser.add_argument(
@@ -45,7 +45,7 @@ parser.add_argument(
 parser.add_argument(
     "--model_filter",
     type=str,
-    default=None,
+    default="1",
     help="A comma separated list of identifiers to be taken from the dataset",
 )
 AppLauncher.add_app_launcher_args(parser)
@@ -176,7 +176,7 @@ def main():
                 dict_obs_term_unpack["object_position"](env), ee_pos_root, ee_quat_root
             )[0]
             target_pos = transform_points(
-                dict_obs_term_unpack["target_object_position"](env),
+                dict_obs_term_unpack["target_object_position"](env)[:, 0:3],
                 ee_pos_root,
                 ee_quat_root,
             )[0]
@@ -202,18 +202,14 @@ def main():
                 init_position.append(ee_pos.numpy())
 
             if time_step < 45:
-                gripper_joint = -torch.ones(7, device=env.unwrapped.device)
-                gripper_joint[2] = 0
+                gripper_joint = torch.zeros(10, device=env.unwrapped.device)
                 ramp = 1
             else:
                 if time_step > 150:
                     ramp = 1  # 0.01 * (150 - time_step) + 1
                 else:
                     ramp = 1  # 0.5 + np.random.normal(0, 0.8) # 0.01 * (time_step - 45) + np.random.normal(0, 0.8)
-                gripper_joint = -torch.ones(7, device=env.unwrapped.device)
-                gripper_joint[2] = 0
-                gripper_joint[3:5] = torch.ones(2, device=env.unwrapped.device) * ramp
-                gripper_joint[6] = 1 * ramp
+                gripper_joint = ramp * torch.ones(10, device=env.unwrapped.device)
 
             actions = torch.cat([delta_ee_pos, delta_ee_ang, gripper_joint]).unsqueeze(
                 0
