@@ -246,7 +246,7 @@ class RewardsCfg:
     object_goal_reach = RewTerm(
         func=mdp.instance_object_reached_target,
         # For power drills
-        params=adder_contact_sensor_params({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
+        params=adder_contact_sensor_params({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose", "threshold_reach":0.05,}),
         # for screwdrives
         # params=adder_contact_sensor_params({"threshold_reach":0.05, "std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
         weight=1/5 * 5/5 * 5/3 / 0.2, #5.0/0.2/10, 
