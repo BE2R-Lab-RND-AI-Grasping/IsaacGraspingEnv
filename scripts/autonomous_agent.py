@@ -14,10 +14,20 @@ from isaaclab.app import AppLauncher
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Random agent for Isaac Lab environments.")
 parser.add_argument(
-    "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
+    "--disable_fabric",
+    action="store_true",
+    default=False,
+    help="Disable fabric and use USD I/O operations.",
 )
-parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to simulate.")
-parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+parser.add_argument(
+    "--num_envs", type=int, default=1, help="Number of environments to simulate."
+)
+parser.add_argument(
+    "--task",
+    type=str,
+    default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0",
+    help="Name of the task.",
+)
 # append AppLauncher cli args
 
 parser.add_argument(
@@ -51,17 +61,23 @@ simulation_app = app_launcher.app
 import gymnasium as gym
 import torch
 import matplotlib.pyplot as plt
-import numpy as np 
+import numpy as np
 
 from IsaacGraspEnv.dataset_managers.dataset_loading import load_object_dataset
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
 
+from isaaclab.utils.math import transform_points
+
+
 def main():
     """Random actions agent with Isaac Lab environment."""
     # create environment configuration
     env_cfg = parse_env_cfg(
-        args_cli.task, device="cpu", num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
+        args_cli.task,
+        device="cpu",
+        num_envs=args_cli.num_envs,
+        use_fabric=not args_cli.disable_fabric,
         # args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs, use_fabric=not args_cli.disable_fabric
     )
     # env_cfg.terminations.time_out = None
@@ -70,17 +86,14 @@ def main():
         dt_models_filter = args_cli.model_filter.replace(" ", "").split(",")
     else:
         dt_models_filter = args_cli.model_filter
-        
 
-    env_cfg.scene.object.rigid_objects =  load_object_dataset(
-        args_cli.dataset_path,
-        args_cli.usd_file_name,
-        dt_models_filter
+    env_cfg.scene.object.rigid_objects = load_object_dataset(
+        args_cli.dataset_path, args_cli.usd_file_name, dt_models_filter
     )
 
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
-    env.env.sim.set_camera_view([2.5,1, 1], [0.0, 0.0,0.0])
+    env.env.sim.set_camera_view([2.5, 1, 1], [0.0, 0.0, 0.0])
     env.env.sim.set_render_mode(env.env.sim.RenderMode.FULL_RENDERING)
     # env.env.sim.set_render_mode(env.env.sim.RenderMode.NO_GUI_OR_RENDERING)
     # print info (this is vectorized environment)
@@ -100,41 +113,85 @@ def main():
     time_step = 0
     time_arr = []
 
-    list_obs_term_name = env.observation_manager.active_terms["policy"] #["ee_frame", "object_position", "target_object_position"]
+    list_obs_term_name = env.observation_manager.active_terms[
+        "policy"
+    ]  # ["ee_frame", "object_position", "target_object_position"]
 
     dict_obs_term_unpack = {}
     for term in list_obs_term_name:
         id_obs_vector = env.observation_manager.active_terms["policy"].index(term)
-        size_obs = env.observation_manager.group_obs_term_dim["policy"][id_obs_vector][0]
-        index_obs_vector = sum([env.observation_manager.group_obs_term_dim["policy"][i][0] for i in range(id_obs_vector)])
-        dict_obs_term_unpack[term] = lambda env, s_id=index_obs_vector, size=size_obs: env.observation_manager._obs_buffer["policy"][:,s_id:s_id+size]
+        size_obs = env.observation_manager.group_obs_term_dim["policy"][id_obs_vector][
+            0
+        ]
+        index_obs_vector = sum(
+            [
+                env.observation_manager.group_obs_term_dim["policy"][i][0]
+                for i in range(id_obs_vector)
+            ]
+        )
+        dict_obs_term_unpack[term] = (
+            lambda env, s_id=index_obs_vector, size=size_obs: env.observation_manager._obs_buffer[
+                "policy"
+            ][
+                :, s_id : s_id + size
+            ]
+        )
 
     init_position = []
     succes = []
-    effort_limits = {act_name:env.env.scene.articulations["robot"].actuators[act_name].effort_limit.tolist()[0]
-                    for act_name in  env.env.scene.articulations["robot"].actuators.keys()}
-    computed_efforts_act = {act_name:[] for act_name in  env.env.scene.articulations["robot"].actuators.keys()}
-    applied_efforts_act = {act_name:[] for act_name in  env.env.scene.articulations["robot"].actuators.keys()}
+    effort_limits = {
+        act_name: env.env.scene.articulations["robot"]
+        .actuators[act_name]
+        .effort_limit.tolist()[0]
+        for act_name in env.env.scene.articulations["robot"].actuators.keys()
+    }
+    computed_efforts_act = {
+        act_name: []
+        for act_name in env.env.scene.articulations["robot"].actuators.keys()
+    }
+    applied_efforts_act = {
+        act_name: []
+        for act_name in env.env.scene.articulations["robot"].actuators.keys()
+    }
     rew_arr = []
     # simulate environment
     while simulation_app.is_running():
         # run everything in inference mode
         with torch.inference_mode():
 
-            ee_quat_root = env.scene.sensors["ee_frame"].data.target_quat_source.squeeze()
+            ee_quat_root = env.scene.sensors[
+                "ee_frame"
+            ].data.target_quat_source.squeeze()
             ee_pos_root = env.scene.sensors["ee_frame"].data.target_pos_source.squeeze()
-            
-            
-            ee_pos = transform_points(dict_obs_term_unpack["ee_frame"](env)[:, 0:3], ee_pos_root, ee_quat_root)[0] # Unpack the ee_frame observation
-            # Closed Kinematics 
+
+            ee_pos = transform_points(
+                dict_obs_term_unpack["ee_frame"](env)[:, 0:3], ee_pos_root, ee_quat_root
+            )[
+                0
+            ]  # Unpack the ee_frame observation
+            # Closed Kinematics
             # obj_pos = obs["policy"][0,56:59]  # + torch.Tensor([0.0, 0.0, 0.11]) #4: + torch.Tensor([-0.05, 0.0, 0.1])  #3: + torch.Tensor([-0.05, 0.0, 0.1]) # 2: + torch.Tensor([-0.05, 0.0, 0.1]) #1: + torch.Tensor([-0.1, 0.0, 0.12])
             # target_pos = obs["policy"][0,63:66]
-            obj_pos = transform_points(dict_obs_term_unpack["object_position"](env), ee_pos_root, ee_quat_root)[0]
-            target_pos = transform_points(dict_obs_term_unpack["target_object_position"](env), ee_pos_root, ee_quat_root)[0]
+            obj_pos = transform_points(
+                dict_obs_term_unpack["object_position"](env), ee_pos_root, ee_quat_root
+            )[0]
+            target_pos = transform_points(
+                dict_obs_term_unpack["target_object_position"](env),
+                ee_pos_root,
+                ee_quat_root,
+            )[0]
             time_arr.append(env.env.sim.current_time)
             for act_name in applied_efforts_act.keys():
-                applied_efforts_act[act_name].append(env.env.scene.articulations["robot"].actuators[act_name].applied_effort.tolist()[0])
-                computed_efforts_act[act_name].append(env.env.scene.articulations["robot"].actuators[act_name].computed_effort.tolist()[0])
+                applied_efforts_act[act_name].append(
+                    env.env.scene.articulations["robot"]
+                    .actuators[act_name]
+                    .applied_effort.tolist()[0]
+                )
+                computed_efforts_act[act_name].append(
+                    env.env.scene.articulations["robot"]
+                    .actuators[act_name]
+                    .computed_effort.tolist()[0]
+                )
             if time_step < 100:
                 delta_ee_pos = (obj_pos - ee_pos) / 2
             else:
@@ -150,20 +207,21 @@ def main():
                 ramp = 1
             else:
                 if time_step > 150:
-                    ramp = 1#0.01 * (150 - time_step) + 1
+                    ramp = 1  # 0.01 * (150 - time_step) + 1
                 else:
-                    ramp = 1# 0.5 + np.random.normal(0, 0.8) # 0.01 * (time_step - 45) + np.random.normal(0, 0.8)
+                    ramp = 1  # 0.5 + np.random.normal(0, 0.8) # 0.01 * (time_step - 45) + np.random.normal(0, 0.8)
                 gripper_joint = -torch.ones(7, device=env.unwrapped.device)
                 gripper_joint[2] = 0
                 gripper_joint[3:5] = torch.ones(2, device=env.unwrapped.device) * ramp
                 gripper_joint[6] = 1 * ramp
 
-            
-            actions = torch.cat([delta_ee_pos, delta_ee_ang, gripper_joint]).unsqueeze(0)
+            actions = torch.cat([delta_ee_pos, delta_ee_ang, gripper_joint]).unsqueeze(
+                0
+            )
             # actions = 2 * torch.rand(env.action_space.shape, device=env.unwrapped.device) - 1
             # apply actions
-            obs, rew, terminated, truncated, info =  env.step(actions)
-            time_step +=1
+            obs, rew, terminated, truncated, info = env.step(actions)
+            time_step += 1
             rew_arr.append(rew)
             # print(time_step, np.round(env.env.sim.current_time, 2), np.round(ramp,3))
             if truncated or terminated:
@@ -171,19 +229,40 @@ def main():
                     succes.append(1)
                 else:
                     succes.append(0)
-                time_step =0
+                time_step = 0
                 # break
 
     # close the simulator
     env.close()
-    
+
     for act_name in applied_efforts_act.keys():
         plt.title(act_name)
         for i in range(len(applied_efforts_act[act_name][0])):
-            plt.plot(time_arr, np.array(computed_efforts_act[act_name])[:,i], "--", linewidth=1.5, label=f"computed_{i}")
-            plt.plot(time_arr, np.array(applied_efforts_act[act_name])[:,i], linewidth=1.5, label=f"applied_{i}")
-            plt.plot([time_arr[0], time_arr[-1]], [effort_limits[act_name][i] for __ in range(2)], linewidth=1.5, label=f"max_limit{i}")
-            plt.plot([time_arr[0], time_arr[-1]], [-effort_limits[act_name][i] for __ in range(2)], linewidth=1.5, label=f"min_limit{i}")
+            plt.plot(
+                time_arr,
+                np.array(computed_efforts_act[act_name])[:, i],
+                "--",
+                linewidth=1.5,
+                label=f"computed_{i}",
+            )
+            plt.plot(
+                time_arr,
+                np.array(applied_efforts_act[act_name])[:, i],
+                linewidth=1.5,
+                label=f"applied_{i}",
+            )
+            plt.plot(
+                [time_arr[0], time_arr[-1]],
+                [effort_limits[act_name][i] for __ in range(2)],
+                linewidth=1.5,
+                label=f"max_limit{i}",
+            )
+            plt.plot(
+                [time_arr[0], time_arr[-1]],
+                [-effort_limits[act_name][i] for __ in range(2)],
+                linewidth=1.5,
+                label=f"min_limit{i}",
+            )
         plt.xlabel("time, s")
         plt.ylabel("Effort, Nm")
         plt.legend()
