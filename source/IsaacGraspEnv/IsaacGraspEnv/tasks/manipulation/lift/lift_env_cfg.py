@@ -216,40 +216,29 @@ class EventCfg:
     #         "asset_cfg": SceneEntityCfg("object", body_names="Object"),
     #     },
     # )
-
-is_contact_params = {"thumb_rot_cfgs": SceneEntityCfg("contact_forces_thumb_rot"),
-            "thumb_flex_cfgs": SceneEntityCfg("contact_forces_thumb_flex"),
-            "thumb_finray_cfgs": SceneEntityCfg("contact_forces_thumb_finray"),
-            "right_flex_cfgs": SceneEntityCfg("contact_forces_right_flex"),
-            "right_finray_cfgs": SceneEntityCfg("contact_forces_right_finray"),
-            "left_flex_cfgs": SceneEntityCfg("contact_forces_left_flex"),
-            "left_finray_cfgs": SceneEntityCfg("contact_forces_left_finray"), "threshold": 30.0}
-
-add_is_contact_param = lambda b: b.update(is_contact_params) or b
-
+    
+adder_contact_sensor_params = mdp.generate_contact_sensor_params()
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
     
-    # fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=1.0/0.2/10)
+    
+    fingettips_to_object = RewTerm(func=mdp.instance_randomize_object_fingertips_distance, params={"std": 0.06}, weight=1.0/0.2/10)
 
-    norm_vectors = RewTerm(func=mdp.instance_vectors_norm, params={"name_obs_vector":"vectors"}, weight= -1/12*4/5*5/3 /0.2)#-5.0/0.2/10) # Weight (1) normalization ~ 1, (2) ~ value reward, (3) extened to [-1, 1]
-
-    # lifting_object = RewTerm(func=mdp.object_is_lifted, params=add_is_contact_param({"minimal_height": 0.04}), weight=15.0)
     # For power drills
-    # lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.2}), weight=10.0/0.2/10)
-    # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.13}), weight=1.0/0.2/10)
+    lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=adder_contact_sensor_params({"minimal_height": 0.2}), weight=10.0/0.2/10)
+    lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=adder_contact_sensor_params({"minimal_height": 0.13}), weight=1.0/0.2/10)
     # for screwdrives
-    # lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=add_is_contact_param({"minimal_height": 0.025}), weight=10.0/0.2/10)
-    # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=add_is_contact_param({"minimal_height": 0.05}), weight=1.0/0.2/10)
+    # lifting_object = RewTerm(func=mdp.instance_randomize_object_lift, params=adder_contact_sensor_params({"minimal_height": 0.025}), weight=10.0/0.2/10)
+    # lifted_object = RewTerm(func=mdp.instance_randomize_object_is_lifted, params=adder_contact_sensor_params({"minimal_height": 0.05}), weight=1.0/0.2/10)
     
 
     object_goal_tracking = RewTerm(
         func=mdp.instance_object_goal_distance,
         # For power drills
-        params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
+        params=adder_contact_sensor_params({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
         # for screwdrives
-        # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
+        # params=adder_contact_sensor_params({"std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
         weight=1/30 * 3/5 * 5/3 /0.2, #1.0/0.2/10, 
     )
     
@@ -257,27 +246,27 @@ class RewardsCfg:
     object_goal_reach = RewTerm(
         func=mdp.instance_object_reached_target,
         # For power drills
-        # params=add_is_contact_param({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
+        params=adder_contact_sensor_params({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
         # for screwdrives
-        params=add_is_contact_param({"threshold_reach":0.05, "std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
+        # params=adder_contact_sensor_params({"threshold_reach":0.05, "std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
         weight=1/5 * 5/5 * 5/3 / 0.2, #5.0/0.2/10, 
     )
     
 
     # object_goal_tracking_fine_grained = RewTerm(
     #     func=mdp.object_goal_distance,
-    #     params=add_is_contact_param({"std": 0.05, "minimal_height": 0.2, "command_name": "object_pose"}),
+    #     params=adder_contact_sensor_params({"std": 0.05, "minimal_height": 0.2, "command_name": "object_pose"}),
     #     weight=5.0/0.2/10,
     # )
     hand_object_contact = RewTerm(
         func=mdp.object_hand_contact,
         weight= 1/4 * 2/5 * 5/3 /0.2, #0.75/0.2/10,
-        params=is_contact_params,
+        params=adder_contact_sensor_params({}),
     )
     hand_object_contact_force = RewTerm(
         func=mdp.object_hand_force_contact,
         weight= 1/500 * 3/5 * 5/3 /0.2, #0.01/0.2/10,
-        params=is_contact_params,
+        params=adder_contact_sensor_params({}),
     )
     
     
@@ -315,9 +304,6 @@ class RewardsCfg:
         params={"asset_cfg": SceneEntityCfg("robot", body_names=["lbr_iiwa_link_7"]), },
     )
 
-    
-    
-    
     # contact_penalty = RewTerm(
     #     func=mdp.undesired_contacts,
     #     weight=-1e-0/0.2/10,
