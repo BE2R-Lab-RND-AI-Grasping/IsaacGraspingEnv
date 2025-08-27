@@ -54,8 +54,8 @@ def instance_randomize_obj_positions_in_robot_ee_frame(
     ]
 
     object_pos_ee, __ = subtract_frame_transforms(
-        ee_frame.data.target_pos_w.squeeze(0),
-        ee_frame.data.target_quat_w.squeeze(0),
+        ee_frame.data.target_pos_w.squeeze(1),
+        ee_frame.data.target_quat_w.squeeze(1),
         object_pos_w,
         object_quat_w,
     )
@@ -83,8 +83,8 @@ def instance_randomize_obj_orientations_in_robot_ee_frame(
     ]
 
     __, object_quat_ee = subtract_frame_transforms(
-        ee_frame.data.target_pos_w.squeeze(0),
-        ee_frame.data.target_quat_w.squeeze(0),
+        ee_frame.data.target_pos_w.squeeze(1),
+        ee_frame.data.target_quat_w.squeeze(1),
         object_pos_w,
         object_quat_w,
     )
