@@ -9,6 +9,7 @@ import isaaclab.sim as sim_utils
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
+from isaaclab.managers import RewardTermCfg as RewTerm
 
 from isaaclab.managers import SceneEntityCfg
 
@@ -88,12 +89,6 @@ class ProprioceptionRobotObservation(ObsGroup):
     actions = ObsTerm(func=mdp.last_action)
 
 
-# ========== Test TODO: REMOVE ============
-# with open("/home/yefim-home/Documents/work/IsaacGraspingEnv/grasping_reference.npy", "rb") as f:
-
-#     grasp_ref = np.load(f, allow_pickle=True)
-
-
 @configclass
 class VectorsObservationsCfg:
     """Observation specifications for the MDP."""
@@ -124,6 +119,70 @@ class VectorsObservationsCfg:
     policy: VectorsPolicyCfg = VectorsPolicyCfg()
 
 
+# ===========================
+# Reward Configuration
+# ===========================
+
+adder_contact_sensor_params = mdp.generate_contact_sensor_params()
+@configclass
+class VecRewardsCfg:
+    """Reward terms for the MDP."""
+    
+    norm_vectors = RewTerm(func=mdp.instance_vectors_norm, params={"name_obs_vector":"vectors"}, weight= -1/12*4/5*5/3 /0.2)#-5.0/0.2/10) # Weight (1) normalization ~ 1, (2) ~ value reward, (3) extened to [-1, 1]
+
+    object_goal_tracking = RewTerm(
+        func=mdp.instance_object_goal_distance,
+        # For power drills
+        params=adder_contact_sensor_params({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
+        # for screwdrives
+        # params=adder_contact_sensor_params({"std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
+        weight=1/30 * 3/5 * 5/3 /0.2, #1.0/0.2/10, 
+    )
+    
+    
+    object_goal_reach = RewTerm(
+        func=mdp.instance_object_reached_target,
+        # For power drills
+        params=adder_contact_sensor_params({"std": 0.04, "minimal_height": 0.13, "command_name": "object_pose"}),
+        # for screwdrives
+        # params=adder_contact_sensor_params({"threshold_reach":0.05, "std": 0.04, "minimal_height": 0.025, "command_name": "object_pose"}),
+        weight=1/5 * 5/5 * 5/3 / 0.2, #5.0/0.2/10, 
+    )
+    
+    hand_object_contact = RewTerm(
+        func=mdp.object_hand_contact,
+        weight= 1/4 * 2/5 * 5/3 /0.2, #0.75/0.2/10,
+        params=adder_contact_sensor_params({}),
+    )
+    hand_object_contact_force = RewTerm(
+        func=mdp.object_hand_force_contact,
+        weight= 1/500 * 3/5 * 5/3 /0.2, #0.01/0.2/10,
+        params=adder_contact_sensor_params({}),
+    )
+    
+    
+    # action penalty
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-1/300 * 3/5 * 5/3 / 0.2)#-5e-3/0.2/10)
+    
+    joint_vel = RewTerm(
+        func=mdp.joint_vel_l2_clip,
+        weight= -1/10 * 1/5 * 5/3 / 0.2, # -5e-3/0.2/10,
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["Joint.*"])},
+    )
+    
+    ee_vel_l2 = RewTerm(
+        func=mdp.robot_link_vel_w_l2,
+        weight= -1/45 * 2/5 * 5/3 / 0.2, #-8e-3/0.2/10,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=["lbr_iiwa_link_7"]), },
+    )
+
+    # contact_penalty = RewTerm(
+    #     func=mdp.undesired_contacts,
+    #     weight=-1e-0/0.2/10,
+    #     params={"sensor_cfg": SceneEntityCfg("contact_forces_arm", body_names="lbr_.*"), "threshold": 1.0},
+    # )
+
+
 ##
 # Environment configuration
 ##
@@ -135,3 +194,4 @@ class VectorsLiftEnvCfg(LiftEnvCfg):
 
     # Basic settings
     observations: VectorsObservationsCfg = VectorsObservationsCfg()
+    rewards: VecRewardsCfg = VecRewardsCfg()
