@@ -25,7 +25,7 @@ parser.add_argument(
 parser.add_argument(
     "--task",
     type=str,
-    default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0",
+    default="Isaac-Vectors-Lift-Iiwa-IK-Rel-v0",
     help="Name of the task.",
 )
 # append AppLauncher cli args
@@ -193,23 +193,36 @@ def main():
                     .computed_effort.tolist()[0]
                 )
             if time_step < 100:
-                delta_ee_pos = (obj_pos - ee_pos) / 2
+                delta_ee_pos = (obj_pos - ee_pos) * 7
             else:
-                delta_ee_pos = (target_pos - ee_pos) / 2
+                delta_ee_pos = (target_pos - ee_pos) * 7
             delta_ee_ang = torch.zeros(3, device=env.unwrapped.device)
 
             if time_step == 0:
                 init_position.append(ee_pos.numpy())
 
-            if time_step < 45:
-                gripper_joint = torch.zeros(10, device=env.unwrapped.device)
+            if time_step < 50:
+                # For Closed Kinematics
+                # gripper_joint = -torch.ones(7, device=env.unwrapped.device)
+                # gripper_joint[2] = 0
+                gripper_joint = -torch.ones(10, device=env.unwrapped.device)
+                gripper_joint[2] = 0
                 ramp = 1
             else:
-                if time_step > 150:
+                if time_step > 50:
                     ramp = 1  # 0.01 * (150 - time_step) + 1
                 else:
                     ramp = 1  # 0.5 + np.random.normal(0, 0.8) # 0.01 * (time_step - 45) + np.random.normal(0, 0.8)
-                gripper_joint = ramp * torch.ones(10, device=env.unwrapped.device)
+                gripper_joint = -torch.ones(10, device=env.unwrapped.device)
+                gripper_joint[2] = 0
+                # gripper_joint[7] = 0
+                # gripper_joint[3:5] = torch.ones(2, device=env.unwrapped.device) * ramp
+                # gripper_joint[6] = 1 * ramp
+                gripper_joint[3:] = (
+                    torch.ones(gripper_joint[3:].shape[0], device=env.unwrapped.device)
+                    * ramp
+                    * 1.0
+                )
 
             actions = torch.cat([delta_ee_pos, delta_ee_ang, gripper_joint]).unsqueeze(
                 0
@@ -230,40 +243,6 @@ def main():
 
     # close the simulator
     env.close()
-
-    for act_name in applied_efforts_act.keys():
-        plt.title(act_name)
-        for i in range(len(applied_efforts_act[act_name][0])):
-            plt.plot(
-                time_arr,
-                np.array(computed_efforts_act[act_name])[:, i],
-                "--",
-                linewidth=1.5,
-                label=f"computed_{i}",
-            )
-            plt.plot(
-                time_arr,
-                np.array(applied_efforts_act[act_name])[:, i],
-                linewidth=1.5,
-                label=f"applied_{i}",
-            )
-            plt.plot(
-                [time_arr[0], time_arr[-1]],
-                [effort_limits[act_name][i] for __ in range(2)],
-                linewidth=1.5,
-                label=f"max_limit{i}",
-            )
-            plt.plot(
-                [time_arr[0], time_arr[-1]],
-                [-effort_limits[act_name][i] for __ in range(2)],
-                linewidth=1.5,
-                label=f"min_limit{i}",
-            )
-        plt.xlabel("time, s")
-        plt.ylabel("Effort, Nm")
-        plt.legend()
-        plt.grid()
-        plt.show()
 
 
 if __name__ == "__main__":
