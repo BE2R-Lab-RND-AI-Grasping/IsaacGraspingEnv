@@ -23,14 +23,15 @@ import numpy as np
 
 # relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/iiwa_cringe/usd/iiwa_cringe_v2_open.usd"
 # relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/iiwa_cringe/usd/iiwa_cringe_v1.usd"
-relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa.usd"
+# relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa.usd"
+relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa_open.usd"
 # relative_path = "source/IsaacGraspEnv/IsaacGraspEnv/robots/hand_iiwa/hand_iiwa_table.usd"
 ABSOLUTE_PATH = Path(relative_path).resolve()
 
 # INIT_Q_IIWA = np.array([-2.9, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
-INIT_Q_IIWA = np.array([-2.9-2.1, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi
+INIT_Q_IIWA = np.array([-2.9-2.1, 71.8, 0.0, -89.3, 0.0, -71.8, 0.0])/180*np.pi # PowerDrill
 # INIT_Q_IIWA = np.array([0.1768, 1.0323, -0.2726, -1.0931, -0.1364, 1.0486, 0.102])
-# INIT_Q_IIWA = np.array([ 0.3228,  1.0685, -0.3784, -1.0638, -0.1891,  1.1131,  0.2125]) # 0.7, 0.0, 0.3
+# INIT_Q_IIWA = np.array([ 0.3228,  1.0685, -0.3784, -1.0638, -0.1891,  1.1131,  0.2125]) # 0.7, 0.0, 0.3 TopTable
 # INIT_Q_IIWA = np.array([ 0.2752,  0.8553, -0.3494, -0.9131, -0.2294,  1.4273,  0.0736]) # 0.7, 0.0, 0.5
 INIT_Q_IIWA = INIT_Q_IIWA.tolist()
 
@@ -72,42 +73,6 @@ IIWA_CRINGE_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         # Grasp from front
         joint_pos={
-            # Open Kinematick
-            # "lbr_iiwa_joint_1": -0.036,
-            # "lbr_iiwa_joint_2": 1.0,
-            # "lbr_iiwa_joint_3": 2.966,
-            # "lbr_iiwa_joint_4": 1.906,
-            # "lbr_iiwa_joint_5": 2.966,
-            # "lbr_iiwa_joint_6": -1.355,
-            # "lbr_iiwa_joint_7": -2.926,
-            
-            # "lbr_iiwa_joint_1": -0.036,
-            # "lbr_iiwa_joint_2": 0.6,
-            # "lbr_iiwa_joint_3": 2.966,
-            # "lbr_iiwa_joint_4": 1.0,
-            # "lbr_iiwa_joint_5": -2.966,
-            # "lbr_iiwa_joint_6": 1.57,
-            # "lbr_iiwa_joint_7": -2.926,
-            
-            # "Joint_thumb_rotation":1.569,
-            # "Joint_thumb_abduction":0.0,
-            # "Joint_thumb_flexion":0.0,
-            # "Joint_thumb_finray_proxy":0.0,
-            # "Joint_right_abduction":0.0,
-            # "Joint_right_flexion":0.0,
-            # "Joint_right_finray_proxy":0.0,
-            # "Joint_left_abduction":0.0,
-            # "Joint_left_flexion":0.0,
-            # "Joint_left_finray_proxy":0.0,
-            
-            # Close to object
-            # "lbr_iiwa_joint_1": 0.0,
-            # "lbr_iiwa_joint_2": 1.4,
-            # "lbr_iiwa_joint_3": 3.14,
-            # "lbr_iiwa_joint_4": 1.6,
-            # "lbr_iiwa_joint_5": -3.466,
-            # "lbr_iiwa_joint_6": -1.155,
-            # "lbr_iiwa_joint_7": -2.926,
             
             "lbr_iiwa_joint_1": INIT_Q_IIWA[0],
             "lbr_iiwa_joint_2": INIT_Q_IIWA[1],
@@ -117,8 +82,8 @@ IIWA_CRINGE_CFG = ArticulationCfg(
             "lbr_iiwa_joint_6": INIT_Q_IIWA[5],
             "lbr_iiwa_joint_7": INIT_Q_IIWA[6],
             
-            "Joint_thumb_dynamixel_crank": 0.0,
-            "Joint_thumb_crank_pusher": 0.0,
+            # "Joint_thumb_dynamixel_crank": 0.5,
+            # "Joint_thumb_crank_pusher": 0.0,
             
             "Joint_thumb_rotation":0.0,
             # New Robot
@@ -128,16 +93,16 @@ IIWA_CRINGE_CFG = ArticulationCfg(
             "Joint_thumb_flexion":0.0,
             "Joint_thumb_finray_proxy":0.0,
 
-            "Joint_right_dynamixel_crank": 0.0,
-            "Joint_right_crank_pusher": 0.0,
+            # "Joint_right_dynamixel_crank": 0.0,
+            # "Joint_right_crank_pusher": 0.0,
             
             "Joint_right_abduction":0.0,
             
             "Joint_right_flexion":0.0,
             "Joint_right_finray_proxy":0.0,
             
-            "Joint_left_dynamixel_crank": 0.0, 
-            "Joint_left_crank_pusher": 0.0, 
+            # "Joint_left_dynamixel_crank": 0.0, 
+            # "Joint_left_crank_pusher": 0.0, 
             
             "Joint_left_abduction":0.0,
             
@@ -243,34 +208,34 @@ IIWA_CRINGE_CFG = ArticulationCfg(
         #     stiffness=2e3,
         #     damping=1e2,
         # ),
-        # "cringe_hand": ImplicitActuatorCfg(
-        #     joint_names_expr=["Joint_.*"],
-        #     effort_limit_sim=1.5*3,
-        #     velocity_limit_sim=6.17,
-        #     stiffness=2e3,
-        #     damping=1e2,
-        # ),
         "cringe_hand_active": ImplicitActuatorCfg(
-            joint_names_expr=["Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation"],
-            effort_limit_sim=1.5,
+            joint_names_expr=["Joint_.*"],
+            effort_limit_sim=1.5*3,
             velocity_limit_sim=6.17,
             stiffness=2e3,
             damping=1e2,
         ),
-        "cringe_hand_spring": ImplicitActuatorCfg(
-            joint_names_expr=["Joint_.*_finray_proxy"],
-            effort_limit_sim=0.001,
-            velocity_limit_sim=20,
-            stiffness=0.15,
-            damping=0,
-        ),
-        "cringe_hand_passive": ImplicitActuatorCfg(
-            joint_names_expr=["Joint_.*_crank_pusher", "Joint_.*_flexion"],
-            effort_limit_sim=50,
-            velocity_limit_sim=20,
-            stiffness=0,
-            damping=0,
-        ),
+        # "cringe_hand_active": ImplicitActuatorCfg(
+        #     joint_names_expr=["Joint_.*_abduction", "Joint_.*_dynamixel_crank", "Joint_.*_rotation"],
+        #     effort_limit_sim=1.5,
+        #     velocity_limit_sim=6.17,
+        #     stiffness=2e3,
+        #     damping=1e2,
+        # ),
+        # "cringe_hand_spring": ImplicitActuatorCfg(
+        #     joint_names_expr=["Joint_.*_finray_proxy"],
+        #     effort_limit_sim=0.001,
+        #     velocity_limit_sim=20,
+        #     stiffness=0.15,
+        #     damping=0,
+        # ),
+        # "cringe_hand_passive": ImplicitActuatorCfg(
+        #     joint_names_expr=["Joint_.*_crank_pusher", "Joint_.*_flexion"],
+        #     effort_limit_sim=50,
+        #     velocity_limit_sim=20,
+        #     stiffness=0,
+        #     damping=0,
+        # ),
     },
     soft_joint_pos_limit_factor=1.0,
 )

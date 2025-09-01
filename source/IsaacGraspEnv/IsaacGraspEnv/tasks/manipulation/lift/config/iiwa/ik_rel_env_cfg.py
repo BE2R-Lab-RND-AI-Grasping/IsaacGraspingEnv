@@ -12,8 +12,16 @@ from . import joint_pos_env_cfg
 ##
 # Pre-defined configs
 ##
-from IsaacGraspEnv.tasks.manipulation.lift.lift_cam_env_cfg import ObjectCamTableSceneCfg, PointCloudObservationsCfg, FullObjPCObservationsCfg
-from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import IIWA_CRINGE_CFG_HIGH_PD_CFG  # isort: skip
+from IsaacGraspEnv.tasks.manipulation.lift.lift_cam_env_cfg import (
+    ObjectCamTableSceneCfg,
+    PointCloudObservationsCfg,
+    FullObjPCObservationsCfg,
+)
+from IsaacGraspEnv.tasks.manipulation.lift.lift_vec_env_cfg import VectorsObservationsCfg
+from IsaacGraspEnv.robots.iiwa_cringe.iiwa_cringe_cfg import (
+    IIWA_CRINGE_CFG_HIGH_PD_CFG,
+)  # isort: skip
+import gymnasium as gym
 
 
 @configclass
@@ -24,16 +32,23 @@ class IiwaCubeLiftEnvCfg(joint_pos_env_cfg.IiwaCubeLiftEnvCfg):
 
         # Set Franka as robot
         # We switch here to a stiffer PD controller for IK tracking to be better.
-        self.scene.robot = IIWA_CRINGE_CFG_HIGH_PD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = IIWA_CRINGE_CFG_HIGH_PD_CFG.replace(
+            prim_path="{ENV_REGEX_NS}/Robot"
+        )
 
         # Set actions for the specific robot type (franka)
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
             joint_names=["lbr_iiwa_joint_.*"],
             body_name="lbr_iiwa_link_7",
-            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
-            scale=0.5,
-            body_offset=DifferentialInverseKinematicsActionCfg.OffsetCfg(pos=[0.0, 0.0, 0.12]),
+            controller=DifferentialIKControllerCfg(
+                command_type="pose", use_relative_mode=True, ik_method="dls"
+            ),
+            scale=0.05,
+            body_offset=DifferentialInverseKinematicsActionCfg.OffsetCfg(
+                pos=[0.0, 0.0, 0.12]
+            ),
+            # clip={"lbr_iiwa_joint_[1-6]":(-1.0, 1.0)}
         )
 
 
@@ -57,7 +72,6 @@ class IiwaCubePCLiftEnvCfg(IiwaCubeLiftEnvCfg):
     # Basic settings
     observations: PointCloudObservationsCfg = PointCloudObservationsCfg()
 
-    
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
@@ -81,7 +95,6 @@ class IiwaCubeFullObjPCLiftEnvCfg(IiwaCubeLiftEnvCfg):
     # Basic settings
     observations: FullObjPCObservationsCfg = FullObjPCObservationsCfg()
 
-    
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
@@ -97,3 +110,14 @@ class IiwaCubeFullObjPCLiftEnvCfg_PLAY(IiwaCubeFullObjPCLiftEnvCfg):
         self.scene.env_spacing = 2.5
         # disable randomization for play
         self.observations.policy.enable_corruption = False
+
+
+@configclass
+class IiwaVectorsLiftEnvCfg(IiwaCubeLiftEnvCfg):
+
+    # Basic settings
+    observations: VectorsObservationsCfg = VectorsObservationsCfg()
+
+    def __post_init__(self):
+        # post init of parent
+        super().__post_init__()

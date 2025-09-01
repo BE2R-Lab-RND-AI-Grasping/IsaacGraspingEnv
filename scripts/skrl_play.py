@@ -21,11 +21,12 @@ parser = argparse.ArgumentParser(description="Play a checkpoint of an RL agent f
 parser.add_argument("--video", action="store_true", default=False, help="Record videos during training.")
 parser.add_argument("--video_length", type=int, default=200, help="Length of the recorded video (in steps).")
 parser.add_argument(
-    "--disable_fabric", action="store_true", default=False, help="Disable fabric and use USD I/O operations."
+    "--disable_fabric", action="store_true", default=True, help="Disable fabric and use USD I/O operations."
 )
-parser.add_argument("--num_envs", type=int, default=16, help="Number of environments to simulate.")
+parser.add_argument("--num_envs", type=int, default=8, help="Number of environments to simulate.")
 # parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
-parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+# parser.add_argument("--task", type=str, default="Isaac-Lift-Cube-Iiwa-IK-Rel-v0", help="Name of the task.")
+parser.add_argument("--task", type=str, default="Isaac-Vectors-Lift-Iiwa-IK-Rel-v0", help="Name of the task.")
 parser.add_argument("--checkpoint", type=str, default=None, help="Path to model checkpoint.")
 parser.add_argument(
     "--ml_framework",
@@ -38,7 +39,7 @@ parser.add_argument(
     "--algorithm",
     type=str,
     default="PPO",
-    choices=["PPO", "IPPO", "MAPPO"],
+    choices=["RPO", "PPO", "IPPO", "MAPPO"],
     help="The RL algorithm used for training the skrl agent.",
 )
 
@@ -103,6 +104,8 @@ from isaaclab_tasks.utils import get_checkpoint_path, load_cfg_from_registry, pa
 from isaaclab_rl.skrl import SkrlVecEnvWrapper
 from IsaacGraspEnv.dataset_managers import load_object_dataset
 
+from IsaacGraspEnv.debug_function.reward_analyze import RewardAnalyzer
+
 # config shortcuts
 algorithm = args_cli.algorithm.lower()
 
@@ -151,6 +154,9 @@ def main():
     # create isaac environment
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
     env.env.sim.set_camera_view([3.5,3.5, 2.5], [0.0, 0.0,0.0])
+    reward_log = RewardAnalyzer(env.env.reward_manager, env.env.max_episode_length, env.env.num_envs)
+    # env.unwrapped.action_space = gym.spaces.Box(-1.0, 1.0, shape=env.action_space.shape)
+    # env.unwrapped.single_action_space = gym.spaces.Box(-1.0, 1.0, shape=(16,))
     # wrap for video recording
     if args_cli.video:
         video_kwargs = {
@@ -183,17 +189,45 @@ def main():
     # set agent to evaluation mode
     runner.agent.set_running_mode("eval")
 
+
+    threshold = 0.07
+    rew_buffer = []
     # reset environment
     obs, _ = env.reset()
     timestep = 0
+    m=0
     # simulate environment
     while simulation_app.is_running():
         # run everything in inference mode
         with torch.inference_mode():
             # agent stepping
             actions = runner.agent.act(obs, timestep=0, timesteps=0)[0]
+            
+            # ee_pos = obs[:,0:3]
+            # target_pos = obs[:,57:60]
+            # object_pos = obs[:,50:53]
+            
+            # mask = torch.where(
+            #     torch.linalg.norm(object_pos-target_pos, dim=1) <= threshold, 0.0, 1.0)
+            
+            # actions[:,0:3] = actions[:,0:3] * mask.unsqueeze(1)
+            
+            # unit_quat = torch.tensor([1.0, 0.0, 0.0, 0.0])
+            
+            # actions[:,3:7] = unit_quat.repeat((env.num_envs,1))
+            
             # env stepping
-            obs, _, _, _, info = env.step(actions)
+            reward_log.step_update()
+            obs, rew, terminated, truncated, info = env.step(actions)
+            rew_buffer.append(rew.cpu().numpy())
+            for i in range(env.env.num_envs):
+                if terminated[i] or truncated[i]:
+                    reward_log.episode_update(i)
+                    if truncated[i]:
+                        m += 1
+                    
+            if m > 20:
+                break
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video
@@ -202,7 +236,7 @@ def main():
 
     # close the simulator
     env.close()
-
+    reward_log.plot()
 
 if __name__ == "__main__":
     # run the main function
