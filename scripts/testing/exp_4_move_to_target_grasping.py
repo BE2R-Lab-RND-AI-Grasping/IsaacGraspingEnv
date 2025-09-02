@@ -79,7 +79,12 @@ from IsaacGraspEnv.dataset_managers.dataset_loading import load_object_dataset
 import IsaacGraspEnv.tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
 
-from isaaclab.utils.math import transform_points, subtract_frame_transforms
+from isaaclab.utils.math import (
+    transform_points,
+    subtract_frame_transforms,
+    quat_from_euler_xyz,
+    combine_frame_transforms,
+)
 
 map_old2new_joint_names = {
     "left": "index",
@@ -89,6 +94,12 @@ map_old2new_joint_names = {
     "flexion": "PPflexion",
     "finray_proxy": "DPflexion",
 }
+
+translation_names = ["WRJTx", "WRJTy", "WRJTz"]
+rot_names = ["WRJRx", "WRJRy", "WRJRz"]
+
+
+grasp_conf_index = 8
 
 
 def main():
@@ -108,8 +119,10 @@ def main():
     else:
         dt_models_filter = args_cli.model_filter
 
+    # ================SET UP ENV Config for Debugging==========================
+
     env_cfg.scene.object.rigid_objects = load_object_dataset(
-        args_cli.dataset_path, args_cli.usd_file_name, dt_models_filter
+        args_cli.dataset_path, args_cli.usd_file_name, dt_models_filter, True
     )
 
     env_cfg.actions.arm_action = mdp.DifferentialInverseKinematicsActionCfg(
@@ -130,8 +143,25 @@ def main():
         joint_names=[
             "Joint_.*",
         ],
-        scale=1.0,
+        scale={
+            "Joint_thumb_rotation": -1.0,
+            "Joint_thumb_abduction": -1.0,
+        },
+        offset={"Joint_thumb_abduction": np.pi / 2},
     )
+
+    cube_in_focus_pos_range = env_cfg.events.randomize_cubes_in_focus.params[
+        "pose_range"
+    ]
+
+    cube_in_focus_pos_range["x"] = (0.9, 0.9)
+    cube_in_focus_pos_range["y"] = (-0.1, -0.1)
+    cube_in_focus_pos_range["z"] = (0.3, 0.3)
+    cube_in_focus_pos_range["roll"] = (0.0, 0.0)
+    cube_in_focus_pos_range["pitch"] = (1.57, 1.57)
+    cube_in_focus_pos_range["yaw"] = (1.57, 1.57)
+
+    env_cfg.scene.ee_frame.target_frames[0].offset.pos = [0.0, 0.0, 0.0]
 
     # create environment
     env = gym.make(args_cli.task, cfg=env_cfg)
@@ -154,8 +184,12 @@ def main():
     obs, __ = env.reset()
     time_step = 0
     time_arr = []
+    action_manager = env.get_wrapper_attr("action_manager")
+    robot = env.get_wrapper_attr("scene").articulations["robot"]
 
-    l_joint_ordering_env = env.env.action_manager._terms["gripper_action"]._joint_names
+    l_joint_ordering_env = robot.find_joints(
+        env_cfg.actions.gripper_action.joint_names, preserve_order=False
+    )[1]
 
     l_joint_order_new_name = []
     for j_name in l_joint_ordering_env:
@@ -171,14 +205,13 @@ def main():
     object_name = path2object_dataset.name
 
     path2grasp_dataset = [
-        file for file in path2grasp_dataset.glob(object_name[:-1] + "*.npy")
+        file for file in path2grasp_dataset.glob(object_name[:-1] + "_0.npy")
     ]
     data = []
     for file in path2grasp_dataset:
         with open(file, "rb") as f:
             data += np.load(f, allow_pickle=True).tolist()
 
-    robot = env.get_wrapper_attr("scene").articulations["robot"]
     ee_body_id = robot.find_bodies("lbr_iiwa_link_7")[0][0]
 
     list_obs_term_name = env.observation_manager.active_terms[
@@ -187,48 +220,61 @@ def main():
 
     target_gripper_angles = []
     for j_name in l_joint_order_new_name:
-        target_gripper_angles.append(data[0].get("qpos", None).get(j_name, 0.0))
+        target_gripper_angles.append(
+            data[grasp_conf_index].get("qpos", None).get(j_name, 0.0)
+        )
 
     target_gripper_angles = torch.Tensor(target_gripper_angles).to(
         env.get_wrapper_attr("device")
     )
 
+    target_pos_obj = []
+    for tran_name in translation_names:
+        target_pos_obj.append(
+            data[grasp_conf_index].get("qpos", None).get(tran_name, 0.0)
+        )
+    target_pos_obj = torch.Tensor(target_pos_obj).to(env.get_wrapper_attr("device"))
+
+    target_rpy_obj = []
+    for rpy_name in rot_names:
+        target_rpy_obj.append(
+            data[grasp_conf_index].get("qpos", None).get(rpy_name, 0.0)
+        )
+    target_rpy_obj = torch.Tensor(target_rpy_obj).to(env.get_wrapper_attr("device"))
+
+    target_quat_obj = quat_from_euler_xyz(
+        target_rpy_obj[0], target_rpy_obj[1], target_rpy_obj[2]
+    )
+    # ==============OBS_UNPACK========================
+
     dict_obs_term_unpack = {}
     for term in list_obs_term_name:
-        id_obs_vector = env.observation_manager.active_terms["policy"].index(term)
-        size_obs = env.observation_manager.group_obs_term_dim["policy"][id_obs_vector][
-            0
-        ]
+        id_obs_vector = (
+            env.get_wrapper_attr("observation_manager")
+            .active_terms["policy"]
+            .index(term)
+        )
+        size_obs = env.get_wrapper_attr("observation_manager").group_obs_term_dim[
+            "policy"
+        ][id_obs_vector][0]
         index_obs_vector = sum(
             [
-                env.observation_manager.group_obs_term_dim["policy"][i][0]
+                env.get_wrapper_attr("observation_manager").group_obs_term_dim[
+                    "policy"
+                ][i][0]
                 for i in range(id_obs_vector)
             ]
         )
         dict_obs_term_unpack[term] = (
-            lambda env, s_id=index_obs_vector, size=size_obs: env.observation_manager._obs_buffer[
-                "policy"
-            ][
-                :, s_id : s_id + size
-            ]
+            lambda env, s_id=index_obs_vector, size=size_obs: env.get_wrapper_attr(
+                "observation_manager"
+            )._obs_buffer["policy"][:, s_id : s_id + size]
         )
+
+    # =====================================
 
     init_position = []
     succes = []
-    effort_limits = {
-        act_name: env.env.scene.articulations["robot"]
-        .actuators[act_name]
-        .effort_limit.tolist()[0]
-        for act_name in env.env.scene.articulations["robot"].actuators.keys()
-    }
-    computed_efforts_act = {
-        act_name: []
-        for act_name in env.env.scene.articulations["robot"].actuators.keys()
-    }
-    applied_efforts_act = {
-        act_name: []
-        for act_name in env.env.scene.articulations["robot"].actuators.keys()
-    }
     rew_arr = []
     # simulate environment
     while simulation_app.is_running():
@@ -257,26 +303,22 @@ def main():
             # Closed Kinematics
             # obj_pos = obs["policy"][0,56:59]  # + torch.Tensor([0.0, 0.0, 0.11]) #4: + torch.Tensor([-0.05, 0.0, 0.1])  #3: + torch.Tensor([-0.05, 0.0, 0.1]) # 2: + torch.Tensor([-0.05, 0.0, 0.1]) #1: + torch.Tensor([-0.1, 0.0, 0.12])
             # target_pos = obs["policy"][0,63:66]
-            obj_pos = transform_points(
-                dict_obs_term_unpack["object_position"](env), ee_pos_root, ee_quat_root
-            )[0]
-            target_pos = transform_points(
-                dict_obs_term_unpack["target_object_position"](env)[:, 0:3],
+            object_pos_root, object_quat_root = combine_frame_transforms(
                 ee_pos_root,
                 ee_quat_root,
-            )[0]
+                dict_obs_term_unpack["object_position"](env).squeeze(0),
+                dict_obs_term_unpack["object_quat"](env).squeeze(0),
+            )
+
+            target_pos_root, target_quat_root = combine_frame_transforms(
+                object_pos_root,
+                object_quat_root,
+                target_pos_obj,
+                target_quat_obj,
+            )
+
             time_arr.append(env.env.sim.current_time)
-            for act_name in applied_efforts_act.keys():
-                applied_efforts_act[act_name].append(
-                    env.env.scene.articulations["robot"]
-                    .actuators[act_name]
-                    .applied_effort.tolist()[0]
-                )
-                computed_efforts_act[act_name].append(
-                    env.env.scene.articulations["robot"]
-                    .actuators[act_name]
-                    .computed_effort.tolist()[0]
-                )
+
             # if time_step < 100:
             #     delta_ee_pos = (obj_pos - ee_pos) * 7
             # else:
@@ -309,8 +351,15 @@ def main():
             #         * 1.0
             #     )
 
+            joint_zeros = torch.zeros(
+                action_manager.action_term_dim[
+                    action_manager.active_terms.index("gripper_action")
+                ],
+                device=env.get_wrapper_attr("device"),
+            )
+
             actions = torch.cat(
-                [ee_pos_root, ee_quat_root, target_gripper_angles]
+                [target_pos_root, target_quat_root, joint_zeros]
             ).unsqueeze(0)
             # actions = 2 * torch.rand(env.action_space.shape, device=env.unwrapped.device) - 1
             # apply actions
@@ -319,7 +368,7 @@ def main():
             rew_arr.append(rew)
             # print(time_step, np.round(env.env.sim.current_time, 2), np.round(ramp,3))
             if truncated or terminated:
-                if obj_pos.numpy()[2] > 0.2:
+                if object_pos_root.numpy()[2] > 0.2:
                     succes.append(1)
                 else:
                     succes.append(0)
