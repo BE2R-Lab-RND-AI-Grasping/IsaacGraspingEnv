@@ -33,7 +33,7 @@ parser.add_argument(
 parser.add_argument(
     "--dataset_path",
     type=str,
-    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers",
+    default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/locking_pliers",
     help="Absolute path to dataset. Dataset directory must have folders with models.",
 )
 parser.add_argument(
@@ -155,11 +155,11 @@ def main():
     ]
 
     cube_in_focus_pos_range["x"] = (0.9, 0.9)
-    cube_in_focus_pos_range["y"] = (-0.1, -0.1)
+    cube_in_focus_pos_range["y"] = (-0.0, -0.0)
     cube_in_focus_pos_range["z"] = (0.3, 0.3)
     cube_in_focus_pos_range["roll"] = (0.0, 0.0)
-    cube_in_focus_pos_range["pitch"] = (1.57, 1.57)
-    cube_in_focus_pos_range["yaw"] = (1.57, 1.57)
+    cube_in_focus_pos_range["pitch"] = (-3.14, -3.14)
+    cube_in_focus_pos_range["yaw"] = (3.14, 3.14)
 
     env_cfg.scene.ee_frame.target_frames[0].offset.pos = [0.0, 0.0, 0.0]
 
@@ -204,9 +204,7 @@ def main():
 
     object_name = path2object_dataset.name
 
-    path2grasp_dataset = [
-        file for file in path2grasp_dataset.glob(object_name[:-1] + "_0.npy")
-    ]
+    path2grasp_dataset = [file for file in path2grasp_dataset.glob("pliers_0.npy")]
     data = []
     for file in path2grasp_dataset:
         with open(file, "rb") as f:
