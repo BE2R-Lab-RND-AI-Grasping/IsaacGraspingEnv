@@ -29,3 +29,7 @@ class DatasetGraspingConverterBuilder(ABC):
     @abstractmethod
     def define_dataset_structure_processing(self, processing_functions: dict[str, Any]) -> None:
         pass
+    
+    @abstractmethod
+    def define_file_filter(list_re_filters: list[str]) -> None:
+        pass
