@@ -7,13 +7,16 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 from source.IsaacGraspEnv.IsaacGraspEnv.dataset_managers.grasping_converter.base import DatasetGraspingConverterBuilder
+from source.IsaacGraspEnv.IsaacGraspEnv.dataset_managers.grasping_converter.isaaclab_processing import IsaacProcessingDataset
 
 def unpack_including_dict(key_unpacked_dict: str):
     def decorator(func):
         def wrapper(grasp: dict[str, Any], keys: list[str]) -> Any:
-            unpacked_dict = grasp[key_unpacked_dict]
-            result = func(unpacked_dict, keys)
-            
+            if key_unpacked_dict not in grasp:
+                result = func(grasp, keys)
+            else:
+                unpacked_dict = grasp[key_unpacked_dict]
+                result = func(unpacked_dict, keys)
             return result
         return wrapper
     return decorator
@@ -27,6 +30,7 @@ def position_processing_func(grasp: dict[str, Any], keys: list[str]) -> list[flo
 def orientation_rpy2quat_processing_func(grasp: dict[str, Any], keys: list[str]) -> list[float]:
     r = R.from_euler("xyz", [grasp[k] for k in keys], degrees=False)
     return r.as_quat()[[3, 0, 1, 2]].tolist()
+
 
 def convert_name_dexgraspnet(object_name: str, model_name: str, old_name: str) -> str:
     
@@ -42,6 +46,7 @@ def convert_name_dexgraspnet(object_name: str, model_name: str, old_name: str) -
     
     return new_dataset_name
 
+
 class DexGraspNetConverter():
     
     
@@ -54,6 +59,7 @@ class DexGraspNetConverter():
         self.d_proc_structure_func: dict[str, Any] = {}
         self.list_filter_file_re: list[str] = []
         self.func_convert_name: Optional[Any] = None
+        self.isaaclab_processing: Optional[IsaacProcessingDataset] = None
     
     def convert_grasping_one_object(self, dataset: np.ndarray) -> np.ndarray:
         new_grasp_datset = []
@@ -151,6 +157,10 @@ class DexGraspNetConverterBuilder(DatasetGraspingConverterBuilder):
         
     def define_name_conversion_function(self, func_convert_name: Optional[Any] = None) -> None:
         self._converter.func_convert_name = func_convert_name
+        
+    def define_isaaclab_processing(self, isaaclab_processing: IsaacProcessingDataset) -> None:
+        self._converter.isaaclab_processing = isaaclab_processing
+
         
 
 
