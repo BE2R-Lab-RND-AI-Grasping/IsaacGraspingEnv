@@ -50,7 +50,7 @@ d_preprocessing_data_functions = {
 l_postprocessing_data_functions = [
     log_bodies_pose,
 ]
-
+# Path to dataset files to be processed
 PATHS = []
 
 
