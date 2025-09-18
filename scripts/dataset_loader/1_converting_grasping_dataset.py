@@ -6,44 +6,11 @@ from isaaclab.app import AppLauncher
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Random agent for Isaac Lab environments.")
-parser.add_argument(
-    "--disable_fabric",
-    action="store_true",
-    default=False,
-    help="Disable fabric and use USD I/O operations.",
-)
 
-# append AppLauncher cli args
-
-# parser.add_argument(
-#     "--dataset_path",
-#     type=str,
-#     default="/home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/locking_pliers",
-#     help="Absolute path to dataset. Dataset directory must have folders with models.",
-# )
-# parser.add_argument(
-#     "--usd_file_name",
-#     type=str,
-#     default="object.usd",
-#     help="The name of the USD file in the folder",
-# )
-# parser.add_argument(
-#     "--model_filter",
-#     type=str,
-#     default="1",
-#     help="A comma separated list of identifiers to be taken from the dataset",
-# )
-
-# parser.add_argument(
-#     "--grasp_dataset_path",
-#     type=str,
-#     default="/home/yefim-home/Documents/work/repo_forks/DexGraspNet/grasp_generation_egorhand_edited_hand/ready_to_work/dataset/DIP-Flex_opened_kinematics",
-#     help="Absolute path to dataset. Dataset directory must have folders with models.",
-# )
 AppLauncher.add_app_launcher_args(parser)
 # parse the arguments
 args_cli = parser.parse_args()
-
+args_cli.headless = True
 # launch omniverse app
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
