@@ -18,7 +18,15 @@ from functools import lru_cache
 class IsaacProcessingDataset():
     
     def __init__(self, max_size_dataset, device, env_spaces, articulation_cfg, d_preprocessing_data_functions: dict[str, Any], l_postprocessing_data_funcions: list[Any]) -> None:
+        """Processes a grasping dataset using Isaac Sim.
         
+        Args:
+            max_size_dataset (int): Maximum size of the dataset to process.
+            device (str): Device to run the simulation on.
+            env_spaces (float): Size of the environment spaces.
+            articulation_cfg (ArticulationCfg): Configuration of the robot articulation.
+            d_preprocessing_data_functions (dict[str, Any]): Dictionary of functions for preprocessing the dataset.
+            l_postprocessing_data_functions (list[Any]): List of functions for postprocessing the dataset."""
         self.max_size_dataset = max_size_dataset
         self.d_preproc_func = d_preprocessing_data_functions
         self.l_postproc_func = l_postprocessing_data_funcions
@@ -31,8 +39,13 @@ class IsaacProcessingDataset():
 
 
     def _build_scene(self, env_spaces: float):
-
-        """Builds the scene."""
+        """Builds the scene.
+        Args:
+            env_spaces (float): Size of the environment spaces.
+        Returns:
+            scene_entities (dict): Dictionary of scene entities.
+            origins (list[list[float]]): List of origins of the environments.
+        """
         # Ground-plane
         cfg = sim_utils.GroundPlaneCfg()
         cfg.func("/World/defaultGroundPlane", cfg)
@@ -72,6 +85,15 @@ class IsaacProcessingDataset():
     
     
     def _preprocess_dataset(self,dataset: np.ndarray, *args, **kwargs) -> dict[str, torch.Tensor]:
+        """Preprocesses the dataset.
+        
+        Args:
+            dataset (np.ndarray): Dataset to preprocess.
+            *args: Additional arguments to pass to the preprocessing functions.
+            **kwargs: Additional keyword arguments to pass to the preprocessing functions.
+        Returns:
+            torch_dataset (dict[str, torch.Tensor]): Preprocessed dataset.
+        """
         torch_dataset = {}
         for key, func in self.d_preproc_func.items():
             torch_dataset[key] = func(dataset, *args, **kwargs).to(self.sim.device)
@@ -80,7 +102,15 @@ class IsaacProcessingDataset():
     
     
     def _run_step_simulation(self, entities: dict[str, Articulation], dataset: np.ndarray, *args, **kwargs) -> np.ndarray:
+        """Runs a step of the simulation.
         
+        Args:
+            entities (dict[str, Articulation]): Dictionary of scene entities.
+            dataset (np.ndarray): Dataset to process.
+            *args: Additional arguments to pass to the preprocessing and postprocessing functions.
+            **kwargs: Additional keyword arguments to pass to the preprocessing and postprocessing functions.
+        Returns:
+            dataset (np.ndarray): Processed dataset."""
         articulations = entities["articulation"]
         
         torch_dataset = self._preprocess_dataset(dataset, *args, **kwargs)
@@ -106,6 +136,15 @@ class IsaacProcessingDataset():
 
 
     def __call__(self, dataset: np.ndarray, *args: Any, **kwds: Any) -> Any:
+        """Processes the dataset.
+        
+        Args:
+            dataset (np.ndarray): Dataset to process.
+            *args: Additional arguments to pass to the preprocessing and postprocessing functions.
+            **kwds: Additional keyword arguments to pass to the preprocessing and postprocessing functions.
+        Returns:
+            dataset (np.ndarray): Processed dataset.
+        """
         # reset simulation to ensure a clean state
         self.sim.reset()
 
@@ -120,8 +159,7 @@ class IsaacProcessingDataset():
 
 
 def make_torch_wrist_state(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
-    
-    """Sets the wrist state of the robot."""
+    """Preprocessing: Sets the wrist state of the robot in simulation."""
     origins = kwargs.get("origins", torch.zeros((dataset.shape[0], 3), device=kwargs.get("device", "cpu")))
     wrist_pos = origins.clone()
     wrist_quat = torch.zeros((origins.shape[0], 4), device=kwargs.get("device", "cpu"))
@@ -137,8 +175,7 @@ def make_torch_wrist_state(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor
     return wrist_state
 
 def make_torch_joint_pos(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
-    
-    """Sets the joint positions of the robot."""
+    """Preprocessing: Sets the joint positions of the robot in simulation."""
     joint_order = kwargs.get("joint_order", None)
     if joint_order is None:
         raise ValueError("Joint Order must be provided in kwargs")
@@ -152,8 +189,7 @@ def make_torch_joint_pos(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     return joint_pos_full
 
 def make_zero_joint_vel(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
-    
-    """Sets the joint velocities of the robot to zero."""
+    """Preprocessing: Sets the joint velocities of the robot in simulation."""
     joint_order = kwargs.get("joint_order", None)
     if joint_order is None:
         raise ValueError("Joint Order must be provided in kwargs")
@@ -163,15 +199,14 @@ def make_zero_joint_vel(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     return joint_vel
 
 def make_zero_root_vel(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
-    
-    """Sets the root velocities of the robot to zero."""
+    """Preprocessing: Sets the root velocities of the robot in simulation."""
     root_vel = torch.zeros((kwargs.get("num_envs", dataset.shape[0]), 6), device=kwargs.get("device", "cpu"))
 
     return root_vel
         
         
 def log_bodies_pose(articulation: Articulation, dataset: np.ndarray, *args, **kwargs) -> None:
-    """Logs the bodies pose of the robot."""
+    """Postprocessing: Mutate dataset. Logs the poses of the bodies in the dataset."""
     origins = kwargs.get("origins", torch.zeros((dataset.shape[0], 3), device=kwargs.get("device", "cpu")))
     bodies_pos = articulation.data.body_link_pos_w.cpu().numpy()
     bodies_quat = articulation.data.body_link_quat_w.cpu().numpy()
