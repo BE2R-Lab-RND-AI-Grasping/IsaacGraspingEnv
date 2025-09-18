@@ -59,7 +59,6 @@ class DexGraspNetConverter():
         self.d_proc_structure_func: dict[str, Any] = {}
         self.list_filter_file_re: list[str] = []
         self.func_convert_name: Optional[Any] = None
-        self.isaaclab_processing: Optional[IsaacProcessingDataset] = None
     
     def convert_grasping_one_object(self, dataset: np.ndarray) -> np.ndarray:
         new_grasp_datset = []
@@ -157,9 +156,6 @@ class DexGraspNetConverterBuilder(DatasetGraspingConverterBuilder):
         
     def define_name_conversion_function(self, func_convert_name: Optional[Any] = None) -> None:
         self._converter.func_convert_name = func_convert_name
-        
-    def define_isaaclab_processing(self, isaaclab_processing: IsaacProcessingDataset) -> None:
-        self._converter.isaaclab_processing = isaaclab_processing
 
         
 

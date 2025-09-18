@@ -12,20 +12,25 @@ from pathlib import Path
 import numpy as np
 import inspect
 
+from functools import lru_cache
+
 
 class IsaacProcessingDataset():
     
-    def __init__(self, args_cli, articulation_cfg, d_preprocessing_data_functions: dict[str, Any], l_postprocessing_data_funcions: list[Any]) -> None:
+    def __init__(self, max_size_dataset, device, env_spaces, articulation_cfg, d_preprocessing_data_functions: dict[str, Any], l_postprocessing_data_funcions: list[Any]) -> None:
         
+        self.max_size_dataset = max_size_dataset
         self.d_preproc_func = d_preprocessing_data_functions
         self.l_postproc_func = l_postprocessing_data_funcions
         self.articulation_cfg = articulation_cfg
         
-        sim_cfg = sim_utils.SimulationCfg(device=args_cli.device)
+        sim_cfg = sim_utils.SimulationCfg(device=device)
         self.sim = SimulationContext(sim_cfg)
-        
-        
-    def _build_scene(self, num_envs: int, env_spaces: float):
+
+        self._entities, self._origins = self._build_scene(env_spaces=env_spaces)
+
+
+    def _build_scene(self, env_spaces: float):
 
         """Builds the scene."""
         # Ground-plane
@@ -35,22 +40,23 @@ class IsaacProcessingDataset():
         cfg = sim_utils.DomeLightCfg(intensity=3000.0, color=(0.75, 0.75, 0.75))
         cfg.func("/World/Light", cfg)
 
+
         origin_counter = 0
-        x_offset = (num_envs // 2) * env_spaces
-        y_offset = (num_envs // 2) * env_spaces
-        x_values = np.linspace(-x_offset, x_offset, num=int(np.sqrt(num_envs)))
-        y_values = np.linspace(-y_offset, y_offset, num=int(np.sqrt(num_envs)))
+        x_offset = (self.max_size_dataset // 2) * env_spaces
+        y_offset = (self.max_size_dataset // 2) * env_spaces
+        x_values = np.linspace(-x_offset, x_offset, num=int(np.ceil(np.sqrt(self.max_size_dataset))))
+        y_values = np.linspace(-y_offset, y_offset, num=int(np.ceil(np.sqrt(self.max_size_dataset))))
         origins = []
 
-        for i in range(int(np.sqrt(num_envs))):   
-            for j in range(int(np.sqrt(num_envs))):
+        for i in range(x_values.shape[0]):   
+            for j in range(y_values.shape[0]):
                 origins.append([x_values[i], y_values[j], 1.0])
                 prim_utils.create_prim(f"/World/Origin{origin_counter}", "Xform", translation=origins[-1])
                 origin_counter += 1
                 
-                if origin_counter >= num_envs:
+                if origin_counter >= self.max_size_dataset:
                     break
-            if origin_counter >= num_envs:
+            if origin_counter >= self.max_size_dataset:
                     break
 
 
@@ -74,10 +80,6 @@ class IsaacProcessingDataset():
     
     
     def _run_step_simulation(self, entities: dict[str, Articulation], dataset: np.ndarray, *args, **kwargs) -> np.ndarray:
-        
-        # reset simulation to ensure a clean state
-        
-        self.sim.reset()
         
         articulations = entities["articulation"]
         
@@ -103,12 +105,33 @@ class IsaacProcessingDataset():
         return dataset
 
 
+    def __call__(self, dataset: np.ndarray, *args: Any, **kwds: Any) -> Any:
+        # reset simulation to ensure a clean state
+        self.sim.reset()
+
+        dataset = self._run_step_simulation(self._entities, dataset, 
+                                            origins=torch.tensor(self._origins, device=self.sim.device), 
+                                            joint_order=self._entities["articulation"].joint_names, 
+                                            device=self.sim.device, 
+                                            num_envs=self.max_size_dataset, 
+                                            *args, **kwds)
+
+        return dataset
+
+
 def make_torch_wrist_state(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     
     """Sets the wrist state of the robot."""
     origins = kwargs.get("origins", torch.zeros((dataset.shape[0], 3), device=kwargs.get("device", "cpu")))
-    wrist_pos = torch.tensor([data["wrist_pos"] for data in dataset], device=origins.device) + origins
-    wrist_quat = torch.tensor([data["wrist_quat"] for data in dataset], device=origins.device)
+    wrist_pos = origins.clone()
+    wrist_quat = torch.zeros((origins.shape[0], 4), device=kwargs.get("device", "cpu"))
+    
+    wrist_pos_dataset = torch.tensor([data["wrist_pos"] for data in dataset], device=origins.device)
+    wrist_quat_dataset = torch.tensor([data["wrist_quat"] for data in dataset], device=origins.device)
+    
+    wrist_pos[:wrist_pos_dataset.shape[0], :3] += wrist_pos_dataset
+    wrist_quat[:wrist_quat_dataset.shape[0], :] = wrist_quat_dataset
+
     wrist_state = torch.cat((wrist_pos, wrist_quat), dim=1)
     
     return wrist_state
@@ -119,10 +142,14 @@ def make_torch_joint_pos(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     joint_order = kwargs.get("joint_order", None)
     if joint_order is None:
         raise ValueError("Joint Order must be provided in kwargs")
-    
-    joint_pos = torch.tensor([[data[joint_name] for joint_name in joint_order] for data in dataset], device=kwargs.get("device", "cpu"))
 
-    return joint_pos
+    joint_pos_full = torch.zeros((kwargs.get("num_envs", dataset.shape[0]), len(joint_order)), device=kwargs.get("device", "cpu"))
+
+    joint_pos = torch.tensor([[data.get(joint_name, 0.0) for joint_name in joint_order] for data in dataset], device=kwargs.get("device", "cpu"))
+
+    joint_pos_full[:joint_pos.shape[0], :] = joint_pos
+
+    return joint_pos_full
 
 def make_zero_joint_vel(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     
@@ -131,14 +158,14 @@ def make_zero_joint_vel(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     if joint_order is None:
         raise ValueError("Joint Order must be provided in kwargs")
     
-    joint_vel = torch.zeros((dataset.shape[0], len(joint_order)), device=kwargs.get("device", "cpu"))
+    joint_vel = torch.zeros((kwargs.get("num_envs", dataset.shape[0]), len(joint_order)), device=kwargs.get("device", "cpu"))
 
     return joint_vel
 
 def make_zero_root_vel(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     
     """Sets the root velocities of the robot to zero."""
-    root_vel = torch.zeros((dataset.shape[0], 6), device=kwargs.get("device", "cpu"))
+    root_vel = torch.zeros((kwargs.get("num_envs", dataset.shape[0]), 6), device=kwargs.get("device", "cpu"))
 
     return root_vel
         
@@ -152,7 +179,7 @@ def log_bodies_pose(articulation: Articulation, dataset: np.ndarray, *args, **kw
     np_origins = origins.cpu().numpy()
     body_names = articulation.body_names
     
-    for robot_id in range(origins.shape[0]):
+    for robot_id in range(dataset.shape[0]):
         d_bodies_pose = {}
         for name, pos, quat in zip(body_names, bodies_pos[robot_id], bodies_quat[robot_id]):
             d_bodies_pose[name] = (pos - np_origins[robot_id], quat)
