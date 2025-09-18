@@ -29,7 +29,7 @@ def get_filtered_folder_name_in_dirs(path_to_models, models_filter):
     return list_folder_names
 
 
-def load_object_dataset(path_to_models, usd_file_name, models_filter=None, kinematic_enabled = None):
+def load_object_dataset(path_to_models, usd_file_name, collision_enabled = True, models_filter=None, kinematic_enabled = None):
     path_to_models = pathlib.Path(path_to_models)
     
     list_obj_models = get_filtered_folder_name_in_dirs(path_to_models, models_filter)
@@ -54,7 +54,7 @@ def load_object_dataset(path_to_models, usd_file_name, models_filter=None, kinem
                 scale=(1.0, 1.0, 1.0),
                 collision_props=sim_utils.CollisionPropertiesCfg(
                     contact_offset=0.001, rest_offset=0.0001,
-                    collision_enabled = False
+                    collision_enabled = collision_enabled
                 ),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     kinematic_enabled=kinematic_enabled
