@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from source.IsaacGraspEnv.IsaacGraspEnv.dataset_managers.grasping_converter.base import DatasetGraspingConverterBuilder
-from source.IsaacGraspEnv.IsaacGraspEnv.dataset_managers.grasping_converter.isaaclab_processing import IsaacProcessingDataset
+from IsaacGraspEnv.dataset_managers.grasping_converter.base import DatasetGraspingConverterBuilder
+from IsaacGraspEnv.dataset_managers.grasping_converter.isaaclab_processing import IsaacProcessingDataset
 
 def unpack_including_dict(key_unpacked_dict: str):
     """Decorator to unpack a dictionary inside the grasp dictionary."""
@@ -215,7 +215,7 @@ class DexGraspNetConverterBuilder(DatasetGraspingConverterBuilder):
 
 if __name__ == "__main__":
     
-    from source.IsaacGraspEnv.IsaacGraspEnv.dataset_managers.grasping_converter.utils import resolve_names_matching
+    from IsaacGraspEnv.dataset_managers.grasping_converter.utils import resolve_names_matching
     import yaml
     l_joint_names = ['Joint_left_abduction', 'Joint_right_abduction', 'Joint_thumb_rotation',
                 'Joint_left_flexion', 'Joint_right_flexion', 'Joint_thumb_abduction',

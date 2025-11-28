@@ -6,7 +6,7 @@
 from __future__ import annotations
 import copy
 
-from source.IsaacGraspEnv.IsaacGraspEnv.debug_function.viz_frames import (
+from IsaacGraspEnv.debug_function.viz_frames import (
     o3d_viz_body_key_points_obj_frames,
 )
 import torch

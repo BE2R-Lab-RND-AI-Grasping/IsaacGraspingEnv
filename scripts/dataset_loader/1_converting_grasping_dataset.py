@@ -18,7 +18,7 @@ simulation_app = app_launcher.app
 """Rest everything follows."""
 
 import yaml
-import source.IsaacGraspEnv.IsaacGraspEnv.dataset_managers.grasping_converter as gc
+import IsaacGraspEnv.dataset_managers.grasping_converter as gc
 
 
 def main_manual():
