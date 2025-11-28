@@ -205,19 +205,23 @@ class DexGraspNetConverterBuilder(DatasetGraspingConverterBuilder):
     def define_name_conversion_function(self, func_convert_name: Optional[Any] = None) -> None:
         """Defines the name conversion function."""
         self._converter.func_convert_name = func_convert_name
-
         
+    def define_converter_by_yaml_config(self, path_to_config: Path) -> None:
+        super().define_converter_by_yaml_config(path_to_config)
+        
+        if len(self._converter.list_filter_file_re) == 0:
+            self.define_file_filter()
 
 
 if __name__ == "__main__":
     
     from source.IsaacGraspEnv.IsaacGraspEnv.dataset_managers.grasping_converter.utils import resolve_names_matching
-    
+    import yaml
     l_joint_names = ['Joint_left_abduction', 'Joint_right_abduction', 'Joint_thumb_rotation',
-                    'Joint_left_flexion', 'Joint_right_flexion', 'Joint_thumb_abduction',
-                    'Joint_left_finray_proxy', 'Joint_right_finray_proxy', 'Joint_thumb_flexion',
-                    'Joint_thumb_finray_proxy']
-    
+                'Joint_left_flexion', 'Joint_right_flexion', 'Joint_thumb_abduction',
+                'Joint_left_finray_proxy', 'Joint_right_finray_proxy', 'Joint_thumb_flexion',
+                'Joint_thumb_finray_proxy']
+
     map_old2new_joint_names = {
     "left": "index",
     "right": "pinkie",
@@ -237,13 +241,27 @@ if __name__ == "__main__":
     
     dict_map_keys = resolve_names_matching(l_joint_names, map_old2new_joint_names)
     
-    conveter_builder = DexGraspNetConverterBuilder()
-    conveter_builder.define_dataset_paths(old_paths, new_path)
-    conveter_builder.define_connected_objects(path_to_object)
-    conveter_builder.define_dataset_structure(dict_map_keys)
-    conveter_builder.define_dataset_structure_processing()
-    conveter_builder.define_file_filter()
-    conveter_builder.define_name_conversion_function(convert_name_dexgraspnet)
-    
-    converter = conveter_builder.converter
-    converter()
+    def convert_dataset():
+        conveter_builder = DexGraspNetConverterBuilder()
+        conveter_builder.define_dataset_paths(old_paths, new_path)
+        conveter_builder.define_connected_objects(path_to_object)
+        conveter_builder.define_dataset_structure(dict_map_keys)
+        conveter_builder.define_dataset_structure_processing()
+        conveter_builder.define_file_filter()
+        conveter_builder.define_name_conversion_function(convert_name_dexgraspnet)
+        
+        converter = conveter_builder.converter
+        converter()
+        
+    def create_yaml_config():
+        dict_config = {}
+        
+        dict_config["dataset_paths"] = {"old":old_paths, "new":new_path}
+        dict_config["connection_object_file_n_dataset"] = path_to_object
+        dict_config["dataset_structure"] = dict_map_keys
+        dict_config["dataset_function_processing"] = {}
+        dict_config["file_filtering"] = []
+        
+        yaml.dump(dict_config, open("test.yaml", "w"), sort_keys=False, default_flow_style=False)
+        
+    create_yaml_config()
