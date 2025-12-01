@@ -1,6 +1,7 @@
 import argparse
 
 from isaaclab.app import AppLauncher
+from pathlib import Path
 
 parser = argparse.ArgumentParser(description="Random agent for Isaac Lab environments.")
 
@@ -66,13 +67,15 @@ def main():
     )
 
     for path in PATHS:
-        with open(path, "rb") as f:
-            dataset = np.load(f, allow_pickle=True)
+        paths_to_file = Path(path).rglob("*.npy")
+        for file_path in paths_to_file:
+            with open(file_path, "rb") as f:
+                dataset = np.load(f, allow_pickle=True)
 
-        new_dataset = isaac_dataset_processing(dataset)
+            new_dataset = isaac_dataset_processing(dataset)
 
-        with open(path, "wb") as f:
-            np.save(f, new_dataset)
+            with open(file_path, "wb") as f:
+                np.save(f, new_dataset)
 
 
 if __name__ == "__main__":
