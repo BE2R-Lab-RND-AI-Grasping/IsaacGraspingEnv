@@ -1,0 +1,22 @@
+dataset_paths:
+  old:
+  - /home/yefim-home/Documents/work/repo_forks/DexGraspNet/grasp_generation_egorhand_edited_hand/ready_to_work/dataset/DIP-Flex_opened_kinematics
+  new: /home/yefim-home/Documents/work/IsaacGraspingEnv/datasets/dexgraspnet_converted
+connection_object_file_n_dataset:
+  ? /home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/locking_pliers/model_0
+  : '*pliers*'
+  ? /home/yefim-home/Documents/work/IsaacGraspingEnv/source/IsaacGraspEnv/IsaacGraspEnv/assets/data/HANDEL/screwdrivers/model_0
+  : '*screwdriver*'
+dataset_structure:
+  Joint_left_abduction: Joint_index_abduction
+  Joint_right_abduction: Joint_pinkie_abduction
+  Joint_thumb_rotation: Joint_thumb_rotation
+  Joint_left_flexion: Joint_index_PPflexion
+  Joint_right_flexion: Joint_pinkie_PPflexion
+  Joint_thumb_abduction: Joint_thumb_abduction
+  Joint_left_finray_proxy: Joint_index_DPflexion
+  Joint_right_finray_proxy: Joint_pinkie_DPflexion
+  Joint_thumb_flexion: Joint_thumb_PPflexion
+  Joint_thumb_finray_proxy: Joint_thumb_DPflexion
+dataset_function_processing: {}
+file_filtering: []
