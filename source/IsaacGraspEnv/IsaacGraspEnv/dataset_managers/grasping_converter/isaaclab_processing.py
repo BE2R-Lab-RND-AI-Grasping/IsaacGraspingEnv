@@ -37,7 +37,6 @@ class IsaacProcessingDataset():
 
         self._entities, self._origins = self._build_scene(env_spaces=env_spaces)
 
-
     def _build_scene(self, env_spaces: float):
         """Builds the scene.
         Args:
@@ -73,20 +72,19 @@ class IsaacProcessingDataset():
                     break
 
 
-        articulation_cfg = self.articulation_cfg.copy()
+        articulation_cfg = self.articulation_cfg.copy() 
         articulation_cfg.spawn.rigid_props.angular_damping = 100.0
         articulation_cfg.spawn.rigid_props.linear_damping = 100.0
         articulation_cfg.prim_path = "/World/Origin.*/Robot"
         articulation = Articulation(cfg=articulation_cfg)
 
         scene_entities = {"articulation": articulation}
-        
+
         return scene_entities, origins
-    
-    
-    def _preprocess_dataset(self,dataset: np.ndarray, *args, **kwargs) -> dict[str, torch.Tensor]:
+
+    def _preprocess_dataset(self, dataset: np.ndarray, *args, **kwargs) -> dict[str, torch.Tensor]:
         """Preprocesses the dataset.
-        
+
         Args:
             dataset (np.ndarray): Dataset to preprocess.
             *args: Additional arguments to pass to the preprocessing functions.
@@ -99,8 +97,7 @@ class IsaacProcessingDataset():
             torch_dataset[key] = func(dataset, *args, **kwargs).to(self.sim.device)
 
         return torch_dataset
-    
-    
+
     def _run_step_simulation(self, entities: dict[str, Articulation], dataset: np.ndarray, *args, **kwargs) -> np.ndarray:
         """Runs a step of the simulation.
         
@@ -133,7 +130,6 @@ class IsaacProcessingDataset():
         sim_dt = self.sim.get_physics_dt()
         
         return dataset
-
 
     def __call__(self, dataset: np.ndarray, *args: Any, **kwds: Any) -> Any:
         """Processes the dataset.
@@ -174,6 +170,7 @@ def make_torch_wrist_state(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor
     
     return wrist_state
 
+
 def make_torch_joint_pos(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     """Preprocessing: Sets the joint positions of the robot in simulation."""
     joint_order = kwargs.get("joint_order", None)
@@ -188,6 +185,7 @@ def make_torch_joint_pos(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
 
     return joint_pos_full
 
+
 def make_zero_joint_vel(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     """Preprocessing: Sets the joint velocities of the robot in simulation."""
     joint_order = kwargs.get("joint_order", None)
@@ -198,13 +196,14 @@ def make_zero_joint_vel(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
 
     return joint_vel
 
+
 def make_zero_root_vel(dataset: np.ndarray, *args, **kwargs) -> torch.Tensor:
     """Preprocessing: Sets the root velocities of the robot in simulation."""
     root_vel = torch.zeros((kwargs.get("num_envs", dataset.shape[0]), 6), device=kwargs.get("device", "cpu"))
 
     return root_vel
-        
-        
+
+
 def log_bodies_pose(articulation: Articulation, dataset: np.ndarray, *args, **kwargs) -> None:
     """Postprocessing: Mutate dataset. Logs the poses of the bodies in the dataset."""
     origins = kwargs.get("origins", torch.zeros((dataset.shape[0], 3), device=kwargs.get("device", "cpu")))

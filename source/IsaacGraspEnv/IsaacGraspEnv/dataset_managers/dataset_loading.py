@@ -1,4 +1,5 @@
-from isaaclab.assets import RigidObjectCfg, RigidObjectCollectionCfg
+from typing import Optional
+from isaaclab.assets import RigidObjectCfg
 import isaaclab.sim as sim_utils
 from isaaclab.sim.spawners.from_files.from_files_cfg import UsdFileCfg
 
@@ -12,13 +13,16 @@ OBJ_POS = np.array([0.9, 0.0, 0.07077])
 # OBJ_POS = np.array([0.7, 0.0, 0.02])
 OBJ_ROT = R.from_euler("xyz", [90.0, 0.0, 0.0], degrees=True)
 
+# OBJ_POS = np.zeros(3)
+# OBJ_ROT = R.identity()
+
 def get_filtered_folder_name_in_dirs(path_to_models, models_filter):
     dir_check = lambda dir: dir.is_dir() and dir.name.split("_")[-1].isdigit()
     if models_filter:
         dt_filter = lambda dir: dir.name.split("_")[-1] in models_filter
     else:
         dt_filter = lambda dir: True
-        
+
     list_folder_names = [
         dir.name
         for dir in path_to_models.iterdir()
@@ -29,12 +33,11 @@ def get_filtered_folder_name_in_dirs(path_to_models, models_filter):
     return list_folder_names
 
 
-def load_object_dataset(path_to_models, usd_file_name, collision_enabled = True, models_filter=None, kinematic_enabled = None):
+def load_object_dataset(path_to_models, usd_file_name, collision_enabled: bool = True, models_filter: Optional[list] = None, kinematic_enabled: Optional[bool] = None):
     path_to_models = pathlib.Path(path_to_models)
-    
+
     list_obj_models = get_filtered_folder_name_in_dirs(path_to_models, models_filter)
-    
-    num_obj_models = len(list_obj_models)
+
     dict_obj_models = {}
     for o_model in list_obj_models:
         dict_obj_models[o_model] = RigidObjectCfg(
@@ -62,7 +65,6 @@ def load_object_dataset(path_to_models, usd_file_name, collision_enabled = True,
                 semantic_tags=[("class", "object"), ("color", "red")],
             ),
         )
-            
 
     return dict_obj_models
 
@@ -71,13 +73,10 @@ def preprocessing_point_cloud_loading(path_to_models, pc_file_name, models_filte
 
     path_to_models = pathlib.Path(path_to_models)
     list_obj_models = get_filtered_folder_name_in_dirs(path_to_models, models_filter)
-    
-    
-    list_path_to_pc = []
+
+    list_path_to_pc: list[str] = []
     for o_model in list_obj_models:
-        
+
         list_path_to_pc.append(str(path_to_models / o_model / pc_file_name))
-        
+
     return list_path_to_pc
-    
-    

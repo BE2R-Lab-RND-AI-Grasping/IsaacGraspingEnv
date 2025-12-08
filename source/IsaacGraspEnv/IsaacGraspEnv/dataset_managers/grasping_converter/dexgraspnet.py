@@ -95,36 +95,39 @@ class DexGraspNetConverter():
             print(f"Processing dataset in path: {dir_path}")
             if not dir_path.exists():
                 raise FileNotFoundError(f"Dataset path {dir_path} does not exist.")
-            
+
             s_file_paths = set()
             for fltr_files_re in self.list_filter_file_re:
                 s_file_paths = s_file_paths.union(set(dir_path.glob(fltr_files_re)))
-            
+
             for path, fltr_obj_re in self.d_filter_by_obj_re.items():
-                
+
                 fltred_file_by_obj = set(dir_path.glob(fltr_obj_re))
                 fltred_file_by_obj = fltred_file_by_obj.intersection(s_file_paths)
-                
+
                 object_name = path.parents[0].name
                 model_name = path.name
-                
+
                 path_to_new_data_dir = self.new_path / object_name
-                
-                
+
                 if not (path_to_new_data_dir).exists():
                     path_to_new_data_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 for dataset_path in fltred_file_by_obj:    
                     with open(dataset_path, "rb") as f:
                         data = np.load(f, allow_pickle=True)
-                        
+
                     new_data = self.convert_grasping_one_object(data)
-                    
+
                     if self.func_convert_name is not None:
                         new_dataset_name = self.func_convert_name(object_name, model_name, dataset_path.name)
                     else:
                         new_dataset_name = dataset_path.name
                     
+                    for sample in new_data:
+                        sample["object_type"] = object_name
+                        sample["object_id"] = int(model_name.split("_")[-1])
+
                     with open(path_to_new_data_dir / new_dataset_name, "wb") as f:
                         np.save(f, new_data, allow_pickle=True)
 
@@ -223,12 +226,12 @@ if __name__ == "__main__":
                 'Joint_thumb_finray_proxy']
 
     map_old2new_joint_names = {
-    "left": "index",
-    "right": "pinkie",
-    "thumb": "thumb",
-    "rotation": "rotation",
-    "flexion": "PPflexion",
-    "finray_proxy": "DPflexion",
+        "left": "index",
+        "right": "pinkie",
+        "thumb": "thumb",
+        "rotation": "rotation",
+        "flexion": "PPflexion",
+        "finray_proxy": "DPflexion",
     }
     
     old_paths = ["/home/yefim-home/Documents/work/repo_forks/DexGraspNet/grasp_generation_egorhand_edited_hand/ready_to_work/dataset/DIP-Flex_opened_kinematics"]

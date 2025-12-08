@@ -65,7 +65,7 @@ class ProprioceptionRobotObservation(ObsGroup):
     )
     
     object_vel = ObsTerm(
-        func= mdp.instance_randomize_obj_vel_in_robot_frame,
+        func = mdp.instance_randomize_obj_vel_in_robot_frame,
         params={"robot_cfg": SceneEntityCfg("robot", body_names=["lbr_iiwa_link_7"]), "object_cfg": SceneEntityCfg("object")}
     )
     
