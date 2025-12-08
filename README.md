@@ -44,6 +44,7 @@ Environments kuka iiwa 14 with DEX-EE:
     - `Isaac-Dexsuite-Kuka-DEXEE-Lift-v0` - Observation: : object's oracle information,
 
 ![](doc/img/comb_wrench_2.gif)
+
 Full description of the environment below.
 
 ## Installation
