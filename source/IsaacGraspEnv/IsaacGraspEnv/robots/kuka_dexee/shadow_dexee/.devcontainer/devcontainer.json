@@ -1,0 +1,14 @@
+{
+    "name": "My Dev Container",
+    "image": "ubuntu:24.04",
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind"
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python"
+            ]
+        }
+    }
+}

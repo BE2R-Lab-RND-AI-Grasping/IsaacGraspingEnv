@@ -1,0 +1,830 @@
+<?xml version="1.0" ?>
+<robot name="Shadow_DEX_EE">
+   <!--generated with mjcf_urdf_simple_converter (https://github.com/Yasu31/mjcf_urdf_simple_converter)-->
+   
+   <link name="world">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <link name="hand_base">
+      <inertial>
+         <origin xyz="0.0012012408425374063 0.006729996281792371 0.08401692122042397" rpy="-0.05683497076935362 0.06733359392505678 1.5758357357552364"/>
+         <mass value="0.51"/>
+         <inertia ixx="0.0017857945287114141" iyy="0.0014331679068060614" izz="0.0008006585504913038" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_config1_base">
+         <origin xyz="0.0012012408425374063 0.006729996281792371 0.08401692122042397" rpy="-0.05683497076935362 0.06733359392505656 1.5758357357552366"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_config1_base_808080ff.obj" />
+         
+         </geometry>
+
+      </visual>
+      <visual name="r3_config1_base_col">
+         <origin xyz="0.0012012408425374063 0.006729996281792371 0.08401692122042397" rpy="-0.05683497076935362 0.06733359392505656 1.5758357357552366"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_config1_base_col_ff9999ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_config1_base_puck">
+         <origin xyz="2.1132538598212176e-05 -1.5607816862469347e-05 0.005612088342766364" rpy="3.107884950007894 -1.5686393870957103 -0.5884114118014745"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_config1_base_puck_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_config1_base_puck_col">
+         <origin xyz="2.1132538598212176e-05 -1.5607816862469347e-05 0.005612088342766364" rpy="3.107884950007894 -1.5686393870957103 -0.5884114118014745"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_config1_base_puck_col_ff9999ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <joint type="fixed" name="world2hand_base_fixed">
+      <parent link="world"/>
+      <child link="hand_base"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F0/">
+      <inertial>
+         <origin xyz="0.0 0.05 0.017" rpy="0.0 0.0 0.0"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="world2F0/_fixed">
+      <parent link="world"/>
+      <child link="F0/"/>
+      <origin xyz="0.0 0.05 0.017" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F0/finger_base">
+      <inertial>
+         <origin xyz="8.327226545399306e-12 0.01054598288936383 0.07048018107010738" rpy="0.0 -0.10711439124122646 1.5707963267948968"/>
+         <mass value="0.89937782"/>
+         <inertia ixx="0.0015673892706571104" iyy="0.0014910361893646423" izz="0.00043993605940265574" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_base">
+         <origin xyz="8.327226545399306e-12 0.01054598288936383 0.07048018107010738" rpy="0.0 -0.10711439124122646 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_base_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_base_tb">
+         <origin xyz="-0.00025000517546225093 0.029824496031573167 0.15326050625056" rpy="-0.11303539257440243 -0.21914547257460848 1.5720384557586078"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_base_tb_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_cover">
+         <origin xyz="0.0007136569957928827 0.028223592638347953 0.04220325608402197" rpy="0.03536068327352959 0.08870175476163311 1.5218955282386957"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_cover_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_pulley_block">
+         <origin xyz="-0.0009622186268961596 0.006361143943189516 0.1466967096132776" rpy="-1.5687868138431136 -1.1022271132639765 -1.576208495621712"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_pulley_block_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_lid_white">
+         <origin xyz="-3.706867975964192e-06 0.03646801477221525 0.1465908800087447" rpy="1.5707963267948966 -0.02201707176498169 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_lid_white_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_lid_logo">
+         <origin xyz="-1.4756088946121951e-05 0.03486981911536337 0.1484948163600187" rpy="1.5793979239547067 -0.07957178813569987 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_lid_logo_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_cover_small_left">
+         <origin xyz="0.029562986508563247 0.011445826228016404 0.12950803634669852" rpy="2.195541630562622 0.0 0.0"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_cover_small_left_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_cover_small_right">
+         <origin xyz="-0.029562986509708983 0.01144582621534511 0.12950803634822772" rpy="2.1955416305372593 0.0 0.0"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_cover_small_right_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_base_col">
+         <origin xyz="-1.3046223241388559e-05 0.0004585780015310033 0.08905454252468384" rpy="0.001172742393657572 0.00012091916462431129 -0.0005129728017108533"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_base_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <joint type="fixed" name="F0/2F0/finger_base_fixed">
+      <parent link="F0/"/>
+      <child link="F0/finger_base"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F0/finger_knuckle">
+      <inertial>
+         <origin xyz="-0.00023377087580675408 -0.007837674710718483 -0.015295115474376404" rpy="1.0322489600345182 0.015439441878945415 -0.030933412173580144"/>
+         <mass value="0.13077995"/>
+         <inertia ixx="6.233881188373811e-05" iyy="5.631648265865956e-05" izz="3.5160911517250855e-05" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_knuckle">
+         <origin xyz="-0.00023377087580675408 -0.007837674710718483 -0.015295115474376404" rpy="1.0322489600345182 0.015439441878945637 -0.030933412173580144"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_knuckle_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_knuckle_col">
+         <origin xyz="-0.00023377087580675408 -0.007837674710718483 -0.015295115474376404" rpy="1.0322489600345182 0.015439441878945637 -0.030933412173580144"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_knuckle_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F0/J0_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F0/J0">
+      <parent link="F0/finger_base"/>
+      <child link="F0/J0_jointbody"/>
+      <origin xyz="0.0 0.015 0.17902" rpy="-1.0472000000000001 0.0 0.0"/>
+      <axis xyz="0.0 0.0 -1.0"/>
+      <limit lower="-0.8727" upper="0.8727" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F0/J0_offset">
+      <parent link="F0/J0_jointbody"/>
+      <child link="F0/finger_knuckle"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F0/finger_proximal">
+      <inertial>
+         <origin xyz="-0.0009644587620116158 -0.016217657025227983 0.0026224635162594807" rpy="0.42741351885532486 -1.5281955927617377 1.1674598495934774"/>
+         <mass value="0.09614332"/>
+         <inertia ixx="4.4348780185862844e-05" iyy="3.9493152754213314e-05" izz="1.6583256458014625e-05" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_proximal">
+         <origin xyz="-0.0009644587620116158 -0.016217657025227983 0.0026224635162594807" rpy="0.4274135188553242 -1.5281955927617377 1.1674598495934778"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_proximal_lid">
+         <origin xyz="0.0009964758204556124 -0.029411778713204648 0.016797547976464114" rpy="2.497510926265769 -1.4287487346267171 -1.3575196482734142"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_lid_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_proximal_magtac">
+         <origin xyz="-1.3808692983045182e-07 -0.02758220823071568 -0.002932796361921121" rpy="1.5707963267948966 0.1889942027358682 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_magtac_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_proximal_col">
+         <origin xyz="-0.0005162379564240678 -0.020597143663197596 0.003623588669234484" rpy="-0.49111008932510347 -1.4921888527050045 2.10201627227121"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F0/J1_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F0/J1">
+      <parent link="F0/finger_knuckle"/>
+      <child link="F0/J1_jointbody"/>
+      <origin xyz="0.0 -0.03 0.0" rpy="0.0 0.0 0.0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="-1.3963" upper="0.7854" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F0/J1_offset">
+      <parent link="F0/J1_jointbody"/>
+      <child link="F0/finger_proximal"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F0/finger_middle">
+      <inertial>
+         <origin xyz="-5.312439490077452e-05 -0.014887540831131058 0.0024159721835044926" rpy="-0.3106861008821471 -1.542885454696393 1.865330518167668"/>
+         <mass value="0.05585897"/>
+         <inertia ixx="1.8411470670307498e-05" iyy="1.586370741286415e-05" izz="7.914944890151545e-06" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_middle">
+         <origin xyz="-5.312439490077452e-05 -0.014887540831131058 0.0024159721835044926" rpy="-0.31068610088214343 -1.542885454696393 1.865330518167664"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_middle_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_middle_magtac">
+         <origin xyz="-8.268536875349562e-07 -0.017052828022417015 -0.006302157933194955" rpy="1.5744146047816145 -1.2499101541936672 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_middle_magtac_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_middle_col">
+         <origin xyz="-3.869287817870368e-05 -0.015361278622972645 0.0005163638117973057" rpy="-0.40438613574675164 -1.560003033264187 1.9569843491253969"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_middle_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F0/J2_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F0/J2">
+      <parent link="F0/finger_proximal"/>
+      <child link="F0/J2_jointbody"/>
+      <origin xyz="0.0 -0.05 0.0" rpy="0.0 0.0 0.0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="0.0" upper="1.3963" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F0/J2_offset">
+      <parent link="F0/J2_jointbody"/>
+      <child link="F0/finger_middle"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F0/finger_distal">
+      <inertial>
+         <origin xyz="-0.0012210484748830597 -0.003505067494228547 0.007269018357083593" rpy="0.39882863373999167 0.031957197161715634 0.13057366506604948"/>
+         <mass value="0.02766365"/>
+         <inertia ixx="4.205112783682214e-06" iyy="4.075291346818556e-06" izz="1.2620029574927629e-06" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_distal">
+         <origin xyz="-0.0012210484748830597 -0.003505067494228547 0.007269018357083593" rpy="0.39882863373999167 0.031957197161715634 0.13057366506604948"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_distal_sensor">
+         <origin xyz="4.159368535496256e-07 -0.0006412162305678167 0.02304441091689664" rpy="0.0 -0.3214055919794552 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_sensor_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_distal_col">
+         <origin xyz="-0.0012210484748830597 -0.003505067494228547 0.007269018357083593" rpy="0.39882863373999167 0.031957197161715634 0.13057366506604948"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_distal_tip_col">
+         <origin xyz="4.159368535496256e-07 -0.0006412162305678167 0.02304441091689664" rpy="0.0 -0.3214055919794552 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_tip_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F0/J3_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F0/J3">
+      <parent link="F0/finger_middle"/>
+      <child link="F0/J3_jointbody"/>
+      <origin xyz="0.0 -0.035 0.0" rpy="-1.5707963267948963 0.0 -3.141592653589793"/>
+      <axis xyz="-1.0 0.0 0.0"/>
+      <limit lower="-0.5236" upper="1.4835" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F0/J3_offset">
+      <parent link="F0/J3_jointbody"/>
+      <child link="F0/finger_distal"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F1/">
+      <inertial>
+         <origin xyz="0.039 -0.029 0.017" rpy="0.0 0.0 -2.8159"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="world2F1/_fixed">
+      <parent link="world"/>
+      <child link="F1/"/>
+      <origin xyz="0.039 -0.029 0.017" rpy="0.0 0.0 -2.8159"/>
+   </joint>
+   <link name="F1/finger_base">
+      <inertial>
+         <origin xyz="8.327226545399306e-12 0.01054598288936383 0.07048018107010738" rpy="0.0 -0.10711439124122646 1.5707963267948968"/>
+         <mass value="0.89937782"/>
+         <inertia ixx="0.0015673892706571104" iyy="0.0014910361893646423" izz="0.00043993605940265574" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_base">
+         <origin xyz="8.327226545399306e-12 0.01054598288936383 0.07048018107010738" rpy="0.0 -0.10711439124122646 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_base_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_base_tb">
+         <origin xyz="-0.00025000517546225093 0.029824496031573167 0.15326050625056" rpy="-0.11303539257440243 -0.21914547257460848 1.5720384557586078"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_base_tb_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_cover">
+         <origin xyz="0.0007136569957928827 0.028223592638347953 0.04220325608402197" rpy="0.03536068327352959 0.08870175476163311 1.5218955282386957"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_cover_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_pulley_block">
+         <origin xyz="-0.0009622186268961596 0.006361143943189516 0.1466967096132776" rpy="-1.5687868138431136 -1.1022271132639765 -1.576208495621712"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_pulley_block_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_lid_white">
+         <origin xyz="-3.706867975964192e-06 0.03646801477221525 0.1465908800087447" rpy="1.5707963267948966 -0.02201707176498169 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_lid_white_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_lid_logo">
+         <origin xyz="-1.4756088946121951e-05 0.03486981911536337 0.1484948163600187" rpy="1.5793979239547067 -0.07957178813569987 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_lid_logo_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_cover_small_left">
+         <origin xyz="0.029562986508563247 0.011445826228016404 0.12950803634669852" rpy="2.195541630562622 0.0 0.0"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_cover_small_left_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_cover_small_right">
+         <origin xyz="-0.029562986509708983 0.01144582621534511 0.12950803634822772" rpy="2.1955416305372593 0.0 0.0"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_cover_small_right_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_base_col">
+         <origin xyz="-1.3046223241388559e-05 0.0004585780015310033 0.08905454252468384" rpy="0.001172742393657572 0.00012091916462431129 -0.0005129728017108533"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_base_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <joint type="fixed" name="F1/2F1/finger_base_fixed">
+      <parent link="F1/"/>
+      <child link="F1/finger_base"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F1/finger_knuckle">
+      <inertial>
+         <origin xyz="-0.00023377087580675408 -0.007837674710718483 -0.015295115474376404" rpy="1.0322489600345182 0.015439441878945415 -0.030933412173580144"/>
+         <mass value="0.13077995"/>
+         <inertia ixx="6.233881188373811e-05" iyy="5.631648265865956e-05" izz="3.5160911517250855e-05" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_knuckle">
+         <origin xyz="-0.00023377087580675408 -0.007837674710718483 -0.015295115474376404" rpy="1.0322489600345182 0.015439441878945637 -0.030933412173580144"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_knuckle_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_knuckle_col">
+         <origin xyz="-0.00023377087580675408 -0.007837674710718483 -0.015295115474376404" rpy="1.0322489600345182 0.015439441878945637 -0.030933412173580144"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_knuckle_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F1/J0_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F1/J0">
+      <parent link="F1/finger_base"/>
+      <child link="F1/J0_jointbody"/>
+      <origin xyz="0.0 0.015 0.17902" rpy="-1.0472000000000001 0.0 0.0"/>
+      <axis xyz="0.0 0.0 -1.0"/>
+      <limit lower="-0.8727" upper="0.8727" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F1/J0_offset">
+      <parent link="F1/J0_jointbody"/>
+      <child link="F1/finger_knuckle"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F1/finger_proximal">
+      <inertial>
+         <origin xyz="-0.0009644587620116158 -0.016217657025227983 0.0026224635162594807" rpy="0.42741351885532486 -1.5281955927617377 1.1674598495934774"/>
+         <mass value="0.09614332"/>
+         <inertia ixx="4.4348780185862844e-05" iyy="3.9493152754213314e-05" izz="1.6583256458014625e-05" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_proximal">
+         <origin xyz="-0.0009644587620116158 -0.016217657025227983 0.0026224635162594807" rpy="0.4274135188553242 -1.5281955927617377 1.1674598495934778"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_proximal_lid">
+         <origin xyz="0.0009964758204556124 -0.029411778713204648 0.016797547976464114" rpy="2.497510926265769 -1.4287487346267171 -1.3575196482734142"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_lid_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_proximal_magtac">
+         <origin xyz="-1.3808692983045182e-07 -0.02758220823071568 -0.002932796361921121" rpy="1.5707963267948966 0.1889942027358682 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_magtac_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_proximal_col">
+         <origin xyz="-0.0005162379564240678 -0.020597143663197596 0.003623588669234484" rpy="-0.49111008932510347 -1.4921888527050045 2.10201627227121"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F1/J1_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F1/J1">
+      <parent link="F1/finger_knuckle"/>
+      <child link="F1/J1_jointbody"/>
+      <origin xyz="0.0 -0.03 0.0" rpy="0.0 0.0 0.0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="-1.3963" upper="0.7854" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F1/J1_offset">
+      <parent link="F1/J1_jointbody"/>
+      <child link="F1/finger_proximal"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F1/finger_middle">
+      <inertial>
+         <origin xyz="-5.312439490077452e-05 -0.014887540831131058 0.0024159721835044926" rpy="-0.3106861008821471 -1.542885454696393 1.865330518167668"/>
+         <mass value="0.05585897"/>
+         <inertia ixx="1.8411470670307498e-05" iyy="1.586370741286415e-05" izz="7.914944890151545e-06" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_middle">
+         <origin xyz="-5.312439490077452e-05 -0.014887540831131058 0.0024159721835044926" rpy="-0.31068610088214343 -1.542885454696393 1.865330518167664"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_middle_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_middle_magtac">
+         <origin xyz="-8.268536875349562e-07 -0.017052828022417015 -0.006302157933194955" rpy="1.5744146047816145 -1.2499101541936672 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_middle_magtac_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_middle_col">
+         <origin xyz="-3.869287817870368e-05 -0.015361278622972645 0.0005163638117973057" rpy="-0.40438613574675164 -1.560003033264187 1.9569843491253969"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_middle_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F1/J2_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F1/J2">
+      <parent link="F1/finger_proximal"/>
+      <child link="F1/J2_jointbody"/>
+      <origin xyz="0.0 -0.05 0.0" rpy="0.0 0.0 0.0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="0.0" upper="1.3963" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F1/J2_offset">
+      <parent link="F1/J2_jointbody"/>
+      <child link="F1/finger_middle"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F1/finger_distal">
+      <inertial>
+         <origin xyz="-0.0012210484748830597 -0.003505067494228547 0.007269018357083593" rpy="0.39882863373999167 0.031957197161715634 0.13057366506604948"/>
+         <mass value="0.02766365"/>
+         <inertia ixx="4.205112783682214e-06" iyy="4.075291346818556e-06" izz="1.2620029574927629e-06" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_distal">
+         <origin xyz="-0.0012210484748830597 -0.003505067494228547 0.007269018357083593" rpy="0.39882863373999167 0.031957197161715634 0.13057366506604948"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_distal_sensor">
+         <origin xyz="4.159368535496256e-07 -0.0006412162305678167 0.02304441091689664" rpy="0.0 -0.3214055919794552 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_sensor_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_distal_col">
+         <origin xyz="-0.0012210484748830597 -0.003505067494228547 0.007269018357083593" rpy="0.39882863373999167 0.031957197161715634 0.13057366506604948"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_distal_tip_col">
+         <origin xyz="4.159368535496256e-07 -0.0006412162305678167 0.02304441091689664" rpy="0.0 -0.3214055919794552 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_tip_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F1/J3_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F1/J3">
+      <parent link="F1/finger_middle"/>
+      <child link="F1/J3_jointbody"/>
+      <origin xyz="0.0 -0.035 0.0" rpy="-1.5707963267948963 0.0 -3.141592653589793"/>
+      <axis xyz="-1.0 0.0 0.0"/>
+      <limit lower="-0.5236" upper="1.4835" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F1/J3_offset">
+      <parent link="F1/J3_jointbody"/>
+      <child link="F1/finger_distal"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F2/">
+      <inertial>
+         <origin xyz="-0.039 -0.029 0.017" rpy="0.0 0.0 2.8159"/>
+         <mass value="0.0"/>
+         <inertia ixx="0.0" iyy="0.0" izz="0.0" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="fixed" name="world2F2/_fixed">
+      <parent link="world"/>
+      <child link="F2/"/>
+      <origin xyz="-0.039 -0.029 0.017" rpy="0.0 0.0 2.8159"/>
+   </joint>
+   <link name="F2/finger_base">
+      <inertial>
+         <origin xyz="8.327226545399306e-12 0.01054598288936383 0.07048018107010738" rpy="0.0 -0.10711439124122646 1.5707963267948968"/>
+         <mass value="0.89937782"/>
+         <inertia ixx="0.0015673892706571104" iyy="0.0014910361893646423" izz="0.00043993605940265574" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_base">
+         <origin xyz="8.327226545399306e-12 0.01054598288936383 0.07048018107010738" rpy="0.0 -0.10711439124122646 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_base_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_base_tb">
+         <origin xyz="-0.00025000517546225093 0.029824496031573167 0.15326050625056" rpy="-0.11303539257440243 -0.21914547257460848 1.5720384557586078"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_base_tb_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_cover">
+         <origin xyz="0.0007136569957928827 0.028223592638347953 0.04220325608402197" rpy="0.03536068327352959 0.08870175476163311 1.5218955282386957"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_cover_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_pulley_block">
+         <origin xyz="-0.0009622186268961596 0.006361143943189516 0.1466967096132776" rpy="-1.5687868138431136 -1.1022271132639765 -1.576208495621712"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_pulley_block_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_lid_white">
+         <origin xyz="-3.706867975964192e-06 0.03646801477221525 0.1465908800087447" rpy="1.5707963267948966 -0.02201707176498169 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_lid_white_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_lid_logo">
+         <origin xyz="-1.4756088946121951e-05 0.03486981911536337 0.1484948163600187" rpy="1.5793979239547067 -0.07957178813569987 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_lid_logo_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_cover_small_left">
+         <origin xyz="0.029562986508563247 0.011445826228016404 0.12950803634669852" rpy="2.195541630562622 0.0 0.0"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_cover_small_left_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_cover_small_right">
+         <origin xyz="-0.029562986509708983 0.01144582621534511 0.12950803634822772" rpy="2.1955416305372593 0.0 0.0"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_cover_small_right_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_base_col">
+         <origin xyz="-1.3046223241388559e-05 0.0004585780015310033 0.08905454252468384" rpy="0.001172742393657572 0.00012091916462431129 -0.0005129728017108533"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_base_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <joint type="fixed" name="F2/2F2/finger_base_fixed">
+      <parent link="F2/"/>
+      <child link="F2/finger_base"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F2/finger_knuckle">
+      <inertial>
+         <origin xyz="-0.00023377087580675408 -0.007837674710718483 -0.015295115474376404" rpy="1.0322489600345182 0.015439441878945415 -0.030933412173580144"/>
+         <mass value="0.13077995"/>
+         <inertia ixx="6.233881188373811e-05" iyy="5.631648265865956e-05" izz="3.5160911517250855e-05" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_knuckle">
+         <origin xyz="-0.00023377087580675408 -0.007837674710718483 -0.015295115474376404" rpy="1.0322489600345182 0.015439441878945637 -0.030933412173580144"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_knuckle_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_knuckle_col">
+         <origin xyz="-0.00023377087580675408 -0.007837674710718483 -0.015295115474376404" rpy="1.0322489600345182 0.015439441878945637 -0.030933412173580144"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_knuckle_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F2/J0_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F2/J0">
+      <parent link="F2/finger_base"/>
+      <child link="F2/J0_jointbody"/>
+      <origin xyz="0.0 0.015 0.17902" rpy="-1.0472000000000001 0.0 0.0"/>
+      <axis xyz="0.0 0.0 -1.0"/>
+      <limit lower="-0.8727" upper="0.8727" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F2/J0_offset">
+      <parent link="F2/J0_jointbody"/>
+      <child link="F2/finger_knuckle"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F2/finger_proximal">
+      <inertial>
+         <origin xyz="-0.0009644587620116158 -0.016217657025227983 0.0026224635162594807" rpy="0.42741351885532486 -1.5281955927617377 1.1674598495934774"/>
+         <mass value="0.09614332"/>
+         <inertia ixx="4.4348780185862844e-05" iyy="3.9493152754213314e-05" izz="1.6583256458014625e-05" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_proximal">
+         <origin xyz="-0.0009644587620116158 -0.016217657025227983 0.0026224635162594807" rpy="0.4274135188553242 -1.5281955927617377 1.1674598495934778"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_proximal_lid">
+         <origin xyz="0.0009964758204556124 -0.029411778713204648 0.016797547976464114" rpy="2.497510926265769 -1.4287487346267171 -1.3575196482734142"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_lid_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_proximal_magtac">
+         <origin xyz="-1.3808692983045182e-07 -0.02758220823071568 -0.002932796361921121" rpy="1.5707963267948966 0.1889942027358682 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_magtac_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_proximal_col">
+         <origin xyz="-0.0005162379564240678 -0.020597143663197596 0.003623588669234484" rpy="-0.49111008932510347 -1.4921888527050045 2.10201627227121"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_proximal_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F2/J1_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F2/J1">
+      <parent link="F2/finger_knuckle"/>
+      <child link="F2/J1_jointbody"/>
+      <origin xyz="0.0 -0.03 0.0" rpy="0.0 0.0 0.0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="-1.3963" upper="0.7854" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F2/J1_offset">
+      <parent link="F2/J1_jointbody"/>
+      <child link="F2/finger_proximal"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F2/finger_middle">
+      <inertial>
+         <origin xyz="-5.312439490077452e-05 -0.014887540831131058 0.0024159721835044926" rpy="-0.3106861008821471 -1.542885454696393 1.865330518167668"/>
+         <mass value="0.05585897"/>
+         <inertia ixx="1.8411470670307498e-05" iyy="1.586370741286415e-05" izz="7.914944890151545e-06" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_middle">
+         <origin xyz="-5.312439490077452e-05 -0.014887540831131058 0.0024159721835044926" rpy="-0.31068610088214343 -1.542885454696393 1.865330518167664"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_middle_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_middle_magtac">
+         <origin xyz="-8.268536875349562e-07 -0.017052828022417015 -0.006302157933194955" rpy="1.5744146047816145 -1.2499101541936672 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_middle_magtac_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_middle_col">
+         <origin xyz="-3.869287817870368e-05 -0.015361278622972645 0.0005163638117973057" rpy="-0.40438613574675164 -1.560003033264187 1.9569843491253969"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_middle_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F2/J2_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F2/J2">
+      <parent link="F2/finger_proximal"/>
+      <child link="F2/J2_jointbody"/>
+      <origin xyz="0.0 -0.05 0.0" rpy="0.0 0.0 0.0"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit lower="0.0" upper="1.3963" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F2/J2_offset">
+      <parent link="F2/J2_jointbody"/>
+      <child link="F2/finger_middle"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+   <link name="F2/finger_distal">
+      <inertial>
+         <origin xyz="-0.0012210484748830597 -0.003505067494228547 0.007269018357083593" rpy="0.39882863373999167 0.031957197161715634 0.13057366506604948"/>
+         <mass value="0.02766365"/>
+         <inertia ixx="4.205112783682214e-06" iyy="4.075291346818556e-06" izz="1.2620029574927629e-06" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual name="r3_finger_distal">
+         <origin xyz="-0.0012210484748830597 -0.003505067494228547 0.007269018357083593" rpy="0.39882863373999167 0.031957197161715634 0.13057366506604948"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_distal_sensor">
+         <origin xyz="4.159368535496256e-07 -0.0006412162305678167 0.02304441091689664" rpy="0.0 -0.3214055919794552 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_sensor_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_distal_col">
+         <origin xyz="-0.0012210484748830597 -0.003505067494228547 0.007269018357083593" rpy="0.39882863373999167 0.031957197161715634 0.13057366506604948"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+      <visual name="r3_finger_distal_tip_col">
+         <origin xyz="4.159368535496256e-07 -0.0006412162305678167 0.02304441091689664" rpy="0.0 -0.3214055919794552 1.5707963267948966"/>
+         <geometry>
+            <mesh filename="meshes/converted_r3_finger_distal_tip_col_808080ff.obj"/>
+         </geometry>
+      </visual>
+   </link>
+   <link name="F2/J3_jointbody">
+      <inertial>
+         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+         <mass value="0.001"/>
+         <inertia ixx="1e-09" iyy="1e-09" izz="1e-09" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+   </link>
+   <joint type="revolute" name="F2/J3">
+      <parent link="F2/finger_middle"/>
+      <child link="F2/J3_jointbody"/>
+      <origin xyz="0.0 -0.035 0.0" rpy="-1.5707963267948963 0.0 -3.141592653589793"/>
+      <axis xyz="-1.0 0.0 0.0"/>
+      <limit lower="-0.5236" upper="1.4835" effort="100" velocity="100"/>
+   </joint>
+   <joint type="fixed" name="F2/J3_offset">
+      <parent link="F2/J3_jointbody"/>
+      <child link="F2/finger_distal"/>
+      <origin xyz="-0.0 -0.0 -0.0" rpy="0.0 0.0 0.0"/>
+   </joint>
+</robot>
