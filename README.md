@@ -23,7 +23,7 @@ And three types of action space:
 - Vector of target positions for the end effector in Cartesian space. Environment name prefix is `IK-Abs`.
 - Vector of end effector displacement in Cartesian space. Environment name prefix is `IK-Rel`.
 
-Below is the environment with the DP-Flex arm and the kuka iiwa 14 manipulator. The agent's task is to grasp the object and move the target position:
+Below is the environment with the DP-Flex hand and the kuka iiwa 14 manipulator. The agent's task is to grasp the object and move the target position:
 
 - Action: joint position of manipulator
     - `Isaac-Lift-Cube-Iiwa-v0` - Observation: object's oracle information,
@@ -38,6 +38,12 @@ Below is the environment with the DP-Flex arm and the kuka iiwa 14 manipulator. 
     - `Isaac-Full-Obj-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object, 
     - `Isaac-PC-Lift-Iiwa-IK-Rel-v0` - Observation: a sampled point cloud on the object.
 
+Environments kuka iiwa 14 with DEX-EE:
+
+- Action: joint position of manipulator
+    - `Isaac-Dexsuite-Kuka-DEXEE-Lift-v0` - Observation: : object's oracle information,
+
+![](doc/img/comb_wrench_2.gif)
 Full description of the environment below.
 
 ## Installation
